@@ -10,7 +10,7 @@
 
   <title>
     
-      Introducing Lanyon &middot; Stan's Blog
+      Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x &middot; Stan's Blog
     
   </title>
 
@@ -92,9 +92,59 @@
 
       <div class="container content">
         <div class="post">
-  <h1 class="post-title">Introducing Lanyon</h1>
-  <span class="post-date">02 Jan 2014</span>
-  <p>Lanyon is an unassuming <a href="http://jekyllrb.com">Jekyll</a> theme that places content first by tucking away navigation in a hidden drawer. It&#39;s based on <a href="http://getpoole.com">Poole</a>, the Jekyll butler.</p>
+  <h1 class="post-title">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</h1>
+  <span class="post-date">17 Apr 2014</span>
+  <p>Installing Vargrant and the vagrant-vsphere plugin on CentOS 6.x</p>
+
+<p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempting to get Vagrant working on CentOS, becuase I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have a more preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I also also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+
+<ol>
+<li><p>Create a CentOS 6.x minimal virtual machine for installing Vagrant. 
+Create or clone a fresh CentOS 6.x minimal virtual machine. I already had an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p></li>
+<li><p>Power on the new cloned vm and connect to the virtual machine console</p></li>
+</ol>
+
+<p><img src="/assets/01-clone-existing-template.png" alt="My helpful screenshot"></p>
+
+<ol>
+<li>Modify /etc/sysconfig/network, /etc/sysconfig/network-scripts/ifcfg-eth0 &amp; /etc/resolv.conf to reflect the network settings for your vagrant vm:</li>
+</ol>
+
+<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network </span>
+<span class="nv">NETWORKING</span><span class="o">=</span>yes 
+<span class="nv">HOSTNAME</span><span class="o">=</span>vagrant.mylab.net 
+<span class="nv">GATEWAY</span><span class="o">=</span>192.168.1.1 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network-scripts/ifcfg-eth0 </span>
+<span class="nv">DEVICE</span><span class="o">=</span>eth0 
+<span class="nv">TYPE</span><span class="o">=</span>Ethernet 
+<span class="nv">ONBOOT</span><span class="o">=</span>yes 
+<span class="nv">NM_CONTROLLED</span><span class="o">=</span>no 
+<span class="nv">BOOTPROTO</span><span class="o">=</span>static 
+<span class="nv">IPADDR</span><span class="o">=</span>192.168.1.40 
+<span class="nv">NETMASK</span><span class="o">=</span>255.255.255.0 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/resolv.conf</span>
+ search mylab.net 
+nameserver 192.168.1.1 
+nameserver 8.8.8.8 
+nameserver 8.8.4.4
+</code></pre></div>
+
+<ol>
+<li>Restart the vm for the hostname change to take affect</li>
+<li>SSH to the vagrant vm using the IP address you assigned in /etc/sysconf/network-scripts/ifcfg-eth0</li>
+<li><p>Install Ruby 1.9.3. There are several ways to install ruby 1.9.3 on CentOS, but I&#39;ll cover using ruby-build to accomplish this:</p>
+
+<p>A. Use yum in install the packages we&#39;ll need to get ruby and vagrant installed:</p></li>
+</ol>
+
+<p>yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</p>
+
+<p>B. Pull down the latest version of ruby-build using git:</p>
+
+<p>which is shown in the screenshot below:
+<img src="http://sdorsett.github.io/assets/screenshot.jpg" alt="My helpful screenshot"></p>
+
+<p>Lanyon is an unassuming <a href="http://jekyllrb.com">Jekyll</a> theme that places content first by tucking away navigation in a hidden drawer. It&#39;s based on <a href="http://getpoole.com">Poole</a>, the Jekyll butler.</p>
 
 <h3>Built on Poole</h3>
 
@@ -140,8 +190,8 @@
     
       <li>
         <h3>
-          <a href="/2014/04/17/vagrant-install/">
-            Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x
+          <a href="/2014/04/17/vagrant-explained/">
+            Vagrant and why it is useful in learning Puppet
             <small>17 Apr 2014</small>
           </a>
         </h3>
@@ -149,9 +199,9 @@
     
       <li>
         <h3>
-          <a href="/2014/04/17/vagrant-explained/">
-            Vagrant and why it is useful in learning Puppet
-            <small>17 Apr 2014</small>
+          <a href="/2014/01/02/introducing-lanyon/">
+            Introducing Lanyon
+            <small>02 Jan 2014</small>
           </a>
         </h3>
       </li>

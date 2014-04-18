@@ -10,7 +10,7 @@
 
   <title>
     
-      Lanyon &middot; A Jekyll theme
+      Stan's Blog &middot; 
     
   </title>
 
@@ -38,7 +38,7 @@
 <!-- Toggleable sidebar -->
 <div class="sidebar" id="sidebar">
   <div class="sidebar-item">
-    <p>A reserved <a href="http://jekyllrb.com" target="_blank">Jekyll</a> theme that places the utmost gravity on content with a hidden drawer. Made by <a href="https://twitter.com/mdo" target="_blank">@mdo</a>.</p>
+    <p></p>
   </div>
 
   <nav class="sidebar-nav">
@@ -65,8 +65,8 @@
       
     
 
-    <a class="sidebar-nav-item" href="https://github.com/poole/lanyon/archive/v1.0.0.zip">Download</a>
-    <a class="sidebar-nav-item" href="https://github.com/poole/lanyon">GitHub project</a>
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
   </nav>
 
@@ -84,14 +84,138 @@
       <div class="masthead">
         <div class="container">
           <h3 class="masthead-title">
-            <a href="/" title="Home">Lanyon</a>
-            <small>A Jekyll theme</small>
+            <a href="/" title="Home">Stan's Blog</a>
+            <small></small>
           </h3>
         </div>
       </div>
 
       <div class="container content">
         <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2014/04/17/vagrant-install/">
+        Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x
+      </a>
+    </h1>
+
+    <span class="post-date">17 Apr 2014</span>
+
+    <p>Installing Vargrant and the vagrant-vsphere plugin on CentOS 6.x</p>
+
+<p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempting to get Vagrant working on CentOS, becuase I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have a more preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I also also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+
+<ol>
+<li><p>Create a CentOS 6.x minimal virtual machine for installing Vagrant. 
+Create or clone a fresh CentOS 6.x minimal virtual machine. I already had an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p></li>
+<li><p>Power on the new cloned vm and connect to the virtual machine console</p></li>
+</ol>
+
+<p><img src="/assets/01-clone-existing-template.png" alt="My helpful screenshot"></p>
+
+<ol>
+<li>Modify /etc/sysconfig/network, /etc/sysconfig/network-scripts/ifcfg-eth0 &amp; /etc/resolv.conf to reflect the network settings for your vagrant vm:</li>
+</ol>
+
+<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network </span>
+<span class="nv">NETWORKING</span><span class="o">=</span>yes 
+<span class="nv">HOSTNAME</span><span class="o">=</span>vagrant.mylab.net 
+<span class="nv">GATEWAY</span><span class="o">=</span>192.168.1.1 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network-scripts/ifcfg-eth0 </span>
+<span class="nv">DEVICE</span><span class="o">=</span>eth0 
+<span class="nv">TYPE</span><span class="o">=</span>Ethernet 
+<span class="nv">ONBOOT</span><span class="o">=</span>yes 
+<span class="nv">NM_CONTROLLED</span><span class="o">=</span>no 
+<span class="nv">BOOTPROTO</span><span class="o">=</span>static 
+<span class="nv">IPADDR</span><span class="o">=</span>192.168.1.40 
+<span class="nv">NETMASK</span><span class="o">=</span>255.255.255.0 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/resolv.conf</span>
+ search mylab.net 
+nameserver 192.168.1.1 
+nameserver 8.8.8.8 
+nameserver 8.8.4.4
+</code></pre></div>
+
+<ol>
+<li>Restart the vm for the hostname change to take affect</li>
+<li>SSH to the vagrant vm using the IP address you assigned in /etc/sysconf/network-scripts/ifcfg-eth0</li>
+<li><p>Install Ruby 1.9.3. There are several ways to install ruby 1.9.3 on CentOS, but I&#39;ll cover using ruby-build to accomplish this:</p>
+
+<p>A. Use yum in install the packages we&#39;ll need to get ruby and vagrant installed:</p></li>
+</ol>
+
+<p>yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</p>
+
+<p>B. Pull down the latest version of ruby-build using git:</p>
+
+<p>which is shown in the screenshot below:
+<img src="http://sdorsett.github.io/assets/screenshot.jpg" alt="My helpful screenshot"></p>
+
+<p>Lanyon is an unassuming <a href="http://jekyllrb.com">Jekyll</a> theme that places content first by tucking away navigation in a hidden drawer. It&#39;s based on <a href="http://getpoole.com">Poole</a>, the Jekyll butler.</p>
+
+<h3>Built on Poole</h3>
+
+<p>Poole is the Jekyll Butler, serving as an upstanding and effective foundation for Jekyll themes by <a href="https://twitter.com/mdo">@mdo</a>. Poole, and every theme built on it (like Lanyon here) includes the following:</p>
+
+<ul>
+<li>Complete Jekyll setup included (layouts, config, <a href="/404">404</a>, <a href="/atom.xml">RSS feed</a>, posts, and <a href="/about">example page</a>)</li>
+<li>Mobile friendly design and development</li>
+<li>Easily scalable text and component sizing with <code>rem</code> units in the CSS</li>
+<li>Support for a wide gamut of HTML elements</li>
+<li>Related posts (time-based, because Jekyll) below each post</li>
+<li>Syntax highlighting, courtesy Pygments (the Python-based code snippet highlighter)</li>
+</ul>
+
+<h3>Lanyon features</h3>
+
+<p>In addition to the features of Poole, Lanyon adds the following:</p>
+
+<ul>
+<li>Toggleable sliding sidebar (built with only CSS) via <strong>☰</strong> link in top corner</li>
+<li>Sidebar includes support for textual modules and a dynamically generated navigation with active link support</li>
+<li>Two orientations for content and sidebar, default (left sidebar) and <a href="https://github.com/poole/lanyon#reverse-layout">reverse</a> (right sidebar), available via <code>&lt;body&gt;</code> classes</li>
+<li><a href="https://github.com/poole/lanyon#themes">Eight optional color schemes</a>, available via <code>&lt;body&gt;</code> classes</li>
+</ul>
+
+<p><a href="https://github.com/poole/lanyon#readme">Head to the readme</a> to learn more.</p>
+
+<h3>Browser support</h3>
+
+<p>Lanyon is by preference a forward-thinking project. In addition to the latest versions of Chrome, Safari (mobile and desktop), and Firefox, it is only compatible with Internet Explorer 9 and above.</p>
+
+<h3>Download</h3>
+
+<p>Lanyon is developed on and hosted with GitHub. Head to the <a href="https://github.com/poole/lanyon">GitHub repository</a> for downloads, bug reports, and features requests.</p>
+
+<p>Thanks!</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2014/04/17/vagrant-explained/">
+        Vagrant and why it is useful in learning Puppet
+      </a>
+    </h1>
+
+    <span class="post-date">17 Apr 2014</span>
+
+    <p>Vagrant, according to the <a href="http://docs.vagrantup.com/v2/why-vagrant/">documentation</a>, provides a &quot;disposable environment and consistent workflow for developing and testing infrastructure management scripts. You can quickly test things like shell scripts, Chef cookbooks, Puppet modules, and more using local virtualization such as VirtualBox or VMware. Then, with the same configuration, you can test these scripts on remote clouds such as AWS or RackSpace with the same workflow.&quot;</p>
+
+<p>I&#39;ve been trying to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The automation experts I work with have demonstrated using Vagant with fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. </p>
+
+<p>This will be the first of several blog posts in which I will cover:</p>
+
+<ul>
+<li>Installing Vagant and the vagrant-vsphere plugin on a CentOS 6.x virtual machine</li>
+<li>Creating a CentOS 6.x template that is customized for Vagrant</li>
+<li>Defining a Puppet manifest that will automatically run when a template is deployed</li>
+</ul>
+
+<p>These posts will hopefully help you understand the steps necessary to get vagrant installed and working with a vSphere environment.</p>
+
+  </div>
   
   <div class="post">
     <h1 class="post-title">
