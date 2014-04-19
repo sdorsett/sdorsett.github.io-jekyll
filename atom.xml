@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-04-19T16:56:07-05:00</updated>
+ <updated>2014-04-19T17:05:54-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -277,7 +277,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 &lt;p&gt;This will be the first of several blog posts in which I will cover:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;[Installing Vagant and the vagrant-vsphere plugin on a CentOS 6.x virtual machine[(https://sdorsett.github.io/2014/04/19/vagrant-install/)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagant and the vagrant-vsphere plugin on a CentOS 6.x virtual machine&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Creating a CentOS 6.x template that is customized for Vagrant&lt;/li&gt;
 &lt;li&gt;Defining a Puppet manifest that will automatically run when a template is deployed&lt;/li&gt;
 &lt;/ul&gt;
