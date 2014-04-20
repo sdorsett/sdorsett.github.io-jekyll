@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-04-20T15:33:10-05:00</updated>
+ <updated>2014-04-20T15:37:05-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -17,7 +17,7 @@
    <link href="http://sdorsett.github.io/2014/04/20/vagrant-boxes/"/>
    <updated>2014-04-20T00:00:00-05:00</updated>
    <id>http://sdorsett.github.io/2014/04/20/vagrant-boxes</id>
-   <content type="html">&lt;p&gt;This post will continue our examination of using the vagrant-vsphere plugin, by customizing a CentOS template for integration with Vagrant. Having a Vagrant customize template will allow us to deploy this template and have Vagrant allow us to SSH using the &amp;quot;vagrant ssh&amp;quot; command, as well automatically run puppet manifests when we deploy a vm using Vagrant. Let&amp;#39;s get started:&lt;/p&gt;
+   <content type="html">&lt;p&gt;This post will continue our examination of using the vagrant-vsphere plugin, by customizing a CentOS template for integration with Vagrant. Having a Vagrant customize template will allow us to deploy this template and SSH to the cloned vm using the &amp;quot;vagrant ssh&amp;quot; command, as well automatically run puppet manifests when we deploy a vm using Vagrant. Let&amp;#39;s get started:&lt;/p&gt;
 
 &lt;h3&gt;1. Ensure you have a DHCP server on the network you will be connecting the Vagrant deployed templates to. While you can utilized guest customization to assign a static IP addresses to a Vagrant deployed vm, using DHCP will make this process much easier.&lt;/h3&gt;
 
