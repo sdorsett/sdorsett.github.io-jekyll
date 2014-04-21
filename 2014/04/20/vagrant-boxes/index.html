@@ -107,7 +107,7 @@
 
 <p>Create or clone a fresh CentOS 6.x minimal virtual machine. I already have an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p>
 
-<h3>3. Power on the new cloned vm and connect using SSH to the IP address DHCP has given this vm.</h3>
+<h3>3. Power on the new cloned vm and connect using SSH to the DHCP assigned IP address for this vm.</h3>
 
 <h3>4. Ensure you have perl, rsync, ruby &amp; puppet agent installed:</h3>
 
@@ -151,14 +151,14 @@ mount: block device /dev/sr0 is write-protected, mounting <span class="nb">read<
 <span class="o">[</span>root@centos-6-5 vmware-tools-distrib<span class="o">]</span><span class="c"># ./vmware-install.pl</span>
 </code></pre></div>
 
-<p>You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed ensure under the vm summary this this template vm, the VMware Tools show as &quot;Running&quot; and &quot;Current.&quot;</p>
+<p>You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed check the vm summary of this template vm in the vSphere client. The VMware Tools should show as &quot;Running&quot; and &quot;Current.&quot;</p>
 
 <h4>F. Unmount the virtual CDROM using the following command:</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># umount /dev/cdrom</span>
 </code></pre></div>
 
-<h3>6. We will next follow the steps on <a href="https://docs.vagrantup.com/v2/boxes/base.html">creating a base box</a> from the Vagrant website.</h3>
+<h3>6. We will next follow the steps for <a href="https://docs.vagrantup.com/v2/boxes/base.html">creating a base box</a> from the Vagrant website.</h3>
 
 <p>One thing to point out is we will be configuring the vagrant template for password less SSH using a vagrant user with the password of &quot;vagrant.&quot; The Vagrant website mentions &#39;by default, Vagrant expects a &quot;vagrant&quot; user to SSH into the machine as. This user should be setup with the insecure keypair that Vagrant uses as a default to attempt to SSH. Also, even though Vagrant uses key-based authentication by default, it is a general convention to set the password for the &quot;vagrant&quot; user to &quot;vagrant.&quot;&#39;</p>
 
@@ -259,7 +259,7 @@ We also need to add the following line at the bottom of the file:</p>
 
 <p>This avoids a reverse DNS lookup on the connecting SSH client which can take many seconds.</p>
 
-<h3>7. Lastly, since this is a template, we will need to remove /etc/udev/rules.d/70-persistent-net.rules file since it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.</h3>
+<h3>7. Lastly this is a template, so we will need to remove /etc/udev/rules.d/70-persistent-net.rules file because it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.</h3>
 
 <h3>8. We will now shutdown the template by running halt:</h3>
 
@@ -312,7 +312,7 @@ Connection to 192.168.1.133 closed.
 <span class="o">==</span>&gt; default: Calling vShpere Destroy
 </code></pre></div>
 
-<h3>Hopefully you found this post helpful in demonstrating how useful it is to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.</h3>
+<h3>Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 

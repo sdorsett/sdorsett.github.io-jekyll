@@ -99,7 +99,7 @@
         <div class="post">
   <h1 class="post-title">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</h1>
   <span class="post-date">19 Apr 2014</span>
-  <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempting to get Vagrant working on CentOS, becuase I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have a more preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I also also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+  <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
 
 <h3>1. Create a CentOS 6.x minimal virtual machine for installing Vagrant.</h3>
 
@@ -261,13 +261,13 @@ Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!
 ./metadata.json
 </code></pre></div>
 
-<h4>C.  Next we will create a new folder under /root from storing the box file we created and other vagrant configuration files</h4>
+<h4>C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/example_box</span>
 <span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mv dummy.box ~/vagrant-vms/example_box</span>
 </code></pre></div>
 
-<h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, what the directory that the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
+<h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, located in the directory from which the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># cd ~/vagrant-vms/</span>
 <span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># touch Vagrantfile</span>
@@ -293,14 +293,17 @@ Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><s
 end
 </code></pre></div>
 
-<p>In this configuration file:
-* &quot;vsphere.host&quot; is your vCenter server FQDN or IP address
-* &quot;vsphere.name&quot; will be the name of the virtual machine that gets created
-* &quot;vsphere.clone<em>from</em>vm&quot; specifies we will be cloning a vm rather than template
-* &quot;vsphere.template_name&quot; is the name of the vm we will be cloning
-* &quot;vsphere.user&quot; is the username we will be using to connect to vCenter
-* &quot;sphere.password&quot; is the password we will be using to connect ot vCenter
-* &quot;vsphere.insecure&quot; tells vagrant to not worry about validating the certificate on the vCenter server</p>
+<p>In this configuration file:</p>
+
+<ul>
+<li>&quot;vsphere.host&quot; is your vCenter server FQDN or IP address</li>
+<li>&quot;vsphere.name&quot; will be the name of the virtual machine that gets created</li>
+<li>&quot;vsphere.clone<em>from</em>vm&quot; specifies we will be cloning a vm rather than template</li>
+<li>&quot;vsphere.template_name&quot; is the name of the vm we will be cloning</li>
+<li>&quot;vsphere.user&quot; is the username we will be using to connect to vCenter</li>
+<li>&quot;vsphere.password&quot; is the password we will be using to connect ot vCenter</li>
+<li>&quot;vsphere.insecure&quot; tells vagrant to not worry about validating the certificate on the vCenter server</li>
+</ul>
 
 <h3>9. Vargrant up!!!!</h3>
 
@@ -314,7 +317,7 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 <span class="o">==</span>&gt; default: Waiting <span class="k">for </span>SSH to become available...
 </code></pre></div>
 
-<p>You should see a &quot;Clone virtual machine&quot; task being run and then completing on your vCenter server.</p>
+<p>You should see a &quot;Clone virtual machine&quot; task being run on your vCenter server and then completing.</p>
 
 <h3>10. Canceling the &quot;Vagrant up&quot; command and destroying our cloned vm.</h3>
 

@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-04-20T15:37:05-05:00</updated>
+ <updated>2014-04-20T21:21:52-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -25,7 +25,7 @@
 
 &lt;p&gt;Create or clone a fresh CentOS 6.x minimal virtual machine. I already have an existing Centos 6.5 minimal template that I simply cloned for this purpose.&lt;/p&gt;
 
-&lt;h3&gt;3. Power on the new cloned vm and connect using SSH to the IP address DHCP has given this vm.&lt;/h3&gt;
+&lt;h3&gt;3. Power on the new cloned vm and connect using SSH to the DHCP assigned IP address for this vm.&lt;/h3&gt;
 
 &lt;h3&gt;4. Ensure you have perl, rsync, ruby &amp;amp; puppet agent installed:&lt;/h3&gt;
 
@@ -69,14 +69,14 @@ mount: block device /dev/sr0 is write-protected, mounting &lt;span class=&quot;n
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 vmware-tools-distrib&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./vmware-install.pl&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed ensure under the vm summary this this template vm, the VMware Tools show as &amp;quot;Running&amp;quot; and &amp;quot;Current.&amp;quot;&lt;/p&gt;
+&lt;p&gt;You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed check the vm summary of this template vm in the vSphere client. The VMware Tools should show as &amp;quot;Running&amp;quot; and &amp;quot;Current.&amp;quot;&lt;/p&gt;
 
 &lt;h4&gt;F. Unmount the virtual CDROM using the following command:&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# umount /dev/cdrom&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;6. We will next follow the steps on &lt;a href=&quot;https://docs.vagrantup.com/v2/boxes/base.html&quot;&gt;creating a base box&lt;/a&gt; from the Vagrant website.&lt;/h3&gt;
+&lt;h3&gt;6. We will next follow the steps for &lt;a href=&quot;https://docs.vagrantup.com/v2/boxes/base.html&quot;&gt;creating a base box&lt;/a&gt; from the Vagrant website.&lt;/h3&gt;
 
 &lt;p&gt;One thing to point out is we will be configuring the vagrant template for password less SSH using a vagrant user with the password of &amp;quot;vagrant.&amp;quot; The Vagrant website mentions &amp;#39;by default, Vagrant expects a &amp;quot;vagrant&amp;quot; user to SSH into the machine as. This user should be setup with the insecure keypair that Vagrant uses as a default to attempt to SSH. Also, even though Vagrant uses key-based authentication by default, it is a general convention to set the password for the &amp;quot;vagrant&amp;quot; user to &amp;quot;vagrant.&amp;quot;&amp;#39;&lt;/p&gt;
 
@@ -177,7 +177,7 @@ We also need to add the following line at the bottom of the file:&lt;/p&gt;
 
 &lt;p&gt;This avoids a reverse DNS lookup on the connecting SSH client which can take many seconds.&lt;/p&gt;
 
-&lt;h3&gt;7. Lastly, since this is a template, we will need to remove /etc/udev/rules.d/70-persistent-net.rules file since it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.&lt;/h3&gt;
+&lt;h3&gt;7. Lastly this is a template, so we will need to remove /etc/udev/rules.d/70-persistent-net.rules file because it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.&lt;/h3&gt;
 
 &lt;h3&gt;8. We will now shutdown the template by running halt:&lt;/h3&gt;
 
@@ -230,7 +230,7 @@ Connection to 192.168.1.133 closed.
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in demonstrating how useful it is to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.&lt;/h3&gt;
+&lt;h3&gt;Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>
@@ -241,7 +241,7 @@ Connection to 192.168.1.133 closed.
    <link href="http://sdorsett.github.io/2014/04/19/vagrant-install/"/>
    <updated>2014-04-19T00:00:00-05:00</updated>
    <id>http://sdorsett.github.io/2014/04/19/vagrant-install</id>
-   <content type="html">&lt;p&gt;Some readers might find this post to be a little &amp;quot;in the weeds&amp;quot; and cover details they are already familiar with. I struggled in my first attempting to get Vagrant working on CentOS, becuase I couldn&amp;#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have a more preferred method for installing Ruby, please understand I&amp;#39;m trying to provide as much detail as possible to those without much linux experience. I also also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.&lt;/p&gt;
+   <content type="html">&lt;p&gt;Some readers might find this post to be a little &amp;quot;in the weeds&amp;quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&amp;#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&amp;#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.&lt;/p&gt;
 
 &lt;h3&gt;1. Create a CentOS 6.x minimal virtual machine for installing Vagrant.&lt;/h3&gt;
 
@@ -403,13 +403,13 @@ Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vsphere (
 ./metadata.json
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;C.  Next we will create a new folder under /root from storing the box file we created and other vagrant configuration files&lt;/h4&gt;
+&lt;h4&gt;C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/example_box&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv dummy.box ~/vagrant-vms/example_box&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;D. Vagrant reads it&amp;#39;s configuration from a file named Vagrantfile, what the directory that the &amp;quot;vagrant up&amp;quot; command is run in. We need to go back to our &amp;quot;vagrant-vms&amp;quot; folder and create this file:&lt;/h4&gt;
+&lt;h4&gt;D. Vagrant reads it&amp;#39;s configuration from a file named Vagrantfile, located in the directory from which the &amp;quot;vagrant up&amp;quot; command is run in. We need to go back to our &amp;quot;vagrant-vms&amp;quot; folder and create this file:&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
@@ -435,14 +435,17 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
 end
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;In this configuration file:
-* &amp;quot;vsphere.host&amp;quot; is your vCenter server FQDN or IP address
-* &amp;quot;vsphere.name&amp;quot; will be the name of the virtual machine that gets created
-* &amp;quot;vsphere.clone&lt;em&gt;from&lt;/em&gt;vm&amp;quot; specifies we will be cloning a vm rather than template
-* &amp;quot;vsphere.template_name&amp;quot; is the name of the vm we will be cloning
-* &amp;quot;vsphere.user&amp;quot; is the username we will be using to connect to vCenter
-* &amp;quot;sphere.password&amp;quot; is the password we will be using to connect ot vCenter
-* &amp;quot;vsphere.insecure&amp;quot; tells vagrant to not worry about validating the certificate on the vCenter server&lt;/p&gt;
+&lt;p&gt;In this configuration file:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;quot;vsphere.host&amp;quot; is your vCenter server FQDN or IP address&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.name&amp;quot; will be the name of the virtual machine that gets created&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.clone&lt;em&gt;from&lt;/em&gt;vm&amp;quot; specifies we will be cloning a vm rather than template&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.template_name&amp;quot; is the name of the vm we will be cloning&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.user&amp;quot; is the username we will be using to connect to vCenter&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.password&amp;quot; is the password we will be using to connect ot vCenter&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.insecure&amp;quot; tells vagrant to not worry about validating the certificate on the vCenter server&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;h3&gt;9. Vargrant up!!!!&lt;/h3&gt;
 
@@ -456,7 +459,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;You should see a &amp;quot;Clone virtual machine&amp;quot; task being run and then completing on your vCenter server.&lt;/p&gt;
+&lt;p&gt;You should see a &amp;quot;Clone virtual machine&amp;quot; task being run on your vCenter server and then completing.&lt;/p&gt;
 
 &lt;h3&gt;10. Canceling the &amp;quot;Vagrant up&amp;quot; command and destroying our cloned vm.&lt;/h3&gt;
 
@@ -494,7 +497,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
    <id>http://sdorsett.github.io/2014/04/16/vagrant-explained</id>
    <content type="html">&lt;p&gt;Vagrant, according to the &lt;a href=&quot;http://docs.vagrantup.com/v2/why-vagrant/&quot;&gt;documentation&lt;/a&gt;, provides a &amp;quot;disposable environment and consistent workflow for developing and testing infrastructure management scripts. You can quickly test things like shell scripts, Chef cookbooks, Puppet modules, and more using local virtualization such as VirtualBox or VMware. Then, with the same configuration, you can test these scripts on remote clouds such as AWS or RackSpace with the same workflow.&amp;quot;&lt;/p&gt;
 
-&lt;p&gt;I&amp;#39;ve been trying to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The vCHS automation team has demonstrated using Vagant with VMware fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. &lt;/p&gt;
+&lt;p&gt;I&amp;#39;ve been wanting to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The vCHS automation team has demonstrated using Vagant with VMware fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. &lt;/p&gt;
 
 &lt;p&gt;This will be the first of several blog posts in which I will cover:&lt;/p&gt;
 

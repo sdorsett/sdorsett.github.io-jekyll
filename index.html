@@ -115,7 +115,7 @@
 
 <p>Create or clone a fresh CentOS 6.x minimal virtual machine. I already have an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p>
 
-<h3>3. Power on the new cloned vm and connect using SSH to the IP address DHCP has given this vm.</h3>
+<h3>3. Power on the new cloned vm and connect using SSH to the DHCP assigned IP address for this vm.</h3>
 
 <h3>4. Ensure you have perl, rsync, ruby &amp; puppet agent installed:</h3>
 
@@ -159,14 +159,14 @@ mount: block device /dev/sr0 is write-protected, mounting <span class="nb">read<
 <span class="o">[</span>root@centos-6-5 vmware-tools-distrib<span class="o">]</span><span class="c"># ./vmware-install.pl</span>
 </code></pre></div>
 
-<p>You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed ensure under the vm summary this this template vm, the VMware Tools show as &quot;Running&quot; and &quot;Current.&quot;</p>
+<p>You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed check the vm summary of this template vm in the vSphere client. The VMware Tools should show as &quot;Running&quot; and &quot;Current.&quot;</p>
 
 <h4>F. Unmount the virtual CDROM using the following command:</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># umount /dev/cdrom</span>
 </code></pre></div>
 
-<h3>6. We will next follow the steps on <a href="https://docs.vagrantup.com/v2/boxes/base.html">creating a base box</a> from the Vagrant website.</h3>
+<h3>6. We will next follow the steps for <a href="https://docs.vagrantup.com/v2/boxes/base.html">creating a base box</a> from the Vagrant website.</h3>
 
 <p>One thing to point out is we will be configuring the vagrant template for password less SSH using a vagrant user with the password of &quot;vagrant.&quot; The Vagrant website mentions &#39;by default, Vagrant expects a &quot;vagrant&quot; user to SSH into the machine as. This user should be setup with the insecure keypair that Vagrant uses as a default to attempt to SSH. Also, even though Vagrant uses key-based authentication by default, it is a general convention to set the password for the &quot;vagrant&quot; user to &quot;vagrant.&quot;&#39;</p>
 
@@ -267,7 +267,7 @@ We also need to add the following line at the bottom of the file:</p>
 
 <p>This avoids a reverse DNS lookup on the connecting SSH client which can take many seconds.</p>
 
-<h3>7. Lastly, since this is a template, we will need to remove /etc/udev/rules.d/70-persistent-net.rules file since it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.</h3>
+<h3>7. Lastly this is a template, so we will need to remove /etc/udev/rules.d/70-persistent-net.rules file because it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.</h3>
 
 <h3>8. We will now shutdown the template by running halt:</h3>
 
@@ -320,7 +320,7 @@ Connection to 192.168.1.133 closed.
 <span class="o">==</span>&gt; default: Calling vShpere Destroy
 </code></pre></div>
 
-<h3>Hopefully you found this post helpful in demonstrating how useful it is to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.</h3>
+<h3>Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
@@ -335,7 +335,7 @@ Connection to 192.168.1.133 closed.
 
     <span class="post-date">19 Apr 2014</span>
 
-    <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempting to get Vagrant working on CentOS, becuase I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have a more preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I also also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+    <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
 
 <h3>1. Create a CentOS 6.x minimal virtual machine for installing Vagrant.</h3>
 
@@ -497,13 +497,13 @@ Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!
 ./metadata.json
 </code></pre></div>
 
-<h4>C.  Next we will create a new folder under /root from storing the box file we created and other vagrant configuration files</h4>
+<h4>C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/example_box</span>
 <span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mv dummy.box ~/vagrant-vms/example_box</span>
 </code></pre></div>
 
-<h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, what the directory that the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
+<h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, located in the directory from which the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
 
 <div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># cd ~/vagrant-vms/</span>
 <span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># touch Vagrantfile</span>
@@ -529,14 +529,17 @@ Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><s
 end
 </code></pre></div>
 
-<p>In this configuration file:
-* &quot;vsphere.host&quot; is your vCenter server FQDN or IP address
-* &quot;vsphere.name&quot; will be the name of the virtual machine that gets created
-* &quot;vsphere.clone<em>from</em>vm&quot; specifies we will be cloning a vm rather than template
-* &quot;vsphere.template_name&quot; is the name of the vm we will be cloning
-* &quot;vsphere.user&quot; is the username we will be using to connect to vCenter
-* &quot;sphere.password&quot; is the password we will be using to connect ot vCenter
-* &quot;vsphere.insecure&quot; tells vagrant to not worry about validating the certificate on the vCenter server</p>
+<p>In this configuration file:</p>
+
+<ul>
+<li>&quot;vsphere.host&quot; is your vCenter server FQDN or IP address</li>
+<li>&quot;vsphere.name&quot; will be the name of the virtual machine that gets created</li>
+<li>&quot;vsphere.clone<em>from</em>vm&quot; specifies we will be cloning a vm rather than template</li>
+<li>&quot;vsphere.template_name&quot; is the name of the vm we will be cloning</li>
+<li>&quot;vsphere.user&quot; is the username we will be using to connect to vCenter</li>
+<li>&quot;vsphere.password&quot; is the password we will be using to connect ot vCenter</li>
+<li>&quot;vsphere.insecure&quot; tells vagrant to not worry about validating the certificate on the vCenter server</li>
+</ul>
 
 <h3>9. Vargrant up!!!!</h3>
 
@@ -550,7 +553,7 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 <span class="o">==</span>&gt; default: Waiting <span class="k">for </span>SSH to become available...
 </code></pre></div>
 
-<p>You should see a &quot;Clone virtual machine&quot; task being run and then completing on your vCenter server.</p>
+<p>You should see a &quot;Clone virtual machine&quot; task being run on your vCenter server and then completing.</p>
 
 <h3>10. Canceling the &quot;Vagrant up&quot; command and destroying our cloned vm.</h3>
 
@@ -592,7 +595,7 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 
     <p>Vagrant, according to the <a href="http://docs.vagrantup.com/v2/why-vagrant/">documentation</a>, provides a &quot;disposable environment and consistent workflow for developing and testing infrastructure management scripts. You can quickly test things like shell scripts, Chef cookbooks, Puppet modules, and more using local virtualization such as VirtualBox or VMware. Then, with the same configuration, you can test these scripts on remote clouds such as AWS or RackSpace with the same workflow.&quot;</p>
 
-<p>I&#39;ve been trying to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The vCHS automation team has demonstrated using Vagant with VMware fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. </p>
+<p>I&#39;ve been wanting to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The vCHS automation team has demonstrated using Vagant with VMware fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. </p>
 
 <p>This will be the first of several blog posts in which I will cover:</p>
 
