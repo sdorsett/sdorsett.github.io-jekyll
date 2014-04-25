@@ -4,13 +4,126 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-04-24T22:47:24-05:00</updated>
+ <updated>2014-04-25T00:33:30-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Using advanced vagrant-vsphere provider settings and vCenter guest customization</title>
+   <link href="http://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization/"/>
+   <updated>2014-04-24T00:00:00-05:00</updated>
+   <id>http://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization</id>
+   <content type="html">&lt;p&gt;This post will pick up where we left off by demonstrating more vagrant-vsphere provider settings using the CentOS template we customized in the last blog post. Let&amp;#39;s get started:&lt;/p&gt;
+
+&lt;h3&gt;1. Create a new customization specification in the vSphere web client. This customization specification will allow us to set the hostname of the vm created by &amp;quot;vagrant up&amp;quot; to the same name as the virtual machine.&lt;/h3&gt;
+
+&lt;h4&gt;A. Go to Home | Customization Specification Manager:&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-web-client-home.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;B. Click the &amp;quot;Create a new specification&amp;quot; button:&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/02-create-guest-customization.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;C. Select &amp;quot;Linux&amp;quot; for the &amp;quot;Target VM Operating System&amp;quot; and name the customization specification. Click &amp;quot;Next&amp;quot; to continue&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/03-new-guest-customization.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;D. For &amp;quot;Computer Name&amp;quot; select &amp;quot;Use the virtual machine name&amp;quot; and click &amp;quot;Next&amp;quot; to continue.&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/04-set-computer-name.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;E. For &amp;quot;Time Zone&amp;quot; select the time zone you want to use and click &amp;quot;Next&amp;quot; to continue.&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/05-set-timezone.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;F. For &amp;quot;Configure Network&amp;quot; keep the default and click &amp;quot;Next to continue.&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/06-configure-network.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;G. For &amp;quot;Enter DNS and Domain settings&amp;quot; enter the DNS servers and the domain name you want to assign to the cloned vm. Click &amp;quot;Next to continue.&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/07-dns-settings.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;H. Click &amp;quot;Finish&amp;quot; to create the customization specification.&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08-finish.jpg&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h3&gt;2. Modify the Vagrantfile we created in the initial &amp;quot;&lt;a href=&quot;http://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x&lt;/a&gt;&amp;quot; post.&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+  config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
+  config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./example_box/dummy.box&amp;#39;&lt;/span&gt;
+
+  config.vm.provider :vsphere &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vsphere&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    vsphere.host &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.195&amp;#39;&lt;/span&gt;
+    vsphere.name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-test&amp;#39;&lt;/span&gt;
+    vsphere.clone_from_vm &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.template_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-centos-6.5&amp;#39;&lt;/span&gt;
+    vsphere.user &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root@localos&amp;#39;&lt;/span&gt;
+    vsphere.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;S0meR@nd0mP@ssw0rd&amp;#39;&lt;/span&gt;
+    vsphere.insecure &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.data_store_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsanDatastore&amp;#39;&lt;/span&gt;
+    vsphere.linked_clone &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.customization_spec_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-centos&amp;#39;&lt;/span&gt;
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The following new lines have been added:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;quot;vsphere.data_store_name&amp;quot; is the datastore that the cloned vm will be deployed to.&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.linked_clone&amp;quot; being set to &amp;quot;true&amp;quot; will cause the cloned vm to be deployed as a linked clone. This will dramatically decrease the amount of time needed to clone the vm when &amp;quot;vagrant up&amp;quot; command is issued.&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.customization_spec_name&amp;quot; will specify the customization specification that will be applied to the cloned vm. Set this to the customization specification we created in the previous step.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;3. Test the configuration changes we made by running a &amp;quot;vagrant up&amp;quot;:&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: vagrant-centos-6.5
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: New virtual machine successfully cloned and &lt;span class=&quot;nv&quot;&gt;started&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should find the time it took to deploy the linked clone vm was much faster than previous full clones of the vagrant template vm.&lt;/p&gt;
+
+&lt;h3&gt;4. Connect to the vagrant vm to validate the hostname of the vm matched the vm name &amp;amp; search domain:&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;hostname -f
+vagrant-test.mylab.net
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
+Connection to 192.168.1.117 closed.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;5. Clean up after ourselves and call it a day:&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You might be wondering why setting the hostname &amp;amp; domain name might be so important. We will see in future posts how to use hostnames to determine which manifests will be applied to specific vms we clone and power up with Vagrant.&lt;/p&gt;
+
+&lt;h3&gt;Hopefully you found this post helpful understanding more about the usefulness of customization specifications and advanced vagrant-vsphere configurations. The next blog post will start diving into using Vagrant to test Puppet manifests.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Creating a CentOS 6.x template that is customized for Vagrant</title>
@@ -230,7 +343,7 @@ Connection to 192.168.1.133 closed.
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of the rsync features of vagrant to run a specific puppet manifest on a vm deployed using vagrant.&lt;/h3&gt;
+&lt;h3&gt;Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of customization specifications and advanced Vagrantfile configurations on a vm deployed using vagrant.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>
@@ -504,6 +617,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagant and the vagrant-vsphere plugin on a CentOS 6.x virtual machine&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/20/vagrant-boxes/&quot;&gt;Creating a CentOS 6.x template that is customized for Vagrant&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization/&quot;&gt;Using advanced vagrant-vsphere provider settings and vCenter guest customization&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Defining a Puppet manifest that will automatically run when a template is deployed&lt;/li&gt;
 &lt;/ul&gt;
 
