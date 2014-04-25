@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-04-25T00:33:30-05:00</updated>
+ <updated>2014-04-25T00:36:47-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -553,7 +553,7 @@ end
 &lt;ul&gt;
 &lt;li&gt;&amp;quot;vsphere.host&amp;quot; is your vCenter server FQDN or IP address&lt;/li&gt;
 &lt;li&gt;&amp;quot;vsphere.name&amp;quot; will be the name of the virtual machine that gets created&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.clone&lt;em&gt;from&lt;/em&gt;vm&amp;quot; specifies we will be cloning a vm rather than template&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.clone_from_vm&amp;quot; specifies we will be cloning a vm rather than template&lt;/li&gt;
 &lt;li&gt;&amp;quot;vsphere.template_name&amp;quot; is the name of the vm we will be cloning&lt;/li&gt;
 &lt;li&gt;&amp;quot;vsphere.user&amp;quot; is the username we will be using to connect to vCenter&lt;/li&gt;
 &lt;li&gt;&amp;quot;vsphere.password&amp;quot; is the password we will be using to connect ot vCenter&lt;/li&gt;
