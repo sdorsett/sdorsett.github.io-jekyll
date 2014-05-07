@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-05-06T21:35:39-05:00</updated>
+ <updated>2014-05-06T21:41:15-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -29,7 +29,7 @@
 &lt;li&gt;2.pool.ntp.org&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h4&gt;A. First we should install tree, since it will help us visualize the directory structure of the puppet manifest directory we&amp;#39;ll be creating:&lt;/h4&gt;
+&lt;h4&gt;A. First we should install tree, since it will help us visualize the directory structure of the puppet manifest directories we will be creating:&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y tree&lt;/span&gt;
 Loaded plugins: fastestmirror
