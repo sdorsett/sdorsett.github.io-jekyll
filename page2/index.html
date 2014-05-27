@@ -10,7 +10,7 @@
 
   <title>
     
-      Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x &middot; sdorsett.github.io
+      sdorsett.github.io &middot; Things I find interesting
     
   </title>
 
@@ -42,7 +42,7 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a class="sidebar-nav-item" href="/">Home</a>
+    <a class="sidebar-nav-item active" href="/">Home</a>
 
     
 
@@ -100,10 +100,18 @@
       </div>
 
       <div class="container content">
-        <div class="post">
-  <h1 class="post-title">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</h1>
-  <span class="post-date">19 Apr 2014</span>
-  <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+        <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2014/04/19/vagrant-install/">
+        Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x
+      </a>
+    </h1>
+
+    <span class="post-date">19 Apr 2014</span>
+
+    <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
 
 <h3>1. Create a CentOS 6.x minimal virtual machine for installing Vagrant.</h3>
 
@@ -350,41 +358,47 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2014/04/16/vagrant-explained/">
+        Vagrant and why it is useful in learning Puppet
+      </a>
+    </h1>
+
+    <span class="post-date">16 Apr 2014</span>
+
+    <p>Vagrant, according to the <a href="http://docs.vagrantup.com/v2/why-vagrant/">documentation</a>, provides a &quot;disposable environment and consistent workflow for developing and testing infrastructure management scripts. You can quickly test things like shell scripts, Chef cookbooks, Puppet modules, and more using local virtualization such as VirtualBox or VMware. Then, with the same configuration, you can test these scripts on remote clouds such as AWS or RackSpace with the same workflow.&quot;</p>
+
+<p>I&#39;ve been wanting to dedicate more time to working with Puppet and needed a better way to quickly test my manifests on a fresh system. The vCHS automation team has demonstrated using Vagant with VMware fusion, but I wanted to be able to use it in my homelab, natively with vSphere/ESXi. The vagrant-vsphere plugin provides the ability to use simple commands to deploy a vm/template, apply a specified manifest and even SSH to the freshly create vm. </p>
+
+<p>This will be the first of several blog posts in which I will cover:</p>
+
+<ul>
+<li><a href="https://sdorsett.github.io/2014/04/19/vagrant-install/">Installing Vagant and the vagrant-vsphere plugin on a CentOS 6.x virtual machine</a></li>
+<li><a href="https://sdorsett.github.io/2014/04/20/vagrant-boxes/">Creating a CentOS 6.x template that is customized for Vagrant</a></li>
+<li><a href="https://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization/">Using advanced vagrant-vsphere provider settings and vCenter guest customization</a></li>
+<li><a href="https://sdorsett.github.io/2014/05/06/vagrant-and-puppet/">Creating a Puppet manifest and integrating it with Vagrant</a> </li>
+</ul>
+
+<p>These posts will hopefully help you understand the steps necessary to get vagrant installed and working with a vSphere environment.</p>
+
+  </div>
+  
 </div>
 
-<div class="related">
-  <h2>Related Posts</h2>
-  <ul class="related-posts">
+<div class="pagination">
+  
+    <span class="pagination-item older">Older</span>
+  
+  
     
-      <li>
-        <h3>
-          <a href="/2014/05/26/vagrant-install/">
-            Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x
-            <small>26 May 2014</small>
-          </a>
-        </h3>
-      </li>
+      <a class="pagination-item newer" href="/">Newer</a>
     
-      <li>
-        <h3>
-          <a href="/2014/05/25/vagrant-vcloud/">
-            Introducing the vagrant-vcloud provider
-            <small>25 May 2014</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2014/05/06/vagrant-and-puppet/">
-            Creating a Puppet manifest and integrating it with Vagrant
-            <small>06 May 2014</small>
-          </a>
-        </h3>
-      </li>
-    
-  </ul>
+  
 </div>
+
 
       </div>
     </div>

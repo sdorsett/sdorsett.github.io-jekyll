@@ -4,13 +4,293 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-05-26T15:22:48-05:00</updated>
+ <updated>2014-05-26T21:32:50-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x</title>
+   <link href="http://sdorsett.github.io/2014/05/26/vagrant-install/"/>
+   <updated>2014-05-26T00:00:00-05:00</updated>
+   <id>http://sdorsett.github.io/2014/05/26/vagrant-install</id>
+   <content type="html">&lt;p&gt;In this post I&amp;#39;m setting out to explain how to create a CentOS 6.4 vm, from template, in vCHS (or a vCloud Director instance) and then install vagrant-vcloud on that. &lt;/p&gt;
+
+&lt;h3&gt;1. Create a CentOS 6.x minimal virtual machine from a template in a vCHS organization.&lt;/h3&gt;
+
+&lt;p&gt;I will demonstrate creating a new CentOS vm in vCHS using a template, but you could just as easily create a new CentOS virtual machine from scratch in vCloud Director.&lt;/p&gt;
+
+&lt;h4&gt;A. Log into vCHS using your credentials and click on your virtual datacenter.&lt;/h4&gt;
+
+&lt;h4&gt;B. Next click on the &amp;quot;Virtual Machines&amp;quot; tab and then click the &amp;quot;Deploy a Virtual Machine&amp;quot; button:&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-create-centos-64-vm.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;C. Select the &amp;quot;CentOS 6.4 64 Bit&amp;quot; template and click &amp;quot;Continue&amp;quot;&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/02-select-centos-64-template.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;D. Name the virtual machine and set the guest OS name of your new virtual machine. Click &amp;quot;Deploy This Virtual Machine&amp;quot;:&lt;/h4&gt;
+
+&lt;p&gt;I named my virtual machine and set the guest OS name both to &amp;quot;vagrant&amp;quot;, but you can change these to what ever you prefer.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/03-virtual-machine-resource-settings.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;E. Power on and then click the name of the virtual machine you just created:&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/04-centos-vm-created.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;F. Click the &amp;quot;Launch Console&amp;quot; link to open the console of the virtual machine you just created.&lt;/h4&gt;
+
+&lt;p&gt;Notice that the guest OS password created by guest customization is displayed on the left. Log into the virtual machine, using &amp;quot;root&amp;quot; and the displayed password, then change this password immediately to something else:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/05-open-console-and-log-in.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h3&gt;2. Modify /etc/resolv.conf&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat /etc/resolv.conf&lt;/span&gt;
+nameserver 8.8.8.8 
+nameserver 8.8.4.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;3. Install Ruby 1.9.3 using ruby-build:&lt;/h3&gt;
+
+&lt;h4&gt;A. Use yum to install the packages we&amp;#39;ll need to get ruby, rubygems and vagrant installed:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Pull down the latest version of ruby-build using git:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Change to the directory the previous command created:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Run the &amp;#39;install.sh&amp;#39; script to install ruby-build:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. I would recommend installing Ruby version 1.9.3-p545 with the following command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/&lt;/span&gt;
+Downloading yaml-0.1.6.tar.gz...
+-&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
+Installing yaml-0.1.6...
+Installed yaml-0.1.6 to /usr/local/
+
+Downloading ruby-1.9.3-p545.tar.gz...
+-&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
+Installing ruby-1.9.3-p545...
+
+Installed ruby-1.9.3-p545 to /usr/local/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;4. Install rubygems by downloading the latest version from &lt;a href=&quot;https://rubygems.org/pages/download&quot;&gt;rubygems.org&lt;/a&gt; and install it:&lt;/h3&gt;
+
+&lt;h4&gt;A. Use wget to download the latest version listed on the rubygems download page:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Use tar to unzip the tar-gzipped file we downloaded:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar xvzf rubygems-2.2.2.tgz&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.2.2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Install rubygems by running the &amp;#39;setup.rb&amp;#39; script:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;5. Install Vagrant&lt;/h3&gt;
+
+&lt;h4&gt;A. Use wget to download the latest version listed on the &lt;a href=&quot;https://www.vagrantup.com/downloads.html&quot;&gt;Vagrant download&lt;/a&gt; page:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Use the &amp;#39;rpm&amp;#39; command to install the RPM package we downloaded in the previous step:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.6.2_x86_64.rpm&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Export the directory that the vagrant executable was install to, in order to make it easier to run:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=$PATH:/opt/vagrant/bin/&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;6. Installing the vagrant-vcloud plugin&lt;/h3&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant blog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vcloud&lt;/span&gt;
+Installing the &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud&amp;#39;&lt;/span&gt; plugin. This can take a few minutes...
+Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud (0.3.3)&amp;#39;&lt;/span&gt;!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;7. Creating a Vagrantfile for testing vagrant-vcloud install&lt;/h3&gt;
+
+&lt;h4&gt;A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by Timo Sugliani:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/precise32-test&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat ~/vagrant-vms/precise32-test/Vagrantfile &lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;precise32_vm_box_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;http://vagrant.tsugliani.fr/precise32.box&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;nodes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; :hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;test-vm&amp;quot;&lt;/span&gt;,  
+    :box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;precise32&amp;quot;&lt;/span&gt;, 
+    :box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; precise32_vm_box_url &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+
+  &lt;span class=&quot;c&quot;&gt;# vCloud Director provider settings&lt;/span&gt;
+  config.vm.provider :vcloud &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vcloud&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+
+    vcloud.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Youor_vCHS_vCloud_Director_API_URL]&amp;#39;&lt;/span&gt;
+    vcloud.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_username@somedomain.com]&amp;#39;&lt;/span&gt;
+    vcloud.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_password]&amp;#39;&lt;/span&gt;
+
+    vcloud.org_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_org_name]&amp;#39;&lt;/span&gt;
+    vcloud.vdc_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_vdc_name]&amp;#39;&lt;/span&gt;
+    vcloud.catalog_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_org_catalog]&amp;#39;&lt;/span&gt;
+    vcloud.network_bridge &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vcloud.vdc_network_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_vdc_network_name]&amp;#39;&lt;/span&gt;
+
+  end
+
+  nodes.each &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    config.vm.define node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node_config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+      node_config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box_url&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B.  Now we can change directory to that directory and test everything with a &amp;quot;vagrant up --provider=vcloud&amp;quot;:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar cvzf dummy.box ./metadata.json&lt;/span&gt;
+./metadata.json
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/example_box&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv dummy.box ~/vagrant-vms/example_box&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Vagrant reads it&amp;#39;s configuration from a file named Vagrantfile, located in the directory from which the &amp;quot;vagrant up&amp;quot; command is run in. We need to go back to our &amp;quot;vagrant-vms&amp;quot; folder and create this file:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. Modify the Vagrantfile to reflect your vsphere configuration. Here&amp;#39;s an example of my working Vagrantfile:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+
+Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+  config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
+  config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./example_box/dummy.box&amp;#39;&lt;/span&gt;
+
+  config.vm.provider :vsphere &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vsphere&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    vsphere.host &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcenter.mylab.net&amp;#39;&lt;/span&gt;
+    vsphere.name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-test&amp;#39;&lt;/span&gt;
+    vsphere.clone_from_vm &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.template_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Centos-6.5&amp;#39;&lt;/span&gt;
+    vsphere.user &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root@localos&amp;#39;&lt;/span&gt;
+    vsphere.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;S0meR@nd0mP@ssw0rd&amp;#39;&lt;/span&gt;
+    vsphere.insecure &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;  &lt;/span&gt;end
+end
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;In this configuration file:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;quot;vsphere.host&amp;quot; is your vCenter server FQDN or IP address&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.name&amp;quot; will be the name of the virtual machine that gets created&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.clone_from_vm&amp;quot; specifies we will be cloning a vm rather than template&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.template_name&amp;quot; is the name of the vm we will be cloning&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.user&amp;quot; is the username we will be using to connect to vCenter&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.password&amp;quot; is the password we will be using to connect ot vCenter&lt;/li&gt;
+&lt;li&gt;&amp;quot;vsphere.insecure&amp;quot; tells vagrant to not worry about validating the certificate on the vCenter server&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;9. Vargrant up!!!!&lt;/h3&gt;
+
+&lt;p&gt;If everything has gone correctly up to this point we can issue a &amp;quot;vagrant up --provider=vsphere&amp;quot; command from the directory that contains the Vagrantfile:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: CentOS-6.5
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should see a &amp;quot;Clone virtual machine&amp;quot; task being run on your vCenter server and then completing.&lt;/p&gt;
+
+&lt;h3&gt;10. Canceling the &amp;quot;Vagrant up&amp;quot; command and destroying our cloned vm.&lt;/h3&gt;
+
+&lt;p&gt;Since we have not properly prepared the vm we are cloning (I will have another blog post covering this topic) Vagrant will never be able to successfully connect to the cloned vm using SSH. As a result we will need to cancel the &amp;quot;vagrant up&amp;quot; command:&lt;/p&gt;
+
+&lt;h4&gt;A. Press [control-c] to attempt to gracefully exit &amp;quot;vagrant-up&amp;quot;&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;cleanup before exiting...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I&amp;#39;ve never seen this task complete so I will press [control-c] again to immediately exit:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Exiting immediately, without cleanup!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Destroy the cloned vm by running &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should see a &amp;quot;Power Off virtual machine&amp;quot; and &amp;quot;Delet virtual machine&amp;quot; tasks being run and then completing on your vCenter server.&lt;/p&gt;
+
+&lt;h3&gt;Hopefully you found this post helpful in getting vagrant and the vagrant-vsphere plugin installed and configured. The next blog post will be covering how to create a template vm that has been prepared for vagrant to connect seemlessly using SSH.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Introducing the vagrant-vcloud provider</title>
+   <link href="http://sdorsett.github.io/2014/05/25/vagrant-vcloud/"/>
+   <updated>2014-05-25T00:00:00-05:00</updated>
+   <id>http://sdorsett.github.io/2014/05/25/vagrant-vcloud</id>
+   <content type="html">&lt;p&gt;While continuing to explore what the vagrant-vsphere provider is capable of I came across the &lt;a href=&quot;https://github.com/frapposelli/vagrant-vcloud&quot;&gt;vagrant-vcloud&lt;/a&gt; provider, which had recently released a new version. I work for the vCHS operations group, so I figured it would be interesting to compare the feature differences of the vsphere &amp;amp; vcloud providers. &lt;/p&gt;
+
+&lt;p&gt;Over the next few blog posts I intend to cover the following vagrant-vcloud provider related topics:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagant and the vagrant-vcloud plugin on a CentOS 6.x virtual machine in vCloud Directory or vCHS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Creating a simple vagrant-vcloud Vagrantfile configuration to deploy a vm &lt;/li&gt;
+&lt;li&gt;Creating a more advanced vagrant-vcloud Vagrantfile configuration&lt;/li&gt;
+&lt;li&gt;Creating a CentOS 6.x .box that is customized for Vagrant and vcloud director&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These posts will hopefully explain the steps necessary to get vagrant-vcloud installed and working with a vCloud Director or vCHS environment.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Creating a Puppet manifest and integrating it with Vagrant</title>
