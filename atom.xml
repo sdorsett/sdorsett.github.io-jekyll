@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-05-26T21:32:50-05:00</updated>
+ <updated>2014-05-26T22:14:23-05:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -55,6 +55,8 @@
 nameserver 8.8.8.8 
 nameserver 8.8.4.4
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;At this point you should have network connectivity to your new vagrant vapp. While I won&amp;#39;t cover it in the post, you can now either setup a DNAT rule to forward SSH to the vagrant vapp or continue the configuration using the vapp console.&lt;/p&gt;
 
 &lt;h3&gt;3. Install Ruby 1.9.3 using ruby-build:&lt;/h3&gt;
 
@@ -139,7 +141,7 @@ Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud (0
 
 &lt;h3&gt;7. Creating a Vagrantfile for testing vagrant-vcloud install&lt;/h3&gt;
 
-&lt;h4&gt;A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by Timo Sugliani:&lt;/h4&gt;
+&lt;h4&gt;A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by &lt;a href=&quot;http://blog.tsugliani.fr/&quot;&gt;Timo Sugliani&lt;/a&gt;:&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/precise32-test&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat ~/vagrant-vms/precise32-test/Vagrantfile &lt;/span&gt;
@@ -156,7 +158,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
   &lt;span class=&quot;c&quot;&gt;# vCloud Director provider settings&lt;/span&gt;
   config.vm.provider :vcloud &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vcloud&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
 
-    vcloud.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Youor_vCHS_vCloud_Director_API_URL]&amp;#39;&lt;/span&gt;
+    vcloud.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;https://[Your_vCD_URL]:443&amp;#39;&lt;/span&gt;
     vcloud.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_username@somedomain.com]&amp;#39;&lt;/span&gt;
     vcloud.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_password]&amp;#39;&lt;/span&gt;
 
@@ -164,7 +166,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
     vcloud.vdc_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_vdc_name]&amp;#39;&lt;/span&gt;
     vcloud.catalog_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_org_catalog]&amp;#39;&lt;/span&gt;
     vcloud.network_bridge &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vcloud.vdc_network_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_vdc_network_name]&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vcloud.vdc_network_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;[Your_vCHS_vdc_name]-default-routed&amp;#39;&lt;/span&gt;
 
   end
 
@@ -178,95 +180,116 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
 end
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;B.  Now we can change directory to that directory and test everything with a &amp;quot;vagrant up --provider=vcloud&amp;quot;:&lt;/h4&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar cvzf dummy.box ./metadata.json&lt;/span&gt;
-./metadata.json
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h4&gt;C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files&lt;/h4&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/example_box&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv dummy.box ~/vagrant-vms/example_box&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h4&gt;D. Vagrant reads it&amp;#39;s configuration from a file named Vagrantfile, located in the directory from which the &amp;quot;vagrant up&amp;quot; command is run in. We need to go back to our &amp;quot;vagrant-vms&amp;quot; folder and create this file:&lt;/h4&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;h4&gt;E. Modify the Vagrantfile to reflect your vsphere configuration. Here&amp;#39;s an example of my working Vagrantfile:&lt;/h4&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
-
-Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
-  config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
-  config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./example_box/dummy.box&amp;#39;&lt;/span&gt;
-
-  config.vm.provider :vsphere &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vsphere&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
-    vsphere.host &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcenter.mylab.net&amp;#39;&lt;/span&gt;
-    vsphere.name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-test&amp;#39;&lt;/span&gt;
-    vsphere.clone_from_vm &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.template_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Centos-6.5&amp;#39;&lt;/span&gt;
-    vsphere.user &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root@localos&amp;#39;&lt;/span&gt;
-    vsphere.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;S0meR@nd0mP@ssw0rd&amp;#39;&lt;/span&gt;
-    vsphere.insecure &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;  &lt;/span&gt;end
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 &lt;p&gt;In this configuration file:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&amp;quot;vsphere.host&amp;quot; is your vCenter server FQDN or IP address&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.name&amp;quot; will be the name of the virtual machine that gets created&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.clone_from_vm&amp;quot; specifies we will be cloning a vm rather than template&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.template_name&amp;quot; is the name of the vm we will be cloning&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.user&amp;quot; is the username we will be using to connect to vCenter&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.password&amp;quot; is the password we will be using to connect ot vCenter&lt;/li&gt;
-&lt;li&gt;&amp;quot;vsphere.insecure&amp;quot; tells vagrant to not worry about validating the certificate on the vCenter server&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.hostname&amp;quot; is your vCloud Director FQDN or IP address. This should be the base URL and not by the specific URL for your org.&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.username&amp;quot; is the username we will be using to connect to vCHS or vCloud Director&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.password&amp;quot; is the password we will be using to connect to vCHS or vCloud Director&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.org_name&amp;quot; will be the name of your vCHS or vCloud Director organization&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.vdc_name&amp;quot; will be the name of your vCHS or vCloud Director virtual datacenter&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.catalog_name&amp;quot; will be the name of your organization catalog a template derived from the .box file will be created in&lt;/li&gt;
+&lt;li&gt;&amp;quot;vcloud.dc_network_name&amp;quot; is the organization network the vagrant vapp will be connected to&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3&gt;9. Vargrant up!!!!&lt;/h3&gt;
+&lt;h4&gt;B.  Now we can change directory to that directory and test everything with a &amp;quot;vagrant up --provider=vcloud&amp;quot;:&lt;/h4&gt;
 
-&lt;p&gt;If everything has gone correctly up to this point we can issue a &amp;quot;vagrant up --provider=vsphere&amp;quot; command from the directory that contains the Vagrantfile:&lt;/p&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
-Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: CentOS-6.5
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/precise32-test&lt;/span&gt;
+oot@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vcloud&lt;/span&gt;
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;test-vm&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcloud&amp;#39;&lt;/span&gt; provider...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; could not be found. Attempting to find and install...
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box Provider: vcloud
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box Version: &amp;gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Adding box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;provider: vcloud
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Downloading: http://vagrant.tsugliani.fr/precise32.box
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Successfully added box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcloud&amp;#39;&lt;/span&gt;!
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Catalog item &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; in Catalog &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Org Private Catalog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; does not exist!
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Would you like to upload the &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; box to &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Org Private Catalog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Catalog?
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Choice &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;yes/no&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: &lt;span class=&quot;nv&quot;&gt;yes&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Uploading &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;...
+Uploading Box...
+Uploading Box...
+Uploading Box... Progress: 22%  ETA: 00:02:16                                          
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;You should see a &amp;quot;Clone virtual machine&amp;quot; task being run on your vCenter server and then completing.&lt;/p&gt;
+&lt;p&gt;Once the .box files has started uploading, you can check the progress in the org catalog of your vCloud Director instance:&lt;/p&gt;
 
-&lt;h3&gt;10. Canceling the &amp;quot;Vagrant up&amp;quot; command and destroying our cloned vm.&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/06-precise32-upload.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Since we have not properly prepared the vm we are cloning (I will have another blog post covering this topic) Vagrant will never be able to successfully connect to the cloned vm using SSH. As a result we will need to cancel the &amp;quot;vagrant up&amp;quot; command:&lt;/p&gt;
+&lt;h4&gt;C. The uploading progress will get to 100% and you will see the vApp getting created, powered on and SSH access achieved:&lt;/h4&gt;
 
-&lt;h4&gt;A. Press [control-c] to attempt to gracefully exit &amp;quot;vagrant-up&amp;quot;&lt;/h4&gt;
-
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;cleanup before exiting...
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;Uploading Box...
+Uploading Box... Progress: 100% Time: 00:02:32                                                                                                   
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Adding &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; to Catalog &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Org Private Catalog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Building vApp...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Powering on VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# root@vagrant precise32-test]#&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;I&amp;#39;ve never seen this task complete so I will press [control-c] again to immediately exit:&lt;/p&gt;
+&lt;h4&gt;D. Test network connectivity by running &amp;quot;vagrant ssh&amp;quot;:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Exiting immediately, without cleanup!
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: External IP &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: 192.168.109.4
+Welcome to Ubuntu 12.04 LTS &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;GNU/Linux 3.2.0-23-generic-pae i686&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+ * Documentation:  https://help.ubuntu.com/
+Welcome to your Vagrant-built virtual machine.
+Last login: Thu Jul 18 11:20:25 2013
+vagrant@test-vm:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;hostname -f
+&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;B. Destroy the cloned vm by running &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
+&lt;h4&gt;E. Run &amp;quot;vagrant vcloud --status&amp;quot; to validate the vCloud Director status of your vagrant vapp:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --status&lt;/span&gt;
+Initializing vCloud Director provider...
+Fetching vCloud Director status...
++-------------------------------+-----------------------------------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  Vagrant vCloud Director Status : https://&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Your_vCD_URL&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;:443            &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++-------------------------------+-----------------------------------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Organization Name             &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Your_vCHS_org_name&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;                    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Organization vDC Name         &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; vCHS-vagrant-demo                       &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Organization vDC ID           &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; b9494d6a-ebda-4368-8f76-0e93b7edcb17    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Organization vDC Network Name &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Your_vCHS_vdc_name&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;-default-routed     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++-------------------------------+-----------------------------------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; vApp Name                     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Vagrant-root-vagrant-8b9115d1           &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; vAppID                        &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; ec918e84-6026-42b2-8639-5390d8c88b0c    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; -&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm                    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 4fc82b9b-c79d-483b-9a71-a87d22289102    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++-------------------------------+-----------------------------------------+
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;You should see a &amp;quot;Power Off virtual machine&amp;quot; and &amp;quot;Delet virtual machine&amp;quot; tasks being run and then completing on your vCenter server.&lt;/p&gt;
+&lt;h4&gt;F. Run &amp;quot;vagrant vcloud --network&amp;quot; to validate the vCloud Director network mapping of your vagrant vapp:&lt;/h4&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in getting vagrant and the vagrant-vsphere plugin installed and configured. The next blog post will be covering how to create a template vm that has been prepared for vagrant to connect seemlessly using SSH.&lt;/h3&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --network&lt;/span&gt;
+Initializing vCloud Director provider...
+Fetching vCloud Director network settings ...
++---------+---------------+------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;             Network Map              &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++---------+---------------+------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; VM Name &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; IP Address    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Connection &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++---------+---------------+------------+
+&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 192.168.109.4 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Direct     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
++---------+---------------+------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;g. Destroy the cloned vm by running &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Are you sure you want to destroy the &lt;span class=&quot;s1&quot;&gt;&amp;#39;test-vm&amp;#39;&lt;/span&gt; VM? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;y/N&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Powering off VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Single VM left in the vApp, Powering off vApp...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Destroying vApp...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should see &amp;quot;Power Off vapp&amp;quot; and &amp;quot;Delete vapp&amp;quot; tasks being run and then completing on your organizations vapps.&lt;/p&gt;
+
+&lt;h3&gt;Hopefully you found this post helpful in getting vagrant and the vagrant-cloud plugin installed and configured. The next blog post will be covering how to modify the Vagrantfile to create a vapp in a vCHS or vCloud Director instance that doesn&amp;#39;t contain the vagrant vm.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>
@@ -282,7 +305,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 &lt;p&gt;Over the next few blog posts I intend to cover the following vagrant-vcloud provider related topics:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagant and the vagrant-vcloud plugin on a CentOS 6.x virtual machine in vCloud Directory or vCHS&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2014/05/26/vagrant-install/&quot;&gt;Installing Vagant and the vagrant-vcloud plugin on a CentOS 6.x virtual machine in vCloud Directory or vCHS&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Creating a simple vagrant-vcloud Vagrantfile configuration to deploy a vm &lt;/li&gt;
 &lt;li&gt;Creating a more advanced vagrant-vcloud Vagrantfile configuration&lt;/li&gt;
 &lt;li&gt;Creating a CentOS 6.x .box that is customized for Vagrant and vcloud director&lt;/li&gt;
