@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-12-29T03:49:24+00:00</updated>
+ <updated>2014-12-29T04:03:56+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -28,7 +28,7 @@ This repo contains a packer post processor that leverages VMware OVF Tool to cre
 This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating pakcer templates on VMware products.&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2&gt;Let&amp;#39;s get started by installing packer.&lt;/h2&gt;
+&lt;h2&gt;1. Let&amp;#39;s get started by installing packer.&lt;/h2&gt;
 
 &lt;h4&gt;A.  Download packer from the following link:&lt;/h4&gt;
 
@@ -42,13 +42,13 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 &lt;h4&gt;D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots&lt;/h4&gt;
 
-&lt;h2&gt;Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.&lt;/h2&gt;
+&lt;h2&gt;2. Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.&lt;/h2&gt;
 
 &lt;h4&gt;A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.0-1274719-mac.x64.dmg is what I used.&lt;/h4&gt;
 
 &lt;h4&gt;B. Verify ovftool is succesfully added to your path by running &amp;quot;ovftool -v&amp;quot;. This command should output the version of ovftool we installed.&lt;/h4&gt;
 
-&lt;h2&gt;Now we can download and install the gosddc packer componants we will need.&lt;/h2&gt;
+&lt;h2&gt;3. Now we can download and install the gosddc packer componants we will need.&lt;/h2&gt;
 
 &lt;h4&gt;A. Download the most recent version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:&lt;/h4&gt;
 
@@ -66,7 +66,7 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git clone https://github.com/gosddc/packer-templates.git
 &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;packer-templates&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h2&gt;Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.&lt;/h2&gt;
+&lt;h2&gt;4. Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.&lt;/h2&gt;
 
 &lt;h4&gt;A. create an &amp;quot;iso&amp;quot; directory for storing the ESXi iso files:&lt;/h4&gt;
 
@@ -74,7 +74,7 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 &lt;h4&gt;B. Download and copy the &amp;quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot; ESXi 5.5 installer to the iso directory.&lt;/h4&gt;
 
-&lt;h2&gt;Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.&lt;/h2&gt;
+&lt;h2&gt;5. Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.&lt;/h2&gt;
 
 &lt;h4&gt;A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:&lt;/h4&gt;
 
