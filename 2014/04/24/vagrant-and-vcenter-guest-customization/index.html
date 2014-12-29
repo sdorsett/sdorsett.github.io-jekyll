@@ -54,14 +54,14 @@
     
       
         
-      
-    
-      
-        
           <a class="sidebar-nav-item" href="/about/">About</a>
         
       
     
+      
+    
+      
+        
       
     
       
@@ -141,7 +141,7 @@
 
 <h3>2. Modify the Vagrantfile we created in the initial &quot;<a href="http://sdorsett.github.io/2014/04/19/vagrant-install/">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</a>&quot; post.</h3>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
 Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
   config.vm.box <span class="o">=</span> <span class="s1">&#39;dummy&#39;</span>
   config.vm.box_url <span class="o">=</span> <span class="s1">&#39;./example_box/dummy.box&#39;</span>
@@ -158,8 +158,7 @@ Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><s
     vsphere.linked_clone <span class="o">=</span> <span class="nb">true</span>
 <span class="nb">    </span>vsphere.customization_spec_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos&#39;</span>
   end
-end
-</code></pre></div>
+end</code></pre></div>
 
 <p>The following new lines have been added:</p>
 
@@ -171,37 +170,34 @@ end
 
 <h3>3. Test the configuration changes we made by running a &quot;vagrant up&quot;:</h3>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
 Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
 <span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
 <span class="o">==</span>&gt; default:  -- Source VM: vagrant-centos-6.5
 <span class="o">==</span>&gt; default:  -- Name: vagrant-test
-<span class="o">==</span>&gt; default: Waiting <span class="k">for </span>SSH to become available...
+<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...
 <span class="o">==</span>&gt; default: New virtual machine successfully cloned and <span class="nv">started</span>
 <span class="o">==</span>&gt; default: Rsyncing folder: /root/vagrant-vms/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># </span>
-</code></pre></div>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
 
 <p>You should find the time it took to deploy the linked clone vm was much faster than previous full clones of the vagrant template vm.</p>
 
 <h3>4. Connect to the vagrant vm to validate the hostname of the vm matched the vm name &amp; search domain:</h3>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant ssh</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant ssh</span>
 <span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span><span class="nv">$ </span>hostname -f
 vagrant-test.mylab.net
 <span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span><span class="nv">$ </span><span class="nb">exit</span>
 <span class="nb">logout</span>
 Connection to 192.168.1.117 closed.
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># </span>
-</code></pre></div>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
 
 <h3>5. Clean up after ourselves and call it a day:</h3>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
 <span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
 <span class="o">==</span>&gt; default: Calling vShpere Destroy
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span>
-</code></pre></div>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
 
 <p>You might be wondering why setting the hostname &amp; domain name might be so important. We will see in future posts how to use hostnames to determine which manifests will be applied to specific vms we clone and power up with Vagrant.</p>
 
@@ -217,6 +213,15 @@ Connection to 192.168.1.117 closed.
     
       <li>
         <h3>
+          <a href="/2014/12/28/getting-packer-installed-on-OS-X/">
+            Using packer on OS X to create a ESXi .box template for vagrant deployment
+            <small>28 Dec 2014</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
           <a href="/2014/05/26/vagrant-install/">
             Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x
             <small>26 May 2014</small>
@@ -229,15 +234,6 @@ Connection to 192.168.1.117 closed.
           <a href="/2014/05/25/vagrant-vcloud/">
             Introducing the vagrant-vcloud provider
             <small>25 May 2014</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2014/05/06/vagrant-and-puppet/">
-            Creating a Puppet manifest and integrating it with Vagrant
-            <small>06 May 2014</small>
           </a>
         </h3>
       </li>
