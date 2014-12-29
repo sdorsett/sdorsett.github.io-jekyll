@@ -221,6 +221,26 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
   <span class="o">]</span>
 <span class="o">}</span></code></pre></div>
 
+<p>There are several things I would like to point out in the esxi.json file we just created.</p>
+
+<ol>
+<li>builder - this sesion specifies that we will be using the &quot;vmware-iso&quot; builder, with VMware fusion, to create our packer template. We can modify attributes of our template virtual machine in this seciton:
+
+<ul>
+<li>disk size ( disk_size)</li>
+<li>memory ( memsize )</li>
+<li>vCPU count ( numvcpus )</li>
+</ul></li>
+<li>provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:
+
+<ul>
+<li>a file provisioner that will copy the vagrant public ssh key into our ESXi template</li>
+<li>a shell script to install the vmware tools VIB for nested ESXi</li>
+<li>a shell script to make necessary MAC address changes in our nested ESXi template.</li>
+</ul></li>
+<li>post-processors - this final section will convert the virtual machine artifact generated in VMware fusion into a vmware-ovf .box file we can use with vagrant</li>
+</ol>
+
 <h4>B. Validate the packer esxi.json file is ready for building by running the following command:</h4>
 
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">packer validate templates/esxi.json

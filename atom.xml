@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-12-29T04:03:56+00:00</updated>
+ <updated>2014-12-29T04:19:17+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -134,6 +134,26 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;There are several things I would like to point out in the esxi.json file we just created.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;builder - this sesion specifies that we will be using the &amp;quot;vmware-iso&amp;quot; builder, with VMware fusion, to create our packer template. We can modify attributes of our template virtual machine in this seciton:
+
+&lt;ul&gt;
+&lt;li&gt;disk size ( disk_size)&lt;/li&gt;
+&lt;li&gt;memory ( memsize )&lt;/li&gt;
+&lt;li&gt;vCPU count ( numvcpus )&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:
+
+&lt;ul&gt;
+&lt;li&gt;a file provisioner that will copy the vagrant public ssh key into our ESXi template&lt;/li&gt;
+&lt;li&gt;a shell script to install the vmware tools VIB for nested ESXi&lt;/li&gt;
+&lt;li&gt;a shell script to make necessary MAC address changes in our nested ESXi template.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;post-processors - this final section will convert the virtual machine artifact generated in VMware fusion into a vmware-ovf .box file we can use with vagrant&lt;/li&gt;
+&lt;/ol&gt;
 
 &lt;h4&gt;B. Validate the packer esxi.json file is ready for building by running the following command:&lt;/h4&gt;
 
