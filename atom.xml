@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-05-26T22:14:23-05:00</updated>
+ <updated>2014-12-29T03:49:24+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -13,9 +13,149 @@
 
  
  <entry>
+   <title>Using packer on OS X to create a ESXi .box template for vagrant deployment</title>
+   <link href="http://sdorsett.github.io/2014/12/28/getting-packer-installed-on-OS-X/"/>
+   <updated>2014-12-28T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2014/12/28/getting-packer-installed-on-OS-X</id>
+   <content type="html">&lt;p&gt;I&amp;#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and centos in a future post.&lt;/p&gt;
+
+&lt;p&gt;Several github projects by gosddc have helped me in getting packer up and running on my Macbook:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf&quot;&gt;gosddc/packer-post-processor-vagrant-vmware-ovf&lt;/a&gt;.
+This repo contains a packer post processor that leverages VMware OVF Tool to create a vmware_ovf Vagrant box that is compatible with vagrant-vcloud, vagrant-vcenter and vagrant-vcloudair vagrant providers. It is only compatible with the packer VMware builder.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-templates&quot;&gt;gosddc/packer-templates&lt;/a&gt;.
+This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating pakcer templates on VMware products.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Let&amp;#39;s get started by installing packer.&lt;/h2&gt;
+
+&lt;h4&gt;A.  Download packer from the following link:&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.packer.io/downloads.html&quot;&gt;https://www.packer.io/downloads.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;B.  Unzip the downloaded files to /usr/local/packer_7.5:&lt;/h4&gt;
+
+&lt;h4&gt;C.  Add /usr/local/packer_7.5 to your path by running the following command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;/usr/local/packer_7.5:$PATH&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots&lt;/h4&gt;
+
+&lt;h2&gt;Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.&lt;/h2&gt;
+
+&lt;h4&gt;A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.0-1274719-mac.x64.dmg is what I used.&lt;/h4&gt;
+
+&lt;h4&gt;B. Verify ovftool is succesfully added to your path by running &amp;quot;ovftool -v&amp;quot;. This command should output the version of ovftool we installed.&lt;/h4&gt;
+
+&lt;h2&gt;Now we can download and install the gosddc packer componants we will need.&lt;/h2&gt;
+
+&lt;h4&gt;A. Download the most recent version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&quot;&gt;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;B. Unzip packer-post-processor-vagrant-vmware-ovf and copy it to &amp;quot;usr/local/packer_7.5&amp;quot;. Ensure the permissions of this file match the other files in this directory.&lt;/h4&gt;
+
+&lt;h4&gt;C. Create a directory to contain the packer templates:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;mkdir ~/Documents/packer
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ~/Documents/packer/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h5&gt;D. Clone the gosddc packer-templates repository:&lt;/h5&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git clone https://github.com/gosddc/packer-templates.git
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;packer-templates&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.&lt;/h2&gt;
+
+&lt;h4&gt;A. create an &amp;quot;iso&amp;quot; directory for storing the ESXi iso files:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;mkdir ~/Documents/packer/packer-templates/isos&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Download and copy the &amp;quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot; ESXi 5.5 installer to the iso directory.&lt;/h4&gt;
+
+&lt;h2&gt;Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.&lt;/h2&gt;
+
+&lt;h4&gt;A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;variables&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&amp;quot;version&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;1.0&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;builders&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vm_name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmdk_name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55-disk0&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmware-iso&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;headless&amp;quot;&lt;/span&gt;: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;disk_size&amp;quot;&lt;/span&gt;: 4096,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;guest_os_type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmkernel5&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_url&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_checksum&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;ef599dc7e647177027684c0eee346ccdbc8704f2&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_checksum_type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;sha1&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_username&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;root&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_password&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_wait_timeout&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;60m&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;shutdown_command&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxcli system maintenanceMode set -e true -t 0 ; esxcli system shutdown poweroff -d 10 -r &amp;#39;Packer Shutdown&amp;#39; ; esxcli system maintenanceMode set -e false -t 0&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;http_directory&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;.&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;boot_wait&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;5s&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmx_data&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;memsize&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;4096&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;numvcpus&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;vhv.enable&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;boot_command&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;lt;enter&amp;gt;&amp;lt;wait&amp;gt;O&amp;lt;wait&amp;gt; ks=http://:/scripts/esxi-5-kickstart.cfg&amp;lt;enter&amp;gt;&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;provisioners&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;file&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;puppet/modules/vagrantbaseconfig/files/vagrant.pub&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;destination&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;/etc/ssh/keys-root/authorized_keys&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;shell&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;script&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;scripts/esxi-vmware-tools_install.sh&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;shell&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;script&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;scripts/esxi-cloning_configuration.sh&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;post-processors&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+   &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+     &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant-vmware-ovf&amp;quot;&lt;/span&gt;,
+     &lt;span class=&quot;s2&quot;&gt;&amp;quot;compression_level&amp;quot;&lt;/span&gt;: 9,
+     &lt;span class=&quot;s2&quot;&gt;&amp;quot;output&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;{{.BuildName}}-{{.Provider}}-{{user `version`}}.box&amp;quot;&lt;/span&gt;
+
+   &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Validate the packer esxi.json file is ready for building by running the following command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;packer validate templates/esxi.json
+Template validated successfully.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Start the build by running:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;packer build templates/esxi.json&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. As long as you encounter no errors, you should end up with a &amp;quot;esxi55-vmware_ovf-1.0.box&amp;quot; file in the same directory you ran the &amp;quot;packer buid&amp;quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.&lt;/h4&gt;
+
+&lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed and configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
+ 
+ <entry>
    <title>Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x</title>
    <link href="http://sdorsett.github.io/2014/05/26/vagrant-install/"/>
-   <updated>2014-05-26T00:00:00-05:00</updated>
+   <updated>2014-05-26T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/05/26/vagrant-install</id>
    <content type="html">&lt;p&gt;In this post I&amp;#39;m setting out to explain how to create a CentOS 6.4 vm, from template, in vCHS (or a vCloud Director instance) and then install vagrant-vcloud on that. &lt;/p&gt;
 
@@ -51,10 +191,9 @@
 
 &lt;h3&gt;2. Modify /etc/resolv.conf&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat /etc/resolv.conf&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat /etc/resolv.conf&lt;/span&gt;
 nameserver 8.8.8.8 
-nameserver 8.8.4.4
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+nameserver 8.8.4.4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;At this point you should have network connectivity to your new vagrant vapp. While I won&amp;#39;t cover it in the post, you can now either setup a DNAT rule to forward SSH to the vagrant vapp or continue the configuration using the vapp console.&lt;/p&gt;
 
@@ -62,27 +201,23 @@ nameserver 8.8.4.4
 
 &lt;h4&gt;A. Use yum to install the packages we&amp;#39;ll need to get ruby, rubygems and vagrant installed:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Pull down the latest version of ruby-build using git:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Change to the directory the previous command created:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Run the &amp;#39;install.sh&amp;#39; script to install ruby-build:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. I would recommend installing Ruby version 1.9.3-p545 with the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/&lt;/span&gt;
 Downloading yaml-0.1.6.tar.gz...
 -&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
 Installing yaml-0.1.6...
@@ -92,58 +227,50 @@ Downloading ruby-1.9.3-p545.tar.gz...
 -&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
 Installing ruby-1.9.3-p545...
 
-Installed ruby-1.9.3-p545 to /usr/local/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+Installed ruby-1.9.3-p545 to /usr/local/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;4. Install rubygems by downloading the latest version from &lt;a href=&quot;https://rubygems.org/pages/download&quot;&gt;rubygems.org&lt;/a&gt; and install it:&lt;/h3&gt;
 
 &lt;h4&gt;A. Use wget to download the latest version listed on the rubygems download page:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Use tar to unzip the tar-gzipped file we downloaded:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar xvzf rubygems-2.2.2.tgz&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.2.2&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar xvzf rubygems-2.2.2.tgz&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.2.2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Install rubygems by running the &amp;#39;setup.rb&amp;#39; script:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;5. Install Vagrant&lt;/h3&gt;
 
 &lt;h4&gt;A. Use wget to download the latest version listed on the &lt;a href=&quot;https://www.vagrantup.com/downloads.html&quot;&gt;Vagrant download&lt;/a&gt; page:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Use the &amp;#39;rpm&amp;#39; command to install the RPM package we downloaded in the previous step:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.6.2_x86_64.rpm&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.6.2_x86_64.rpm&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Export the directory that the vagrant executable was install to, in order to make it easier to run:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=$PATH:/opt/vagrant/bin/&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=$PATH:/opt/vagrant/bin/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;6. Installing the vagrant-vcloud plugin&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant blog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vcloud&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant blog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vcloud&lt;/span&gt;
 Installing the &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud&amp;#39;&lt;/span&gt; plugin. This can take a few minutes...
-Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud (0.3.3)&amp;#39;&lt;/span&gt;!
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcloud (0.3.3)&amp;#39;&lt;/span&gt;!&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;7. Creating a Vagrantfile for testing vagrant-vcloud install&lt;/h3&gt;
 
 &lt;h4&gt;A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by &lt;a href=&quot;http://blog.tsugliani.fr/&quot;&gt;Timo Sugliani&lt;/a&gt;:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/precise32-test&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/precise32-test&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat ~/vagrant-vms/precise32-test/Vagrantfile &lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;precise32_vm_box_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;http://vagrant.tsugliani.fr/precise32.box&amp;quot;&lt;/span&gt;
 
@@ -177,8 +304,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
       node_config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box_url&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
     end
   end
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;In this configuration file:&lt;/p&gt;
 
@@ -194,13 +320,13 @@ end
 
 &lt;h4&gt;B.  Now we can change directory to that directory and test everything with a &amp;quot;vagrant up --provider=vcloud&amp;quot;:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/precise32-test&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/precise32-test&lt;/span&gt;
 oot@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vcloud&lt;/span&gt;
 Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;test-vm&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcloud&amp;#39;&lt;/span&gt; provider...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; could not be found. Attempting to find and install...
     &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box Provider: vcloud
     &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Box Version: &amp;gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Adding box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;provider: vcloud
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Adding box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; provider: vcloud
     &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Downloading: http://vagrant.tsugliani.fr/precise32.box
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Successfully added box &lt;span class=&quot;s1&quot;&gt;&amp;#39;precise32&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcloud&amp;#39;&lt;/span&gt;!
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Catalog item &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; in Catalog &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Org Private Catalog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; does not exist!
@@ -209,8 +335,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;test-vm&amp;#39;&lt;/
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Uploading &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;...
 Uploading Box...
 Uploading Box...
-Uploading Box... Progress: 22%  ETA: 00:02:16                                          
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+Uploading Box... Progress: 22%  ETA: 00:02:16&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Once the .box files has started uploading, you can check the progress in the org catalog of your vCloud Director instance:&lt;/p&gt;
 
@@ -218,35 +343,33 @@ Uploading Box... Progress: 22%  ETA: 00:02:16
 
 &lt;h4&gt;C. The uploading progress will get to 100% and you will see the vApp getting created, powered on and SSH access achieved:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;Uploading Box...
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;Uploading Box...
 Uploading Box... Progress: 100% Time: 00:02:32                                                                                                   
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Adding &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;precise32&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; to Catalog &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Org Private Catalog&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Building vApp...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Powering on VM...
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH Access on 192.168.109.4:22 ... 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH Access on 192.168.109.4:22 ... 
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# root@vagrant precise32-test]#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# root@vagrant precise32-test]#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Test network connectivity by running &amp;quot;vagrant ssh&amp;quot;:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: External IP &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: 192.168.109.4
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: External IP &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: 192.168.109.4
 Welcome to Ubuntu 12.04 LTS &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;GNU/Linux 3.2.0-23-generic-pae i686&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
 
  * Documentation:  https://help.ubuntu.com/
 Welcome to your Vagrant-built virtual machine.
-Last login: Thu Jul 18 11:20:25 2013
+Last login: Thu Jul &lt;span class=&quot;m&quot;&gt;18&lt;/span&gt; 11:20:25 2013
 vagrant@test-vm:~&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;hostname -f
-&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. Run &amp;quot;vagrant vcloud --status&amp;quot; to validate the vCloud Director status of your vagrant vapp:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --status&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --status&lt;/span&gt;
 Initializing vCloud Director provider...
 Fetching vCloud Director status...
 +-------------------------------+-----------------------------------------+
@@ -260,12 +383,11 @@ Fetching vCloud Director status...
 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; vApp Name                     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Vagrant-root-vagrant-8b9115d1           &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; vAppID                        &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; ec918e84-6026-42b2-8639-5390d8c88b0c    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; -&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm                    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 4fc82b9b-c79d-483b-9a71-a87d22289102    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
-+-------------------------------+-----------------------------------------+
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
++-------------------------------+-----------------------------------------+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;F. Run &amp;quot;vagrant vcloud --network&amp;quot; to validate the vCloud Director network mapping of your vagrant vapp:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --network&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant vcloud --network&lt;/span&gt;
 Initializing vCloud Director provider...
 Fetching vCloud Director network settings ...
 +---------+---------------+------------+
@@ -274,18 +396,16 @@ Fetching vCloud Director network settings ...
 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; VM Name &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; IP Address    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Connection &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
 +---------+---------------+------------+
 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 192.168.109.4 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; Direct     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
-+---------+---------------+------------+
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
++---------+---------------+------------+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;g. Destroy the cloned vm by running &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
     &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Are you sure you want to destroy the &lt;span class=&quot;s1&quot;&gt;&amp;#39;test-vm&amp;#39;&lt;/span&gt; VM? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;y/N&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Powering off VM...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Single VM left in the vApp, Powering off vApp...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; &lt;span class=&quot;nb&quot;&gt;test&lt;/span&gt;-vm: Destroying vApp...
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant precise32-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You should see &amp;quot;Power Off vapp&amp;quot; and &amp;quot;Delete vapp&amp;quot; tasks being run and then completing on your organizations vapps.&lt;/p&gt;
 
@@ -298,7 +418,7 @@ Fetching vCloud Director network settings ...
  <entry>
    <title>Introducing the vagrant-vcloud provider</title>
    <link href="http://sdorsett.github.io/2014/05/25/vagrant-vcloud/"/>
-   <updated>2014-05-25T00:00:00-05:00</updated>
+   <updated>2014-05-25T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/05/25/vagrant-vcloud</id>
    <content type="html">&lt;p&gt;While continuing to explore what the vagrant-vsphere provider is capable of I came across the &lt;a href=&quot;https://github.com/frapposelli/vagrant-vcloud&quot;&gt;vagrant-vcloud&lt;/a&gt; provider, which had recently released a new version. I work for the vCHS operations group, so I figured it would be interesting to compare the feature differences of the vsphere &amp;amp; vcloud providers. &lt;/p&gt;
 
@@ -318,7 +438,7 @@ Fetching vCloud Director network settings ...
  <entry>
    <title>Creating a Puppet manifest and integrating it with Vagrant</title>
    <link href="http://sdorsett.github.io/2014/05/06/vagrant-and-puppet/"/>
-   <updated>2014-05-06T00:00:00-05:00</updated>
+   <updated>2014-05-06T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/05/06/vagrant-and-puppet</id>
    <content type="html">&lt;p&gt;This post will cover configuring Vagrant to automatically run a Puppet manifest on the vm created by &amp;quot;vagrant up.&amp;quot; This capability allows you to test your Puppet manifests, make changes and test again, all quickly and easily. Let&amp;#39;s get started:&lt;/p&gt;
 
@@ -334,7 +454,7 @@ Fetching vCloud Director network settings ...
 
 &lt;h4&gt;A. First we should install tree, since it will help us visualize the directory structure of the puppet manifest directories we will be creating:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y tree&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y tree&lt;/span&gt;
 Loaded plugins: fastestmirror
 Loading mirror speeds from cached hostfile
  * base: mirrors.centarra.com
@@ -353,16 +473,16 @@ Dependencies &lt;span class=&quot;nv&quot;&gt;Resolved&lt;/span&gt;
  Package      Arch           Version             Repository    &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;====================================================================&lt;/span&gt;
 Installing:
- tree         x86_64         1.5.3-2.el6         base          36 k
+ tree         x86_64         1.5.3-2.el6         base          &lt;span class=&quot;m&quot;&gt;36&lt;/span&gt; k
 
 Transaction &lt;span class=&quot;nv&quot;&gt;Summary&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;====================================================================&lt;/span&gt;
-Install       1 Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Install       &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
 
-Total download size: 36 k
-Installed size: 65 k
+Total download size: &lt;span class=&quot;m&quot;&gt;36&lt;/span&gt; k
+Installed size: &lt;span class=&quot;m&quot;&gt;65&lt;/span&gt; k
 Downloading Packages:
-tree-1.5.3-2.el6.x86_64.rpm                    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  36 kB     00:00     
+tree-1.5.3-2.el6.x86_64.rpm                    &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;36&lt;/span&gt; kB     00:00     
 Running rpm_check_debug
 Running Transaction Test
 Transaction Test Succeeded
@@ -374,25 +494,23 @@ Installed:
   tree.x86_64 0:1.5.3-2.el6                                           
 
 Complete!
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Change to the directory that contains the Vagrantfile &amp;amp; example_box directory we&amp;#39;ve been working in over the last few blog posts:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tree&lt;/span&gt;
 .
 ├── example_box
 │   └── dummy.box
 └── Vagrantfile
 
-1 directory, 2 files
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#  &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; directory, &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; files
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Create the following modules &amp;amp; manifests directory structure for our Puppet manifest files:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p {manifests,modules/ntp/manifests,modules/ntp/templates,modules/common/manifests}&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p {manifests,modules/ntp/manifests,modules/ntp/templates,modules/common/manifests}&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tree&lt;/span&gt;
 .
 ├── example_box
@@ -406,25 +524,23 @@ Complete!
 │       └── templates
 └── Vagrantfile
 
-8 directories, 2 files
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;m&quot;&gt;8&lt;/span&gt; directories, &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; files
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Create manifests/site.pp with the following contents:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi manifests/site.pp&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi manifests/site.pp&lt;/span&gt;
 node default &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
   include common
     class &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;ntp&amp;#39;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This is the Puppet manifest that we will configure Vagrent to run automatically. The &amp;quot;node default&amp;quot; section will be applied by any hostname that runs this manifest. The &amp;quot;node default&amp;quot; section calls the common &amp;amp; ntp modules which we will create next.&lt;/p&gt;
 
 &lt;h4&gt;E. Create modules/common/manifests/init.pp with the following contents:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat modules/common/manifests/init.pp&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat modules/common/manifests/init.pp&lt;/span&gt;
 class common &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
   include common::data
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
@@ -432,14 +548,13 @@ class common &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
 class common::data &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nv&quot;&gt;$ntpServerList&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;0.pool.ntp.org&amp;#39;&lt;/span&gt;,&lt;span class=&quot;s1&quot;&gt;&amp;#39;1.pool.ntp.org&amp;#39;&lt;/span&gt;,&lt;span class=&quot;s1&quot;&gt;&amp;#39;2.pool.ntp.org&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This manifest is what gets run when Puppets runs &amp;quot;include common&amp;quot; in the manifests/site.pp manifest. When this manifest is run it creates an array named &amp;quot;common::data::ntpServerList&amp;quot; containing the ntp servers we&amp;#39;re needing to have defined.&lt;/p&gt;
 
 &lt;h4&gt;F. Create modules/ntp/manifests/init.pp with the following contents:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat modules/ntp/manifests/init.pp&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat modules/ntp/manifests/init.pp&lt;/span&gt;
 class ntp&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$ntpServerList&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$common&lt;/span&gt;::data::ntpServerList&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
   package &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ntp&amp;#39;&lt;/span&gt;:
   &lt;span class=&quot;nv&quot;&gt;ensure&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;present&amp;#39;&lt;/span&gt;,
@@ -458,14 +573,13 @@ class ntp&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;nv&
     &lt;span class=&quot;nv&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; Package&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;ntp&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,
   &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# service&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This manifest is what gets run when Puppet calls &amp;quot;class {&amp;#39;ntp&amp;#39;:}&amp;quot; in the manifests/site.pp manifest. When this manifest is run it will ensure the ntp package is installed, the file &amp;quot;/etc/ntp.conf&amp;quot; is created containing our list of ntp servers and the ntpd service is started.    &lt;/p&gt;
 
 &lt;h4&gt;G. Create modules/ntp/templates/client-ntp.conf.erb with the following contents:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;# This file is being maintained by Puppet.&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;# This file is being maintained by Puppet.&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# DO NOT EDIT&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# Permit time synchronization with our time source, but do not&lt;/span&gt;
@@ -488,21 +602,19 @@ server &amp;lt;%&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; ntpServer %&amp;g
 &lt;span class=&quot;c&quot;&gt;# by creating a temporary in the same directory and then rename()&amp;#39;ing&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# it to the file.&lt;/span&gt;
 driftfile /var/lib/ntp/drift
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This .erb file is a ruby template describing what the file /etc/ntp.conf should contain. The magic of this is the section:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&amp;lt;% ntpServerList.each &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;ntpServer&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; -%&amp;gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&amp;lt;% ntpServerList.each &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;ntpServer&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; -%&amp;gt;
 server &amp;lt;%&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; ntpServer %&amp;gt;
-&amp;lt;% end -%&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&amp;lt;% end -%&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This section is actually ruby code that runs a foreach loop on the array &amp;quot;ntpServerList&amp;quot; and adds a line for each ntp server contained in that array. &lt;/p&gt;
 
 &lt;h4&gt;H. Run the tree command and you should see the following file/directory structure:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tree&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tree&lt;/span&gt;
 .
 ├── example_box
 │   └── dummy.box
@@ -519,13 +631,12 @@ server &amp;lt;%&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; ntpServer %&amp;g
 │           └── client-ntp.conf.erb
 └── Vagrantfile
 
-8 directories, 6 files
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;m&quot;&gt;8&lt;/span&gt; directories, &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt; files
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;2. Modify the Vagrantfile we created in the last post to include the following:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
 Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
   config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
   config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./example_box/dummy.box&amp;#39;&lt;/span&gt;
@@ -548,8 +659,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
     puppet.module_path &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;modules&amp;quot;&lt;/span&gt;
   end
 end
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The following new lines have been added:&lt;/p&gt;
 
@@ -561,12 +671,12 @@ end
 
 &lt;h3&gt;3. Test the configuration changes we made by running a &amp;quot;vagrant up&amp;quot;:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
 Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: vagrant-centos-6.5
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: New virtual machine successfully cloned and &lt;span class=&quot;nv&quot;&gt;started&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /tmp/vagrant-puppet-1/manifests
@@ -574,10 +684,9 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Running provisioner: puppet...
 Running Puppet with site.pp...
 notice: /File&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/etc/ntp.conf&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/content: content changed &lt;span class=&quot;s1&quot;&gt;&amp;#39;{md5}d7e1e16f9c0cd6382f6b68b486163db1&amp;#39;&lt;/span&gt; to &lt;span class=&quot;s1&quot;&gt;&amp;#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&amp;#39;&lt;/span&gt;
-notice: /Stage&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/Ntp/Service&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ntpd&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: Triggered &lt;span class=&quot;s1&quot;&gt;&amp;#39;refresh&amp;#39;&lt;/span&gt; from 1 events
+notice: /Stage&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/Ntp/Service&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ntpd&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: Triggered &lt;span class=&quot;s1&quot;&gt;&amp;#39;refresh&amp;#39;&lt;/span&gt; from &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; events
 notice: Finished catalog run in 0.72 seconds
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You might notice a few new lines since the &amp;quot;vagrant up&amp;quot; we ran in the last post. &lt;/p&gt;
 
@@ -590,7 +699,7 @@ notice: Finished catalog run in 0.72 seconds
 
 &lt;h3&gt;4. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we specified:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cat /etc/ntp.conf
 &lt;span class=&quot;c&quot;&gt;# This file is being maintained by Puppet.&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# DO NOT EDIT&lt;/span&gt;
@@ -618,12 +727,11 @@ driftfile /var/lib/ntp/drift
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
 Connection to 192.168.1.123 closed.
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;5. Modify the site.pp file to add a node definition for our vagrant vm:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat site.pp&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat site.pp&lt;/span&gt;
 node default &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
   include common
     class &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;ntp&amp;#39;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
@@ -633,31 +741,29 @@ node &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-test.mylab.net&amp;#39;&l
     class &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;ntp&amp;#39;&lt;/span&gt;:
       &lt;span class=&quot;nv&quot;&gt;ntpServerList&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;3.pool.ntp.org&amp;#39;&lt;/span&gt;,&lt;span class=&quot;s1&quot;&gt;&amp;#39;4.pool.ntp.org&amp;#39;&lt;/span&gt;,&lt;span class=&quot;s1&quot;&gt;&amp;#39;5.pool.ntp.org&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The new &amp;quot;node &amp;#39;vagrant-test.mylab.net&amp;#39;&amp;quot; definition will only be run by hosts with a matching hostname. Any host that doesn&amp;#39;t have a matching host definition will continue to run the &amp;quot;node default&amp;quot; section. Node definitions allow you to change variables or even modules that will be run by specific hosts and provide flexibility in the changes made to a given host. Our new node section will configure &amp;quot;vagrant-test.mylab.net&amp;quot; to use a different set of ntp servers than any other host that runs this Puppet manifest  &lt;/p&gt;
 
 &lt;h3&gt;6. Run &amp;#39;vagrant provision&amp;#39; to apply the updated Puppet manifest to our Vagrant vm:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant provision&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant provision&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /tmp/vagrant-puppet-1/manifests
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/modules/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /tmp/vagrant-puppet-1/modules-0
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Running provisioner: puppet...
 Running Puppet with site.pp...
 notice: /File&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/etc/ntp.conf&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/content: content changed &lt;span class=&quot;s1&quot;&gt;&amp;#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&amp;#39;&lt;/span&gt; to &lt;span class=&quot;s1&quot;&gt;&amp;#39;{md5}414e811fdbfa3f8cfa38e1e4e6d0586f&amp;#39;&lt;/span&gt;
-notice: /Stage&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/Ntp/Service&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ntpd&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: Triggered &lt;span class=&quot;s1&quot;&gt;&amp;#39;refresh&amp;#39;&lt;/span&gt; from 1 events
+notice: /Stage&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;/Ntp/Service&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;ntpd&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: Triggered &lt;span class=&quot;s1&quot;&gt;&amp;#39;refresh&amp;#39;&lt;/span&gt; from &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; events
 notice: Finished catalog run in 0.34 seconds
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;While we could have destroyed and recreated our Vagrant vm to test the change to the Puppet manifest, &amp;#39;vagrant provision&amp;#39; quickly resyncs the folders defined in our Vagrantfile and re-runs our Puppet manifest.&lt;/p&gt;
 
 &lt;h3&gt;7. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we defined fof this specific node:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
-Last login: Tue May  6 15:09:50 2014 from 192.168.1.40
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+Last login: Tue May  &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt; 15:09:50 &lt;span class=&quot;m&quot;&gt;2014&lt;/span&gt; from 192.168.1.40
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cat /etc/ntp.conf
 &lt;span class=&quot;c&quot;&gt;# This file is being maintained by Puppet.&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# DO NOT EDIT&lt;/span&gt;
@@ -685,16 +791,14 @@ driftfile /var/lib/ntp/drift
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
 Connection to 192.168.1.123 closed.
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;8. Shutdown the vagrant machine:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;Hopefully you found this post helpful in demonstrating how to use Puppet with Vagrant, as well as the benefits it provides for testing Puppet manfests and modules&lt;/h3&gt;
 
@@ -705,7 +809,7 @@ Connection to 192.168.1.123 closed.
  <entry>
    <title>Using advanced vagrant-vsphere provider settings and vCenter guest customization</title>
    <link href="http://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization/"/>
-   <updated>2014-04-24T00:00:00-05:00</updated>
+   <updated>2014-04-24T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/04/24/vagrant-and-vcenter-guest-customization</id>
    <content type="html">&lt;p&gt;This post will pick up where we left off by demonstrating more vagrant-vsphere provider settings using the CentOS template we customized in the last blog post. Let&amp;#39;s get started:&lt;/p&gt;
 
@@ -745,7 +849,7 @@ Connection to 192.168.1.123 closed.
 
 &lt;h3&gt;2. Modify the Vagrantfile we created in the initial &amp;quot;&lt;a href=&quot;http://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x&lt;/a&gt;&amp;quot; post.&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
 Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
   config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
   config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;./example_box/dummy.box&amp;#39;&lt;/span&gt;
@@ -762,8 +866,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
     vsphere.linked_clone &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vsphere.customization_spec_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-centos&amp;#39;&lt;/span&gt;
   end
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The following new lines have been added:&lt;/p&gt;
 
@@ -775,37 +878,34 @@ end
 
 &lt;h3&gt;3. Test the configuration changes we made by running a &amp;quot;vagrant up&amp;quot;:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
 Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: vagrant-centos-6.5
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: New virtual machine successfully cloned and &lt;span class=&quot;nv&quot;&gt;started&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You should find the time it took to deploy the linked clone vm was much faster than previous full clones of the vagrant template vm.&lt;/p&gt;
 
 &lt;h3&gt;4. Connect to the vagrant vm to validate the hostname of the vm matched the vm name &amp;amp; search domain:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;hostname -f
 vagrant-test.mylab.net
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-test ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
 Connection to 192.168.1.117 closed.
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;5. Clean up after ourselves and call it a day:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You might be wondering why setting the hostname &amp;amp; domain name might be so important. We will see in future posts how to use hostnames to determine which manifests will be applied to specific vms we clone and power up with Vagrant.&lt;/p&gt;
 
@@ -818,7 +918,7 @@ Connection to 192.168.1.117 closed.
  <entry>
    <title>Creating a CentOS 6.x template that is customized for Vagrant</title>
    <link href="http://sdorsett.github.io/2014/04/20/vagrant-boxes/"/>
-   <updated>2014-04-20T00:00:00-05:00</updated>
+   <updated>2014-04-20T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/04/20/vagrant-boxes</id>
    <content type="html">&lt;p&gt;This post will continue our examination of using the vagrant-vsphere plugin, by customizing a CentOS template for integration with Vagrant. Having a Vagrant customize template will allow us to deploy this template and SSH to the cloned vm using the &amp;quot;vagrant ssh&amp;quot; command, as well automatically run puppet manifests when we deploy a vm using Vagrant. Let&amp;#39;s get started:&lt;/p&gt;
 
@@ -834,16 +934,14 @@ Connection to 192.168.1.117 closed.
 
 &lt;h4&gt;A. Import the EPEL 6 key and RPM:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-6&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-6&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -Kih http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;########################################### [100%]&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;########################################### [100%]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;c&quot;&gt;########################################### [100%]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Use yum to install ruby, wget, puppet, facter &amp;amp; rsync:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install ruby ruby-libs ruby-shad wget yum-priorities puppet facter rsync -y&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install ruby ruby-libs ruby-shad wget yum-priorities puppet facter rsync -y&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;5. Ensure you have vmtools installed on the new CentOS template.&lt;/h3&gt;
 
@@ -851,33 +949,28 @@ Connection to 192.168.1.117 closed.
 
 &lt;h4&gt;B. Create a directory to mount the virtual CDROM to with the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir /mnt/cdrom&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir /mnt/cdrom&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Mount the virtual CDROM to /mnt/cdrom with the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mount /dev/cdrom /mnt/cdrom&lt;/span&gt;
-mount: block device /dev/sr0 is write-protected, mounting &lt;span class=&quot;nb&quot;&gt;read&lt;/span&gt;-only
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mount /dev/cdrom /mnt/cdrom&lt;/span&gt;
+mount: block device /dev/sr0 is write-protected, mounting &lt;span class=&quot;nb&quot;&gt;read&lt;/span&gt;-only&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Copy the VMware Tools installer over to the /root directory and unzip it:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cp /mnt/cdrom/VMwareTools-* ~/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar -zxf ~/VMwareTools*&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cp /mnt/cdrom/VMwareTools-* ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar -zxf ~/VMwareTools*&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. Change directory into the directory we just untared and run the &amp;quot;vmware-install.pl&amp;quot; to start the installer:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vmware-tools-distrib/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 vmware-tools-distrib&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./vmware-install.pl&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vmware-tools-distrib/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 vmware-tools-distrib&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./vmware-install.pl&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed check the vm summary of this template vm in the vSphere client. The VMware Tools should show as &amp;quot;Running&amp;quot; and &amp;quot;Current.&amp;quot;&lt;/p&gt;
 
 &lt;h4&gt;F. Unmount the virtual CDROM using the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# umount /dev/cdrom&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# umount /dev/cdrom&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;6. We will next follow the steps for &lt;a href=&quot;https://docs.vagrantup.com/v2/boxes/base.html&quot;&gt;creating a base box&lt;/a&gt; from the Vagrant website.&lt;/h3&gt;
 
@@ -887,96 +980,84 @@ mount: block device /dev/sr0 is write-protected, mounting &lt;span class=&quot;n
 
 &lt;h4&gt;A. Add a new user named &amp;quot;vagrant&amp;quot; to the template.&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# useradd vagrant&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# useradd vagrant&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Change the password of the user &amp;quot;vagrant&amp;quot; to &amp;quot;vagrant&amp;quot;&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# [root@centos-6-5 ~]# passwd vagrant&lt;/span&gt;
-Changing password &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;user vagrant.
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# [root@centos-6-5 ~]# passwd vagrant&lt;/span&gt;
+Changing password &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; user vagrant.
 New password: &amp;lt;&lt;span class=&quot;nb&quot;&gt;type &lt;/span&gt;the word &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant&amp;quot;&lt;/span&gt;&amp;gt;
 BAD PASSWORD: it is based on a dictionary word
 BAD PASSWORD: is too simple
 Retype new password: &amp;lt;&lt;span class=&quot;nb&quot;&gt;type &lt;/span&gt;the word &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant&amp;quot;&lt;/span&gt; again&amp;gt;
-passwd: all authentication tokens updated successfully.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+passwd: all authentication tokens updated successfully.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. We will next need to copy the contents of the vagrant.pub file located at the &lt;a href=&quot;9https://github.com/mitchellh/vagrant/tree/master/keys&quot;&gt;vagrant github site&lt;/a&gt; into the /home/vagrant/.ssh/authorized_keys file.&lt;/h4&gt;
 
 &lt;p&gt;First we will su (switch user) to the vagrant user by running the following command:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# su vagrant&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 root&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# su vagrant&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 root&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Next we will create the .ssh directory since is does not exist:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 root&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir ~/.ssh
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 root&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir ~/.ssh
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 root&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ~/.ssh
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;pwd&lt;/span&gt;
-/home/vagrant/.ssh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+/home/vagrant/.ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;We will now create /home/vagrant/.ssh/authorized_keys with the contents of &lt;a href=&quot;https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub&quot;&gt;this file&lt;/a&gt; from the vagrant github page:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key&amp;#39;&lt;/span&gt; &amp;gt; ~/.ssh/authorized_keys
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key&amp;#39;&lt;/span&gt; &amp;gt; ~/.ssh/authorized_keys
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cat ~/.ssh/authorized_keys
-ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; vagrant insecure public key
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; vagrant insecure public key&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The vagrant website also mentions &amp;#39;that OpenSSH is very picky about file permissions. Therefore, make sure that ~/.ssh has 0700 permissions and the authorized keys file has 0600 permissions.&amp;#39; We will correct those permissions now:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ~/
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;chmod 700 ~/.ssh
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;chmod 600 ~/.ssh/authorized_keys
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 .ssh&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ~/
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;chmod &lt;span class=&quot;m&quot;&gt;700&lt;/span&gt; ~/.ssh
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;chmod &lt;span class=&quot;m&quot;&gt;600&lt;/span&gt; ~/.ssh/authorized_keys
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ls -la
 total 24
-drwx------. 3 vagrant vagrant 4096 Apr 20 14:22 .
-drwxr-xr-x. 3 root    root    4096 Apr 20 14:15 ..
--rw-r--r--. 1 vagrant vagrant   18 Jul 18  2013 .bash_logout
--rw-r--r--. 1 vagrant vagrant  176 Jul 18  2013 .bash_profile
--rw-r--r--. 1 vagrant vagrant  124 Jul 18  2013 .bashrc
-drwx------. 2 vagrant vagrant 4096 Apr 20 14:26 .ssh
+drwx------. &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; vagrant vagrant &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:22 .
+drwxr-xr-x. &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; root    root    &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:15 ..
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; vagrant vagrant   &lt;span class=&quot;m&quot;&gt;18&lt;/span&gt; Jul &lt;span class=&quot;m&quot;&gt;18&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;2013&lt;/span&gt; .bash_logout
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; vagrant vagrant  &lt;span class=&quot;m&quot;&gt;176&lt;/span&gt; Jul &lt;span class=&quot;m&quot;&gt;18&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;2013&lt;/span&gt; .bash_profile
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; vagrant vagrant  &lt;span class=&quot;m&quot;&gt;124&lt;/span&gt; Jul &lt;span class=&quot;m&quot;&gt;18&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;2013&lt;/span&gt; .bashrc
+drwx------. &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; vagrant vagrant &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:26 .ssh
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ls -la .ssh
 total 12
-drwx------. 2 vagrant vagrant 4096 Apr 20 14:26 .
-drwx------. 3 vagrant vagrant 4096 Apr 20 14:22 ..
--rw-------. 1 vagrant vagrant  409 Apr 20 14:26 authorized_keys
+drwx------. &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; vagrant vagrant &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:26 .
+drwx------. &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; vagrant vagrant &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:22 ..
+-rw-------. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; vagrant vagrant  &lt;span class=&quot;m&quot;&gt;409&lt;/span&gt; Apr &lt;span class=&quot;m&quot;&gt;20&lt;/span&gt; 14:26 authorized_keys
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. We will to edit the sudo file. Type the following command to open the sudo file in vi:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# visudo&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# visudo&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Locate the line containing:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;Defaults    requiretty
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;Defaults    requiretty&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;...and change it to read:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;# Defaults    requiretty&amp;#39;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;# Defaults    requiretty&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The # sign at the beginning of the line will cause this line to be ignored as a comment.
 We also need to add the following line at the bottom of the file:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;vagrant &lt;span class=&quot;nv&quot;&gt;ALL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=(&lt;/span&gt;ALL&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; NOPASSWD: ALL
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;vagrant &lt;span class=&quot;nv&quot;&gt;ALL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=(&lt;/span&gt;ALL&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; NOPASSWD: ALL&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. One more recommendation from the vagrant website is to edit /etc/ssh/sshd_config and change any line matching:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;UseDNS yes
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;UseDNS yes&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;to &lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;UseDNS no
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;UseDNS no&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This avoids a reverse DNS lookup on the connecting SSH client which can take many seconds.&lt;/p&gt;
 
@@ -984,30 +1065,27 @@ We also need to add the following line at the bottom of the file:&lt;/p&gt;
 
 &lt;h3&gt;8. We will now shutdown the template by running halt:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# halt&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# halt&lt;/span&gt;
 Broadcast message from root@centos-6-5
     &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;/dev/pts/1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; at 14:51 ...
-The system is going down &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;halt NOW!
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+The system is going down &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; halt NOW!&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;9. We now need to SSH to the vagrant vm that has the vagrant-vsphere plugin installed. This is the vm we created if you followed the &lt;a href=&quot;https://sdorsett.github.io/2014/04/19/vagrant-install/&quot;&gt;last blog post.&lt;/a&gt;&lt;/h3&gt;
 
 &lt;h4&gt;A. Edit the Vagrantfile we created to modify the following line to reflect the name you gave the new vagrant template we cloned or created in the steps above:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;vsphere.template_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-centos-6.5&amp;#39;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;vsphere.template_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-centos-6.5&amp;#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. We can test this new template by issuing the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
 Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: vagrant-centos-6.5
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: New virtual machine successfully cloned and &lt;span class=&quot;nv&quot;&gt;started&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Rsyncing folder: /root/vagrant-vms/ &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /vagrant&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Unlike our &amp;#39;vagrant up&amp;quot; command in the last post we have established a SSH session with the cloned template using the vagrant user we created and the public key in that users authorized_keys file.&lt;/p&gt;
 
@@ -1015,7 +1093,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 
 &lt;h4&gt;C. Using SSH to connect to the vagrant vm is as easy as &amp;#39;vagrant ssh&amp;#39;&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# hostname&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# hostname&lt;/span&gt;
 vagrant.mylab.net
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;hostname
@@ -1023,15 +1101,13 @@ vagrant-centos-6-5
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;vagrant@vagrant-centos-6-5 ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
 Connection to 192.168.1.133 closed.
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# &lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Finally we will power down and delete the cloned template by running the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of customization specifications and advanced Vagrantfile configurations on a vm deployed using vagrant.&lt;/h3&gt;
 
@@ -1042,7 +1118,7 @@ Connection to 192.168.1.133 closed.
  <entry>
    <title>Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</title>
    <link href="http://sdorsett.github.io/2014/04/19/vagrant-install/"/>
-   <updated>2014-04-19T00:00:00-05:00</updated>
+   <updated>2014-04-19T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/04/19/vagrant-install</id>
    <content type="html">&lt;p&gt;Some readers might find this post to be a little &amp;quot;in the weeds&amp;quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&amp;#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&amp;#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.&lt;/p&gt;
 
@@ -1054,7 +1130,7 @@ Connection to 192.168.1.133 closed.
 
 &lt;h3&gt;3. Modify /etc/sysconfig/network, /etc/sysconfig/network-scripts/ifcfg-eth0 &amp;amp; /etc/resolv.conf to reflect the network settings for your vagrant vm:&lt;/h3&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat /etc/sysconfig/network &lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat /etc/sysconfig/network &lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;NETWORKING&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;yes 
 &lt;span class=&quot;nv&quot;&gt;HOSTNAME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;vagrant.mylab.net 
 &lt;span class=&quot;nv&quot;&gt;GATEWAY&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;192.168.1.1 
@@ -1070,8 +1146,7 @@ Connection to 192.168.1.133 closed.
  search mylab.net 
 nameserver 192.168.1.1 
 nameserver 8.8.8.8 
-nameserver 8.8.4.4
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+nameserver 8.8.4.4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;4. Restart the vm for the hostname change to take affect&lt;/h3&gt;
 
@@ -1081,27 +1156,23 @@ nameserver 8.8.4.4
 
 &lt;h4&gt;A. Use yum to install the packages we&amp;#39;ll need to get ruby, rubygems and vagrant installed:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Pull down the latest version of ruby-build using git:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Change to the directory the previous command created:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Run the &amp;#39;install.sh&amp;#39; script to install ruby-build:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. I have not been successful in getting vagrant-vsphere to run on any version of ruby newer than 1.9.3-p545. As a result I would recommend installing that version with the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/&lt;/span&gt;
 Downloading yaml-0.1.6.tar.gz...
 -&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
 Installing yaml-0.1.6...
@@ -1111,83 +1182,73 @@ Downloading ruby-1.9.3-p545.tar.gz...
 -&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
 Installing ruby-1.9.3-p545...
 
-Installed ruby-1.9.3-p545 to /usr/local/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+Installed ruby-1.9.3-p545 to /usr/local/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;7. We will next need to install rubygems. The process I used was to download the latest version from &lt;a href=&quot;https://rubygems.org/pages/download&quot;&gt;rubygems.org&lt;/a&gt; and install it:&lt;/h3&gt;
 
 &lt;h4&gt;A. Use wget to download the latest version listed on the rubygems download page:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Use tar to unzip the tar-gzipped file we downloaded:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar xvzf rubygems-2.2.2.tgz&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.2.2&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar xvzf rubygems-2.2.2.tgz&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.2.2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Install rubygems by running the &amp;#39;setup.rb&amp;#39; script:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;8. Installing Vagrant&lt;/h3&gt;
 
 &lt;h4&gt;A. Use wget to download the latest version listed on the &lt;a href=&quot;https://www.vagrantup.com/downloads.html&quot;&gt;Vagrant download&lt;/a&gt; page:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.2_x86_64.rpm&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.2.2&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.2_x86_64.rpm&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Use the &amp;#39;rpm&amp;#39; command to install the RPM package we downloaded in the previous step:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.5.2_x86_64.rpm&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.5.2_x86_64.rpm&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Export the directory that the vagrant executable was install to, in order to make it easier to run:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=$PATH:/opt/vagrant/bin/&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=$PATH:/opt/vagrant/bin/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;9. Installing the vagrant-vsphere plugin&lt;/h3&gt;
 
 &lt;h4&gt;A. The nokogiri gem, which is a ruby HTML, XML &amp;amp; SAM parser, is required by vagrant-vsphere so we will install it with the following commands:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# gem install nokogiri&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# gem install nokogiri&lt;/span&gt;
 Building native extensions.  This could take a &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt;...
 Successfully installed nokogiri-1.6.1
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\x89&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/tests/xmlspec/logo-REC, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF6&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/libxslt/xslt.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF6&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/ChangeLog, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE1&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/NEWS, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xFD&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/win32/Readme.txt, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/test/XInclude/ents/isolatin.txt, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE4&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/doc/examples/testWriter.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF8&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/testapi.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE9&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/runtest.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF8&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/entities.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ports/x86_64-redhat-linux/libxslt/1.1.26/bin/xsltproc, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE4&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ports/x86_64-redhat-linux/libxml2/2.8.0/share/doc/libxml2-2.8.0/html/testWriter.c, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmllint, skipping
-unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmlcatalog, skipping
-1 gem installed
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\x89&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/tests/xmlspec/logo-REC, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF6&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/libxslt/xslt.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF6&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/ChangeLog, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE1&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/NEWS, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xFD&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/win32/Readme.txt, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/test/XInclude/ents/isolatin.txt, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE4&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/doc/examples/testWriter.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF8&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/testapi.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE9&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/runtest.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xF8&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/entities.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ports/x86_64-redhat-linux/libxslt/1.1.26/bin/xsltproc, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xE4&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ports/x86_64-redhat-linux/libxml2/2.8.0/share/doc/libxml2-2.8.0/html/testWriter.c, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmllint, skipping
+unable to convert &lt;span class=&quot;s2&quot;&gt;&amp;quot;\xC0&amp;quot;&lt;/span&gt; from ASCII-8BIT to UTF-8 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmlcatalog, skipping
+&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; gem installed&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Next we will install the rbvmomi gem with the following command. rbvmomi is a ruby interface for using the vSphere API.&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# gem install rbvmomi&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# gem install rbvmomi&lt;/span&gt;
 Successfully installed rbvmomi-1.8.1
-1 gem installed
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; gem installed&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Now we can install the vagrant-vsphere plugin with the following command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vsphere&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vsphere&lt;/span&gt;
 Installing the &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vsphere&amp;#39;&lt;/span&gt; plugin. This can take a few minutes...
-Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vsphere (0.8.1)&amp;#39;&lt;/span&gt;!
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vsphere (0.8.1)&amp;#39;&lt;/span&gt;!&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;8. Configuring vagrant-vsphere&lt;/h3&gt;
 
@@ -1195,32 +1256,28 @@ Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vsphere (
 
 &lt;h4&gt;A.  We can use the linux the &amp;quot;find&amp;quot; command to determine the path to the example_box directory:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# find / -name example_box&lt;/span&gt;
-/root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# find / -name example_box&lt;/span&gt;
+/root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B.  Now we can change directory to that directory and create the necessary dummy box file:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar cvzf dummy.box ./metadata.json&lt;/span&gt;
-./metadata.json
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+./metadata.json&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/example_box&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv dummy.box ~/vagrant-vms/example_box&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/example_box&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv dummy.box ~/vagrant-vms/example_box&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;D. Vagrant reads it&amp;#39;s configuration from a file named Vagrantfile, located in the directory from which the &amp;quot;vagrant up&amp;quot; command is run in. We need to go back to our &amp;quot;vagrant-vms&amp;quot; folder and create this file:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant example_box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;E. Modify the Vagrantfile to reflect your vsphere configuration. Here&amp;#39;s an example of my working Vagrantfile:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
 
 Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
   config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;dummy&amp;#39;&lt;/span&gt;
@@ -1235,8 +1292,7 @@ Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&q
     vsphere.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;S0meR@nd0mP@ssw0rd&amp;#39;&lt;/span&gt;
     vsphere.insecure &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;  &lt;/span&gt;end
-end
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;In this configuration file:&lt;/p&gt;
 
@@ -1254,13 +1310,12 @@ end
 
 &lt;p&gt;If everything has gone correctly up to this point we can issue a &amp;quot;vagrant up --provider=vsphere&amp;quot; command from the directory that contains the Vagrantfile:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up --provider=vsphere&lt;/span&gt;
 Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsphere&amp;#39;&lt;/span&gt; provider...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere CloneVM with the following settings:
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Source VM: CentOS-6.5
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default:  -- Name: vagrant-test
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;SSH to become available...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You should see a &amp;quot;Clone virtual machine&amp;quot; task being run on your vCenter server and then completing.&lt;/p&gt;
 
@@ -1270,20 +1325,17 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
 
 &lt;h4&gt;A. Press [control-c] to attempt to gracefully exit &amp;quot;vagrant-up&amp;quot;&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;cleanup before exiting...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; cleanup before exiting...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;I&amp;#39;ve never seen this task complete so I will press [control-c] again to immediately exit:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Exiting immediately, without cleanup!
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;^C&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Exiting immediately, without cleanup!&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Destroy the cloned vm by running &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vagrant-vms&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vSphere &lt;span class=&quot;nv&quot;&gt;PowerOff&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; default: Calling vShpere Destroy&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;You should see a &amp;quot;Power Off virtual machine&amp;quot; and &amp;quot;Delet virtual machine&amp;quot; tasks being run and then completing on your vCenter server.&lt;/p&gt;
 
@@ -1296,7 +1348,7 @@ Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;default&amp;#39;&lt;/
  <entry>
    <title>Vagrant and why it is useful in learning Puppet</title>
    <link href="http://sdorsett.github.io/2014/04/16/vagrant-explained/"/>
-   <updated>2014-04-16T00:00:00-05:00</updated>
+   <updated>2014-04-16T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/04/16/vagrant-explained</id>
    <content type="html">&lt;p&gt;Vagrant, according to the &lt;a href=&quot;http://docs.vagrantup.com/v2/why-vagrant/&quot;&gt;documentation&lt;/a&gt;, provides a &amp;quot;disposable environment and consistent workflow for developing and testing infrastructure management scripts. You can quickly test things like shell scripts, Chef cookbooks, Puppet modules, and more using local virtualization such as VirtualBox or VMware. Then, with the same configuration, you can test these scripts on remote clouds such as AWS or RackSpace with the same workflow.&amp;quot;&lt;/p&gt;
 

@@ -54,14 +54,14 @@
     
       
         
-      
-    
-      
-        
           <a class="sidebar-nav-item" href="/about/">About</a>
         
       
     
+      
+    
+      
+        
       
     
       
@@ -104,6 +104,210 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2014/04/20/vagrant-boxes/">
+        Creating a CentOS 6.x template that is customized for Vagrant
+      </a>
+    </h1>
+
+    <span class="post-date">20 Apr 2014</span>
+
+    <p>This post will continue our examination of using the vagrant-vsphere plugin, by customizing a CentOS template for integration with Vagrant. Having a Vagrant customize template will allow us to deploy this template and SSH to the cloned vm using the &quot;vagrant ssh&quot; command, as well automatically run puppet manifests when we deploy a vm using Vagrant. Let&#39;s get started:</p>
+
+<h3>1. Ensure you have a DHCP server on the network you will be connecting the Vagrant deployed templates to. While you can utilized guest customization to assign a static IP addresses to a Vagrant deployed vm, using DHCP will make this process much easier.</h3>
+
+<h3>2. Create a CentOS 6.x minimal virtual machine for configuring as our Vagrant CentOS template.</h3>
+
+<p>Create or clone a fresh CentOS 6.x minimal virtual machine. I already have an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p>
+
+<h3>3. Power on the new cloned vm and connect using SSH to the DHCP assigned IP address for this vm.</h3>
+
+<h3>4. Ensure you have perl, rsync, ruby &amp; puppet agent installed:</h3>
+
+<h4>A. Import the EPEL 6 key and RPM:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-6</span>
+<span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># rpm -Kih http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm</span>
+<span class="c">########################################### [100%]</span>
+<span class="c">########################################### [100%]</span></code></pre></div>
+
+<h4>B. Use yum to install ruby, wget, puppet, facter &amp; rsync:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># yum install ruby ruby-libs ruby-shad wget yum-priorities puppet facter rsync -y</span></code></pre></div>
+
+<h3>5. Ensure you have vmtools installed on the new CentOS template.</h3>
+
+<h4>A. Start the install process by clicking &quot;VM | Guest | Install/Upgrade VMware Tools&quot; in the vShpere client. When prompted select &quot;Automatice Tools Upgrade&quot; and click &quot;OK&quot;</h4>
+
+<h4>B. Create a directory to mount the virtual CDROM to with the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># mkdir /mnt/cdrom</span></code></pre></div>
+
+<h4>C. Mount the virtual CDROM to /mnt/cdrom with the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># mount /dev/cdrom /mnt/cdrom</span>
+mount: block device /dev/sr0 is write-protected, mounting <span class="nb">read</span>-only</code></pre></div>
+
+<h4>D. Copy the VMware Tools installer over to the /root directory and unzip it:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># cp /mnt/cdrom/VMwareTools-* ~/</span>
+<span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># tar -zxf ~/VMwareTools*</span></code></pre></div>
+
+<h4>E. Change directory into the directory we just untared and run the &quot;vmware-install.pl&quot; to start the installer:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># cd vmware-tools-distrib/</span>
+<span class="o">[</span>root@centos-6-5 vmware-tools-distrib<span class="o">]</span><span class="c"># ./vmware-install.pl</span></code></pre></div>
+
+<p>You should be able to accept the defaults for all prompts and complete the VMware tools installer. Once the installer has completed check the vm summary of this template vm in the vSphere client. The VMware Tools should show as &quot;Running&quot; and &quot;Current.&quot;</p>
+
+<h4>F. Unmount the virtual CDROM using the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># umount /dev/cdrom</span></code></pre></div>
+
+<h3>6. We will next follow the steps for <a href="https://docs.vagrantup.com/v2/boxes/base.html">creating a base box</a> from the Vagrant website.</h3>
+
+<p>One thing to point out is we will be configuring the vagrant template for password less SSH using a vagrant user with the password of &quot;vagrant.&quot; The Vagrant website mentions &#39;by default, Vagrant expects a &quot;vagrant&quot; user to SSH into the machine as. This user should be setup with the insecure keypair that Vagrant uses as a default to attempt to SSH. Also, even though Vagrant uses key-based authentication by default, it is a general convention to set the password for the &quot;vagrant&quot; user to &quot;vagrant.&quot;&#39;</p>
+
+<p>This vagrant template should only be used for lab or development work and never used for production or publicly facing virtual machines due to the security risks of having known users, passwords &amp; private SSH keys configured by default. </p>
+
+<h4>A. Add a new user named &quot;vagrant&quot; to the template.</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># useradd vagrant</span></code></pre></div>
+
+<h4>B. Change the password of the user &quot;vagrant&quot; to &quot;vagrant&quot;</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># [root@centos-6-5 ~]# passwd vagrant</span>
+Changing password <span class="k">for</span> user vagrant.
+New password: &lt;<span class="nb">type </span>the word <span class="s2">&quot;vagrant&quot;</span>&gt;
+BAD PASSWORD: it is based on a dictionary word
+BAD PASSWORD: is too simple
+Retype new password: &lt;<span class="nb">type </span>the word <span class="s2">&quot;vagrant&quot;</span> again&gt;
+passwd: all authentication tokens updated successfully.</code></pre></div>
+
+<h4>C. We will next need to copy the contents of the vagrant.pub file located at the <a href="9https://github.com/mitchellh/vagrant/tree/master/keys">vagrant github site</a> into the /home/vagrant/.ssh/authorized_keys file.</h4>
+
+<p>First we will su (switch user) to the vagrant user by running the following command:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># su vagrant</span>
+<span class="o">[</span>vagrant@centos-6-5 root<span class="o">]</span><span class="err">$</span></code></pre></div>
+
+<p>Next we will create the .ssh directory since is does not exist:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>vagrant@centos-6-5 root<span class="o">]</span><span class="nv">$ </span>mkdir ~/.ssh
+<span class="o">[</span>vagrant@centos-6-5 root<span class="o">]</span><span class="nv">$ </span><span class="nb">cd</span> ~/.ssh
+<span class="o">[</span>vagrant@centos-6-5 .ssh<span class="o">]</span><span class="nv">$ </span><span class="nb">pwd</span>
+/home/vagrant/.ssh</code></pre></div>
+
+<p>We will now create /home/vagrant/.ssh/authorized_keys with the contents of <a href="https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub">this file</a> from the vagrant github page:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>vagrant@centos-6-5 .ssh<span class="o">]</span><span class="nv">$ </span><span class="nb">echo</span> <span class="s1">&#39;ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key&#39;</span> &gt; ~/.ssh/authorized_keys
+<span class="o">[</span>vagrant@centos-6-5 .ssh<span class="o">]</span><span class="nv">$ </span>cat ~/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ<span class="o">==</span> vagrant insecure public key</code></pre></div>
+
+<p>The vagrant website also mentions &#39;that OpenSSH is very picky about file permissions. Therefore, make sure that ~/.ssh has 0700 permissions and the authorized keys file has 0600 permissions.&#39; We will correct those permissions now:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>vagrant@centos-6-5 .ssh<span class="o">]</span><span class="nv">$ </span><span class="nb">cd</span> ~/
+<span class="o">[</span>vagrant@centos-6-5 ~<span class="o">]</span><span class="nv">$ </span>chmod <span class="m">700</span> ~/.ssh
+<span class="o">[</span>vagrant@centos-6-5 ~<span class="o">]</span><span class="nv">$ </span>chmod <span class="m">600</span> ~/.ssh/authorized_keys
+<span class="o">[</span>vagrant@centos-6-5 ~<span class="o">]</span><span class="nv">$ </span>ls -la
+total 24
+drwx------. <span class="m">3</span> vagrant vagrant <span class="m">4096</span> Apr <span class="m">20</span> 14:22 .
+drwxr-xr-x. <span class="m">3</span> root    root    <span class="m">4096</span> Apr <span class="m">20</span> 14:15 ..
+-rw-r--r--. <span class="m">1</span> vagrant vagrant   <span class="m">18</span> Jul <span class="m">18</span>  <span class="m">2013</span> .bash_logout
+-rw-r--r--. <span class="m">1</span> vagrant vagrant  <span class="m">176</span> Jul <span class="m">18</span>  <span class="m">2013</span> .bash_profile
+-rw-r--r--. <span class="m">1</span> vagrant vagrant  <span class="m">124</span> Jul <span class="m">18</span>  <span class="m">2013</span> .bashrc
+drwx------. <span class="m">2</span> vagrant vagrant <span class="m">4096</span> Apr <span class="m">20</span> 14:26 .ssh
+<span class="o">[</span>vagrant@centos-6-5 ~<span class="o">]</span><span class="nv">$ </span>ls -la .ssh
+total 12
+drwx------. <span class="m">2</span> vagrant vagrant <span class="m">4096</span> Apr <span class="m">20</span> 14:26 .
+drwx------. <span class="m">3</span> vagrant vagrant <span class="m">4096</span> Apr <span class="m">20</span> 14:22 ..
+-rw-------. <span class="m">1</span> vagrant vagrant  <span class="m">409</span> Apr <span class="m">20</span> 14:26 authorized_keys
+<span class="o">[</span>vagrant@centos-6-5 ~<span class="o">]</span><span class="nv">$ </span><span class="nb">exit</span>
+<span class="nb">exit</span>
+<span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h4>D. We will to edit the sudo file. Type the following command to open the sudo file in vi:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@centos-6-5 ~<span class="o">]</span><span class="c"># visudo</span></code></pre></div>
+
+<p>Locate the line containing:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">Defaults    requiretty</code></pre></div>
+
+<p>...and change it to read:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># Defaults    requiretty&#39;</span></code></pre></div>
+
+<p>The # sign at the beginning of the line will cause this line to be ignored as a comment.
+We also need to add the following line at the bottom of the file:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">vagrant <span class="nv">ALL</span><span class="o">=(</span>ALL<span class="o">)</span> NOPASSWD: ALL</code></pre></div>
+
+<h4>E. One more recommendation from the vagrant website is to edit /etc/ssh/sshd_config and change any line matching:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">UseDNS yes</code></pre></div>
+
+<p>to </p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">UseDNS no</code></pre></div>
+
+<p>This avoids a reverse DNS lookup on the connecting SSH client which can take many seconds.</p>
+
+<h3>7. Lastly this is a template, so we will need to remove /etc/udev/rules.d/70-persistent-net.rules file because it contains the MAC address of the current virtual NIC. It will be recreated on boot up or when we deploy other virtual machines from this template.</h3>
+
+<h3>8. We will now shutdown the template by running halt:</h3>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@centos-6-5 ~<span class="o">]</span><span class="c"># halt</span>
+Broadcast message from root@centos-6-5
+    <span class="o">(</span>/dev/pts/1<span class="o">)</span> at 14:51 ...
+The system is going down <span class="k">for</span> halt NOW!</code></pre></div>
+
+<h3>9. We now need to SSH to the vagrant vm that has the vagrant-vsphere plugin installed. This is the vm we created if you followed the <a href="https://sdorsett.github.io/2014/04/19/vagrant-install/">last blog post.</a></h3>
+
+<h4>A. Edit the Vagrantfile we created to modify the following line to reflect the name you gave the new vagrant template we cloned or created in the steps above:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">vsphere.template_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos-6.5&#39;</span></code></pre></div>
+
+<h4>B. We can test this new template by issuing the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
+Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
+<span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
+<span class="o">==</span>&gt; default:  -- Source VM: vagrant-centos-6.5
+<span class="o">==</span>&gt; default:  -- Name: vagrant-test
+<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...
+<span class="o">==</span>&gt; default: New virtual machine successfully cloned and <span class="nv">started</span>
+<span class="o">==</span>&gt; default: Rsyncing folder: /root/vagrant-vms/ <span class="o">=</span>&gt; /vagrant</code></pre></div>
+
+<p>Unlike our &#39;vagrant up&quot; command in the last post we have established a SSH session with the cloned template using the vagrant user we created and the public key in that users authorized_keys file.</p>
+
+<p>You also might notice that the entire directory we launched the &#39;vagrant up&quot; command from has been copied over to /vagrant on the cloned vm using rsync. We will go into leveraging this feature with puppet in our next blog post.</p>
+
+<h4>C. Using SSH to connect to the vagrant vm is as easy as &#39;vagrant ssh&#39;</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># hostname</span>
+vagrant.mylab.net
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant ssh</span>
+<span class="o">[</span>vagrant@vagrant-centos-6-5 ~<span class="o">]</span><span class="nv">$ </span>hostname
+vagrant-centos-6-5
+<span class="o">[</span>vagrant@vagrant-centos-6-5 ~<span class="o">]</span><span class="nv">$ </span><span class="nb">exit</span>
+<span class="nb">logout</span>
+Connection to 192.168.1.133 closed.
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h4>D. Finally we will power down and delete the cloned template by running the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
+<span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
+<span class="o">==</span>&gt; default: Calling vShpere Destroy</code></pre></div>
+
+<h3>Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of customization specifications and advanced Vagrantfile configurations on a vm deployed using vagrant.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2014/04/19/vagrant-install/">
         Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x
       </a>
@@ -121,7 +325,7 @@
 
 <h3>3. Modify /etc/sysconfig/network, /etc/sysconfig/network-scripts/ifcfg-eth0 &amp; /etc/resolv.conf to reflect the network settings for your vagrant vm:</h3>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network </span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network </span>
 <span class="nv">NETWORKING</span><span class="o">=</span>yes 
 <span class="nv">HOSTNAME</span><span class="o">=</span>vagrant.mylab.net 
 <span class="nv">GATEWAY</span><span class="o">=</span>192.168.1.1 
@@ -137,8 +341,7 @@
  search mylab.net 
 nameserver 192.168.1.1 
 nameserver 8.8.8.8 
-nameserver 8.8.4.4
-</code></pre></div>
+nameserver 8.8.4.4</code></pre></div>
 
 <h3>4. Restart the vm for the hostname change to take affect</h3>
 
@@ -148,27 +351,23 @@ nameserver 8.8.4.4
 
 <h4>A. Use yum to install the packages we&#39;ll need to get ruby, rubygems and vagrant installed:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span></code></pre></div>
 
 <h4>B. Pull down the latest version of ruby-build using git:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span></code></pre></div>
 
 <h4>C. Change to the directory the previous command created:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span></code></pre></div>
 
 <h4>D. Run the &#39;install.sh&#39; script to install ruby-build:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span></code></pre></div>
 
 <h4>E. I have not been successful in getting vagrant-vsphere to run on any version of ruby newer than 1.9.3-p545. As a result I would recommend installing that version with the following command:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
 Downloading yaml-0.1.6.tar.gz...
 -&gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
 Installing yaml-0.1.6...
@@ -178,83 +377,73 @@ Downloading ruby-1.9.3-p545.tar.gz...
 -&gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
 Installing ruby-1.9.3-p545...
 
-Installed ruby-1.9.3-p545 to /usr/local/
-</code></pre></div>
+Installed ruby-1.9.3-p545 to /usr/local/</code></pre></div>
 
 <h3>7. We will next need to install rubygems. The process I used was to download the latest version from <a href="https://rubygems.org/pages/download">rubygems.org</a> and install it:</h3>
 
 <h4>A. Use wget to download the latest version listed on the rubygems download page:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span></code></pre></div>
 
 <h4>B. Use tar to unzip the tar-gzipped file we downloaded:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar xvzf rubygems-2.2.2.tgz</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.2.2</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar xvzf rubygems-2.2.2.tgz</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.2.2</span></code></pre></div>
 
 <h4>C. Install rubygems by running the &#39;setup.rb&#39; script:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># ruby setup.rb</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># ruby setup.rb</span></code></pre></div>
 
 <h3>8. Installing Vagrant</h3>
 
 <h4>A. Use wget to download the latest version listed on the <a href="https://www.vagrantup.com/downloads.html">Vagrant download</a> page:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.2_x86_64.rpm</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.2_x86_64.rpm</span></code></pre></div>
 
 <h4>B. Use the &#39;rpm&#39; command to install the RPM package we downloaded in the previous step:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.5.2_x86_64.rpm</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.5.2_x86_64.rpm</span></code></pre></div>
 
 <h4>C. Export the directory that the vagrant executable was install to, in order to make it easier to run:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># export PATH=$PATH:/opt/vagrant/bin/</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># export PATH=$PATH:/opt/vagrant/bin/</span></code></pre></div>
 
 <h3>9. Installing the vagrant-vsphere plugin</h3>
 
 <h4>A. The nokogiri gem, which is a ruby HTML, XML &amp; SAM parser, is required by vagrant-vsphere so we will install it with the following commands:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install nokogiri</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install nokogiri</span>
 Building native extensions.  This could take a <span class="k">while</span>...
 Successfully installed nokogiri-1.6.1
-unable to convert <span class="s2">&quot;\x89&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/tests/xmlspec/logo-REC, skipping
-unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/libxslt/xslt.c, skipping
-unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/ChangeLog, skipping
-unable to convert <span class="s2">&quot;\xE1&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/NEWS, skipping
-unable to convert <span class="s2">&quot;\xFD&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/win32/Readme.txt, skipping
-unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/test/XInclude/ents/isolatin.txt, skipping
-unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/doc/examples/testWriter.c, skipping
-unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/testapi.c, skipping
-unable to convert <span class="s2">&quot;\xE9&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/runtest.c, skipping
-unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/entities.c, skipping
-unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ports/x86_64-redhat-linux/libxslt/1.1.26/bin/xsltproc, skipping
-unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ports/x86_64-redhat-linux/libxml2/2.8.0/share/doc/libxml2-2.8.0/html/testWriter.c, skipping
-unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmllint, skipping
-unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for </span>ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmlcatalog, skipping
-1 gem installed
-</code></pre></div>
+unable to convert <span class="s2">&quot;\x89&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/tests/xmlspec/logo-REC, skipping
+unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/libxslt/xslt.c, skipping
+unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/ChangeLog, skipping
+unable to convert <span class="s2">&quot;\xE1&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/NEWS, skipping
+unable to convert <span class="s2">&quot;\xFD&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/win32/Readme.txt, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/test/XInclude/ents/isolatin.txt, skipping
+unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/doc/examples/testWriter.c, skipping
+unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/testapi.c, skipping
+unable to convert <span class="s2">&quot;\xE9&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/runtest.c, skipping
+unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/entities.c, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxslt/1.1.26/bin/xsltproc, skipping
+unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/share/doc/libxml2-2.8.0/html/testWriter.c, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmllint, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmlcatalog, skipping
+<span class="m">1</span> gem installed</code></pre></div>
 
 <h4>B. Next we will install the rbvmomi gem with the following command. rbvmomi is a ruby interface for using the vSphere API.</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install rbvmomi</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install rbvmomi</span>
 Successfully installed rbvmomi-1.8.1
-1 gem installed
-</code></pre></div>
+<span class="m">1</span> gem installed</code></pre></div>
 
 <h4>C. Now we can install the vagrant-vsphere plugin with the following command:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vsphere</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vsphere</span>
 Installing the <span class="s1">&#39;vagrant-vsphere&#39;</span> plugin. This can take a few minutes...
-Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!
-</code></pre></div>
+Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!</code></pre></div>
 
 <h3>8. Configuring vagrant-vsphere</h3>
 
@@ -262,32 +451,28 @@ Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!
 
 <h4>A.  We can use the linux the &quot;find&quot; command to determine the path to the example_box directory:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># find / -name example_box</span>
-/root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># find / -name example_box</span>
+/root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box</code></pre></div>
 
 <h4>B.  Now we can change directory to that directory and create the necessary dummy box file:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box</span>
 <span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># tar cvzf dummy.box ./metadata.json</span>
-./metadata.json
-</code></pre></div>
+./metadata.json</code></pre></div>
 
 <h4>C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/example_box</span>
-<span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mv dummy.box ~/vagrant-vms/example_box</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/example_box</span>
+<span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mv dummy.box ~/vagrant-vms/example_box</span></code></pre></div>
 
 <h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, located in the directory from which the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># cd ~/vagrant-vms/</span>
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># touch Vagrantfile</span>
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># cd ~/vagrant-vms/</span>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># touch Vagrantfile</span></code></pre></div>
 
 <h4>E. Modify the Vagrantfile to reflect your vsphere configuration. Here&#39;s an example of my working Vagrantfile:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
 
 Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
   config.vm.box <span class="o">=</span> <span class="s1">&#39;dummy&#39;</span>
@@ -302,8 +487,7 @@ Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><s
     vsphere.password <span class="o">=</span> <span class="s1">&#39;S0meR@nd0mP@ssw0rd&#39;</span>
     vsphere.insecure <span class="o">=</span> <span class="nb">true</span>
 <span class="nb">  </span>end
-end
-</code></pre></div>
+end</code></pre></div>
 
 <p>In this configuration file:</p>
 
@@ -321,13 +505,12 @@ end
 
 <p>If everything has gone correctly up to this point we can issue a &quot;vagrant up --provider=vsphere&quot; command from the directory that contains the Vagrantfile:</p>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
 Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
 <span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
 <span class="o">==</span>&gt; default:  -- Source VM: CentOS-6.5
 <span class="o">==</span>&gt; default:  -- Name: vagrant-test
-<span class="o">==</span>&gt; default: Waiting <span class="k">for </span>SSH to become available...
-</code></pre></div>
+<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...</code></pre></div>
 
 <p>You should see a &quot;Clone virtual machine&quot; task being run on your vCenter server and then completing.</p>
 
@@ -337,20 +520,17 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 
 <h4>A. Press [control-c] to attempt to gracefully exit &quot;vagrant-up&quot;</h4>
 
-<div class="highlight"><pre><code class="bash">^C<span class="o">==</span>&gt; default: Waiting <span class="k">for </span>cleanup before exiting...
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">^C<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> cleanup before exiting...</code></pre></div>
 
 <p>I&#39;ve never seen this task complete so I will press [control-c] again to immediately exit:</p>
 
-<div class="highlight"><pre><code class="bash">^C<span class="o">==</span>&gt; default: Exiting immediately, without cleanup!
-</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">^C<span class="o">==</span>&gt; default: Exiting immediately, without cleanup!</code></pre></div>
 
 <h4>B. Destroy the cloned vm by running &quot;vagrant destroy&quot; command:</h4>
 
-<div class="highlight"><pre><code class="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
 <span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
-<span class="o">==</span>&gt; default: Calling vShpere Destroy
-</code></pre></div>
+<span class="o">==</span>&gt; default: Calling vShpere Destroy</code></pre></div>
 
 <p>You should see a &quot;Power Off virtual machine&quot; and &quot;Delet virtual machine&quot; tasks being run and then completing on your vCenter server.</p>
 
