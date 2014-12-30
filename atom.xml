@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-12-30T02:24:11+00:00</updated>
+ <updated>2014-12-30T02:26:58+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -248,7 +248,7 @@ sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/sp
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ls *.box
 esxi55-vmware_ovf-1.0.box&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed and configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
+&lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>
