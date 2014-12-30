@@ -130,17 +130,24 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 <h4>B.  Unzip the downloaded files to /usr/local/packer_7.5:</h4>
 
-<h4>C.  Add /usr/local/packer_7.5 to your path by running the following command:</h4>
+<h4>C.  Add /usr/local/packer_7.5 to your path by running the following command.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span></code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span></code></pre></div>
 
-<h4>D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots</h4>
+<h4>D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>cat ~/.bash_profile
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span>
+sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
 
 <h2>2. Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.</h2>
 
 <h4>A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.0-1274719-mac.x64.dmg is what I used.</h4>
 
 <h4>B. Verify ovftool is succesfully added to your path by running &quot;ovftool -v&quot;. This command should output the version of ovftool we installed.</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ovftool -v
+VMware ovftool 3.5.0 <span class="o">(</span>build-1274719<span class="o">)</span></code></pre></div>
 
 <h2>3. Now we can download and install the gosddc packer components we will need.</h2>
 
@@ -152,19 +159,19 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 <h4>C. Create a directory to contain the packer templates:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">mkdir ~/Documents/packer
-<span class="nb">cd</span> ~/Documents/packer/</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer
+sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">cd</span> ~/Documents/packer/</code></pre></div>
 
 <h5>D. Clone the gosddc packer-templates repository:</h5>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">git clone https://github.com/gosddc/packer-templates.git
-<span class="nb">cd </span>packer-templates</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer sdorsett<span class="nv">$ </span>git clone https://github.com/gosddc/packer-templates.git
+sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span>packer-templates</code></pre></div>
 
 <h2>4. Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.</h2>
 
 <h4>A. create an &quot;iso&quot; directory for storing the ESXi iso files:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">mkdir ~/Documents/packer/packer-templates/isos</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer/packer-templates/isos</code></pre></div>
 
 <h4>B. Download and copy the &quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot; ESXi 5.5 installer to the iso directory.</h4>
 
@@ -172,7 +179,8 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 <h4>A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">{</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>cat templates/esxi.json
+<span class="o">{</span>
   <span class="s2">&quot;variables&quot;</span>: <span class="o">{</span>
     <span class="s2">&quot;version&quot;</span>: <span class="s2">&quot;1.0&quot;</span>
   <span class="o">}</span>,
@@ -251,14 +259,88 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 <h4>B. Validate the packer esxi.json file is ready for building by running the following command:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">packer validate templates/esxi.json
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer validate templates/esxi.json
 Template validated successfully.</code></pre></div>
 
 <h4>C. Start the build by running:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">packer build templates/esxi.json</code></pre></div>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer build templates/esxi.json
+esxi55 output will be in this color.
 
-<h4>D. As long as you encounter no errors, you should end up with a &quot;esxi55-vmware_ovf-1.0.box&quot; file in the same directory you ran the &quot;packer build&quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.</h4>
+<span class="o">==</span>&gt; esxi55: Downloading or copying ISO
+    esxi55: Downloading or copying: file:///Users/sdorsett/Documents/packer/packer-templates/iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso
+<span class="o">==</span>&gt; esxi55: Creating virtual machine <span class="nv">disk</span>
+<span class="o">==</span>&gt; esxi55: Building and writing VMX <span class="nv">file</span>
+<span class="o">==</span>&gt; esxi55: Starting HTTP server on port <span class="nv">8351</span>
+<span class="o">==</span>&gt; esxi55: Starting virtual machine...
+    esxi55: The VM will be run headless, without a GUI. If you want to
+    esxi55: view the screen of the VM, connect via VNC without a password to
+    esxi55: 127.0.0.1:5986
+<span class="o">==</span>&gt; esxi55: Waiting 5s <span class="k">for</span> boot...
+<span class="o">==</span>&gt; esxi55: Connecting to VM via <span class="nv">VNC</span>
+<span class="o">==</span>&gt; esxi55: Typing the boot <span class="nb">command </span>over VNC...
+<span class="o">==</span>&gt; esxi55: Waiting <span class="k">for</span> SSH to become available...
+<span class="o">==</span>&gt; esxi55: Connected to SSH!
+<span class="o">==</span>&gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub <span class="o">=</span>&gt; /etc/ssh/keys-root/authorized_keys
+<span class="o">==</span>&gt; esxi55: Provisioning with shell script: scripts/esxi-vmware-tools_install.sh
+    esxi55: Installation Result
+    esxi55: Message: The update completed successfully, but the system needs to be rebooted <span class="k">for</span> the changes to be effective.
+    esxi55: Reboot Required: <span class="nb">true</span>
+<span class="nb">    </span>esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
+    esxi55: VIBs Removed:
+    esxi55: VIBs Skipped:
+<span class="o">==</span>&gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
+    esxi55: diff: can<span class="s1">&#39;t stat &#39;</span>/tmp/auto-backup.35216//etc/ssh/keys-root/authorized_keys<span class="s1">&#39;: No such file or directory</span>
+<span class="s1">    esxi55: Saving current state in /bootbank</span>
+<span class="s1">    esxi55: Clock updated.</span>
+<span class="s1">    esxi55: Time: 02:09:44   Date: 12/30/2014   UTC</span>
+<span class="s1">==&gt; esxi55: Gracefully halting virtual machine...</span>
+<span class="s1">    esxi55: Waiting for VMware to clean up after itself...</span>
+<span class="s1">==&gt; esxi55: Deleting unnecessary VMware files...</span>
+<span class="s1">    esxi55: Deleting: output-esxi55/564d2ab2-395b-a9ba-9c17-2fe36682237c.vmem</span>
+<span class="s1">    esxi55: Deleting: output-esxi55/esxi55.plist</span>
+<span class="s1">    esxi55: Deleting: output-esxi55/vmware.log</span>
+<span class="s1">==&gt; esxi55: Cleaning VMX prior to finishing up...</span>
+<span class="s1">    esxi55: Unmounting floppy from VMX...</span>
+<span class="s1">    esxi55: Detaching ISO from CD-ROM device...</span>
+<span class="s1">==&gt; esxi55: Compacting the disk image</span>
+<span class="s1">==&gt; esxi55: Running post-processor: vagrant-vmware-ovf</span>
+<span class="s1">==&gt; esxi55 (vagrant-vmware-ovf): Creating Vagrant box for &#39;</span>vmware_ovf<span class="s1">&#39; provider</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Deleting key: ide1:0.filename</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Deleting key: floppy0.present</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Setting key: floppy0.present = FALSE</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Setting key: ide1:0.present = FALSE</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Creating directory: output-esxi55/ovf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Starting ovftool</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Reading files in output-esxi55/ovf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55-disk1.vmdk</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55.mf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55.ovf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: Vagrantfile</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55-disk1.vmdk</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.mf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.ovf</span>
+<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: metadata.json</span>
+<span class="s1">Build &#39;</span>esxi55<span class="s1">&#39; finished.</span>
+
+<span class="s1">==&gt; Builds finished. The artifacts of successful builds are:</span>
+<span class="s1">--&gt; esxi55: &#39;</span>vmware_ovf<span class="err">&#39;</span> provider box: esxi55-vmware_ovf-1.0.box
+sdorsett-mbp:packer-templates sdorsett<span class="err">$</span></code></pre></div>
+
+<p>If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">esxi55: The VM will be run headless, without a GUI. If you want to
+    esxi55: view the screen of the VM, connect via VNC without a password to
+    esxi55: 127.0.0.1:5986</code></pre></div>
+
+<p>When I connected the &quot;Chicken of the VNC&quot; client installed on my macbook to &quot;127.0.0.1:5986&quot; I could see where the build was at during the install process:</p>
+
+<p><img src="/assets/01-esxi-vnc-client.png" alt="screenshot">  </p>
+
+<h4>D. Once the packer build completes you should end up with a &quot;esxi55-vmware_ovf-1.0.box&quot; file in the same directory you ran the &quot;packer build&quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>ls *.box
+esxi55-vmware_ovf-1.0.box</code></pre></div>
 
 <h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed and configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.</h3>
 
