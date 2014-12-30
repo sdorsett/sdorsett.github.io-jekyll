@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-12-30T01:16:55+00:00</updated>
+ <updated>2014-12-30T01:24:59+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -164,7 +164,7 @@ Template validated successfully.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;packer build templates/esxi.json&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;D. As long as you encounter no errors, you should end up with a &amp;quot;esxi55-vmware_ovf-1.0.box&amp;quot; file in the same directory you ran the &amp;quot;packer buid&amp;quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.&lt;/h4&gt;
+&lt;h4&gt;D. As long as you encounter no errors, you should end up with a &amp;quot;esxi55-vmware_ovf-1.0.box&amp;quot; file in the same directory you ran the &amp;quot;packer build&amp;quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.&lt;/h4&gt;
 
 &lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed and configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
 
