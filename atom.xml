@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2014-12-30T02:33:30+00:00</updated>
+ <updated>2014-12-31T16:51:05+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -77,7 +77,7 @@ sdorsett-mbp:packer sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;
 
 &lt;h4&gt;A. create an &amp;quot;iso&amp;quot; directory for storing the ESXi iso files:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir ~/Documents/packer/packer-templates/isos&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mkdir ~/Documents/packer/packer-templates/iso&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;B. Download and copy the &amp;quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot; ESXi 5.5 installer to the iso directory.&lt;/h4&gt;
 
