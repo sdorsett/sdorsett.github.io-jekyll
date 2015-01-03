@@ -81,7 +81,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2014. All rights reserved.
+      &copy; 2015. All rights reserved.
     </p>
   </div>
 </div>
@@ -208,7 +208,7 @@ sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span
         <span class="s2">&quot;vhv.enable&quot;</span>: <span class="s2">&quot;TRUE&quot;</span>
       <span class="o">}</span>,
       <span class="s2">&quot;boot_command&quot;</span>: <span class="o">[</span>
-        <span class="s2">&quot;&lt;enter&gt;&lt;wait&gt;O&lt;wait&gt; ks=http://:/scripts/esxi-5-kickstart.cfg&lt;enter&gt;&quot;</span>
+        <span class="s2">&quot;&lt;enter&gt;&lt;wait&gt;O&lt;wait&gt; ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/scripts/esxi-5-kickstart.cfg&lt;enter&gt;&quot;</span>
       <span class="o">]</span>
     <span class="o">}</span>
   <span class="o">]</span>,
