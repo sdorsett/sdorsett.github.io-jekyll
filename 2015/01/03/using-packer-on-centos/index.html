@@ -528,6 +528,16 @@ Password:</code></pre></div>
 ./esxi55.ovf
 ./metadata.json
 ./Vagrantfile
+<span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c"># ls -la</span>
+total 968296
+drwxr-xr-x. <span class="m">2</span> root root      <span class="m">4096</span> Jan  <span class="m">3</span> 15:36 .
+drwxr-xr-x. <span class="m">9</span> root root      <span class="m">4096</span> Jan  <span class="m">3</span> 20:12 ..
+-rw-r--r--. <span class="m">1</span> root root <span class="m">496975360</span> Jan  <span class="m">3</span> 15:32 esxi55-disk1.vmdk
+-rw-r--r--. <span class="m">1</span> root root       <span class="m">125</span> Jan  <span class="m">3</span> 15:32 esxi55.mf
+-rw-r--r--. <span class="m">1</span> root root      <span class="m">7522</span> Jan  <span class="m">3</span> 15:32 esxi55.ovf
+-rw-r--r--. <span class="m">1</span> root root <span class="m">494527542</span> Jan  <span class="m">3</span> 15:36 esxi55-vmware_ovf-1.1.box
+-rw-r--r--. <span class="m">1</span> root root        <span class="m">26</span> Jan  <span class="m">3</span> 15:34 metadata.json
+-rw-r--r--. <span class="m">1</span> root root         <span class="m">0</span> Jan  <span class="m">3</span> 15:34 Vagrantfile
 <span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c">#</span></code></pre></div>
 
 <h3>That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.</h3>
@@ -539,6 +549,15 @@ Password:</code></pre></div>
 <div class="related">
   <h2>Related Posts</h2>
   <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2015/01/04/installing-vagrant-on-centos/">
+            Installing vagrant and the vagrant-vcenter provider on CentOS 6.5
+            <small>04 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
     
       <li>
         <h3>
@@ -554,15 +573,6 @@ Password:</code></pre></div>
           <a href="/2014/05/26/vagrant-install/">
             Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x
             <small>26 May 2014</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2014/05/25/vagrant-vcloud/">
-            Introducing the vagrant-vcloud provider
-            <small>25 May 2014</small>
           </a>
         </h3>
       </li>

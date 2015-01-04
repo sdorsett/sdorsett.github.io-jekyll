@@ -4,13 +4,381 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-04T07:10:32+00:00</updated>
+ <updated>2015-01-04T21:51:02+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Installing vagrant and the vagrant-vcenter provider on CentOS 6.5</title>
+   <link href="http://sdorsett.github.io/2015/01/04/installing-vagrant-on-centos/"/>
+   <updated>2015-01-04T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/01/04/installing-vagrant-on-centos</id>
+   <content type="html">&lt;p&gt;If you followed the steps in one of the two previous posts, you have a ESXi .box template in the vagrant-vmware-ovf format. This format allows for deploying the exact same template to vCenter, vCloud Director or vCloud Air, by simply specifying a different provider in vagrant. This post will cover using vCenter, since that is the most readily available of the three. &lt;/p&gt;
+
+&lt;p&gt;In this post we will again talk about two helpful gosddc projects:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/gosddc/vagrant-vcenter&quot;&gt;gosddc/vagrant-vcenter&lt;/a&gt;.
+This repo contains a vagrant plugin (provider) that will deploy a vagrant-vmware-ovf generated .box template to a vcenter instance. This provider allows vagrant to seamlessly deploy to vCenter.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We will need a virtual machine with a minimal install of CentOS 6.5 to install vagrant or you can use the same CentOS virtual machine we used &lt;a href=&quot;https://sdorsett.github.io/2015/01/03/using-packer-on-centos/&quot;&gt;in the last post&lt;/a&gt;. For convenience I will be using the same virtual machine.&lt;/p&gt;
+
+&lt;h2&gt;1. Let&amp;#39;s get started by installing the necessary dependancies.&lt;/h2&gt;
+
+&lt;h4&gt;A. Run the following command to install the some needed packages:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git unzip&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Download and install ruby-build:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/sstephenson/ruby-build.git&lt;/span&gt;
+Initialized empty Git repository in /root/ruby-build/.git/
+remote: Counting objects: 4212, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+remote: Compressing objects: 100% &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;16/16&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+remote: Total &lt;span class=&quot;m&quot;&gt;4212&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;delta 4&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reused &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;delta 0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Receiving objects: 100% &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;4212/4212&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 761.14 KiB &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;730&lt;/span&gt; KiB/s, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+Resolving deltas: 100% &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;2142/2142&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ruby-build/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./install.sh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Running the &amp;quot;ruby-build --definitions&amp;quot; command will provide an output of the versions of Ruby that ruby-buid supports:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build --definitions&lt;/span&gt;
+1.8.6-p383
+1.8.6-p420
+1.8.7-p249
+1.8.7-p302
+1.8.7-p334
+1.8.7-p352
+1.8.7-p357
+1.8.7-p358
+1.8.7-p370
+1.8.7-p371
+1.8.7-p374
+1.8.7-p375
+1.9.1-p378
+1.9.1-p430
+1.9.2-p0
+1.9.2-p180
+1.9.2-p290
+1.9.2-p318
+1.9.2-p320
+1.9.2-p326
+1.9.2-p330
+1.9.3-dev
+1.9.3-preview1
+1.9.3-rc1
+1.9.3-p0
+1.9.3-p125
+1.9.3-p194
+1.9.3-p286
+1.9.3-p327
+1.9.3-p362
+1.9.3-p374
+1.9.3-p385
+1.9.3-p392
+1.9.3-p429
+1.9.3-p448
+1.9.3-p484
+1.9.3-p545
+1.9.3-p547
+1.9.3-p550
+1.9.3-p551
+2.0.0-dev
+2.0.0-preview1
+2.0.0-preview2
+...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Install ruby 1.9.3 build 551 using the following command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby-build 1.9.3-p551 /usr/local/&lt;/span&gt;
+Downloading yaml-0.1.6.tar.gz...
+-&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/7da6971b4bd08a986dd2a61353bc422362bd0edcc67d7ebaac68c95f74182749
+Installing yaml-0.1.6...
+Installed yaml-0.1.6 to /usr/local/
+
+Downloading ruby-1.9.3-p551.tar.gz...
+-&amp;gt; http://dqw8nmjcqpjn7.cloudfront.net/bb5be55cd1f49c95bb05b6f587701376b53d310eb1bb7c76fbd445a1c75b51e8
+Installing ruby-1.9.3-p551...
+Installed ruby-1.9.3-p551 to /usr/local/&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. Download and install the latest version of ruby gems. You can always find the URL to the most recent version at &lt;a href=&quot;https://rubygems.org/pages/download&quot;&gt;rubygems.org&lt;/a&gt;.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ruby-build&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz&lt;/span&gt;
+--2015-01-02 21:14:39-- http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz
+Resolving production.cf.rubygems.org... 54.230.6.155, 54.230.6.120, 54.230.7.122, ...
+Connecting to production.cf.rubygems.org&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;54.230.6.155&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:80... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt; OK
+Length: &lt;span class=&quot;m&quot;&gt;446665&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;436K&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;application/x-tar&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+Saving to: &lt;span class=&quot;s2&quot;&gt;&amp;quot;rubygems-2.4.5.tgz&amp;quot;&lt;/span&gt;
+
+100%&lt;span class=&quot;o&quot;&gt;[==================================================================================================&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; 446,665 1.78M/s in 0.2s 
+
+2015-01-02 21:14:45 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1.78 MB/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; - &lt;span class=&quot;s2&quot;&gt;&amp;quot;rubygems-2.4.5.tgz&amp;quot;&lt;/span&gt; saved &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;446665/446665&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar -zxf rubygems-2.4.5.tgz&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd rubygems-2.4.5&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.4.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ruby setup.rb&lt;/span&gt;
+RubyGems 2.4.5 installed
+Installing ri documentation &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; rubygems-2.4.5&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;2. Create a directory to keep our vagrant-vmware-ovf .box template to and copy the template we previously created to it:&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir ~/box-files/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cp /root/packer/packer-templates/esxi55/esxi55-vmware_ovf-1.1.box ~/box-files/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;3. The next thing we need to do is download and install vagrant and the vagrant-vcenter provider:&lt;/h2&gt;
+
+&lt;h4&gt;A. Download and install the latest version of vagrant. You can find the URL to the latest versions of the linux 64bit .rpm at &lt;a href=&quot;https://www.vagrantup.com/downloads.html&quot;&gt;vagrantup.com&lt;/a&gt;.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant rubygems-2.4.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm&lt;/span&gt;
+--2015-01-03 16:02:34-- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm
+Resolving dl.bintray.com... 108.168.194.92, 108.168.194.91
+Connecting to dl.bintray.com&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;108.168.194.92&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:443... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;302&lt;/span&gt; 
+Resolving d29vzk4ow07wi7.cloudfront.net... 54.230.7.101, 54.230.5.129, 54.230.6.222, ...
+Connecting to d29vzk4ow07wi7.cloudfront.net&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;54.230.7.101&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:443... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt; OK
+Length: &lt;span class=&quot;m&quot;&gt;65197711&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;62M&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;application/unknown&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+Saving to: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant_1.7.1_x86_64.rpm&amp;quot;&lt;/span&gt;
+
+100%&lt;span class=&quot;o&quot;&gt;[==================================================================================================&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; 65,197,711 1.92M/s in 33s 
+
+2015-01-03 16:03:18 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1.87 MB/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; - &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant_1.7.1_x86_64.rpm&amp;quot;&lt;/span&gt; saved &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;65197711/65197711&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rpm -i vagrant_1.7.1_x86_64.rpm&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant -v&lt;/span&gt;
+Vagrant 1.7.1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Install the vagrant-vcenter plugin using the following commands:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin list&lt;/span&gt;
+vagrant-share &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1.1.4, system&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant plugin install vagrant-vcenter&lt;/span&gt;
+Installing the &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcenter&amp;#39;&lt;/span&gt; plugin. This can take a few minutes...
+Installed the plugin &lt;span class=&quot;s1&quot;&gt;&amp;#39;vagrant-vcenter (0.3.2)&amp;#39;&lt;/span&gt;!
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Create directory and Vagrantfile for the ESXi virtual machines we will deploy with vagrant:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/esxi-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vagrant-vms/esxi-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;esxi_box_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/root/box-files/esxi55-vmware_ovf-1.1.box&amp;#39;&lt;/span&gt;
+ 
+&lt;span class=&quot;nv&quot;&gt;nodes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; :hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-01a&amp;#39;&lt;/span&gt;, :box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt;, :box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; esxi_box_url&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+  &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; :hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-02a&amp;#39;&lt;/span&gt;, :box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt;, :box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; esxi_box_url&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+ 
+Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;2&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+ 
+  config.vm.provider :vcenter &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vcenter&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    vcenter.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.195&amp;#39;&lt;/span&gt;
+    vcenter.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+    vcenter.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;mySecretP@ssw0rd&amp;#39;&lt;/span&gt;
+    vcenter.folder_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Vagrant/Deployed&amp;#39;&lt;/span&gt;
+    vcenter.datacenter_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;datacenter-01&amp;#39;&lt;/span&gt;
+    vcenter.computer_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;cluster-01&amp;#39;&lt;/span&gt;
+    vcenter.datastore_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsanDatastore&amp;#39;&lt;/span&gt;
+    vcenter.template_folder_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Vagrant/Templates&amp;#39;&lt;/span&gt;
+    vcenter.network_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vlan2&amp;#39;&lt;/span&gt;
+    vcenter.linked_clones &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vcenter.enable_vm_customization &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;  &lt;/span&gt;end
+ 
+  &lt;span class=&quot;c&quot;&gt;# Go through nodes and configure each of them.j&lt;/span&gt;
+  nodes.each &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    config.vm.define node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node_config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+ 
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;.include? &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-&amp;#39;&lt;/span&gt;
+        node_config.ssh.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+        node_config.ssh.shell &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;sh&amp;#39;&lt;/span&gt;
+        node_config.ssh.insert_key &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;        &lt;/span&gt;node_config.vm.synced_folder &lt;span class=&quot;s1&quot;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;, &lt;span class=&quot;s1&quot;&gt;&amp;#39;/vagrant&amp;#39;&lt;/span&gt;, disabled: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;      &lt;/span&gt;end
+ 
+      node_config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box_url&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    end
+  end
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This Vagrantfile is specifying vagrant to use the vagrant-vcenter profiler to create two virtual machines (esx-01a &amp;amp; esx-02a) from the esx55-vmware_ovf-1.1.box file. You will need update the following properties to reflect your own vCenter configuration:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;vcenter.hostname = the IP address of your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.username = the username used to connect to your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.password = the password used to connect to your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.datacenter_name = the vCenter virtual datacenter to use for virtual machine deployment&lt;/li&gt;
+&lt;li&gt;vcenter.computer_name = the vCenter host or cluster to use for virtual machine deployment. I&amp;#39;ve used the cluster in my example.&lt;/li&gt;
+&lt;li&gt;vcenter.datastore_name = the vCenter datastore to use for virtual machine deployment&lt;/li&gt;
+&lt;li&gt;vcenter.folder_name = the vm folder that the virtual machines will be deployed to&lt;/li&gt;
+&lt;li&gt;vcenter.template_folder_name = the vm folder that the ESXi template will be created in&lt;/li&gt;
+&lt;li&gt;vcenter.network_name = the vCenter portgroup to connect the ESXi templates to. There should be a DHCP server on this portgroup to provide IP addresses to the deployed ESXi templates.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;4. &amp;quot;vagrant up&amp;quot;&lt;/h2&gt;
+
+&lt;h4&gt;A. Now that we have created a Vagrantfile config file and updated it with our vCenter information we can bring up our virtual machine by running &amp;quot;vagrant up&amp;quot; in the directory with the Vagrantfile.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up&lt;/span&gt;
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-01a&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcenter&amp;#39;&lt;/span&gt; provider...
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-02a&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcenter&amp;#39;&lt;/span&gt; provider...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Box &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt; could not be found. Attempting to find and install...
+ esx-01a: Box Provider: vmware_ovf, vcloud, vcenter
+ esx-01a: Box Version: &amp;gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Adding box &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; provider: vmware_ovf, vcloud, vcenter
+ esx-01a: Downloading: file:///root/box-files/esxi55-vmware_ovf-1.1.box
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Successfully added box &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vmware_ovf&amp;#39;&lt;/span&gt;!
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Box &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt; could not be found. Attempting to find and install...
+ esx-02a: Box Provider: vmware_ovf, vcloud, vcenter
+ esx-02a: Box Version: &amp;gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Adding box &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxi55&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;v0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; provider: vmware_ovf, vcloud, &lt;span class=&quot;nv&quot;&gt;vcenter&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Uploading &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Adding &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+2015-01-03 16:28:34 -0600: networks: &lt;span class=&quot;nv&quot;&gt;vlan2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; vlan2
+2015-01-03 16:28:34 -0600: Uploading OVF to esx02.tyrell.corp...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Uploading &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Adding &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+2015-01-03 16:28:35 -0600: networks: &lt;span class=&quot;nv&quot;&gt;vlan2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; vlan2
+2015-01-03 16:28:35 -0600: Uploading OVF to esx01.tyrell.corp...
+DEBUG: Timeout: 300
+Iteration 1: Trying to get host&lt;span class=&quot;s1&quot;&gt;&amp;#39;s IP address ...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt; % Total % Received % Xferd Average Speed Time Time Time Current&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt; Dload Upload Total Spent Left Speed&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt; 15 473M 15 75.3M 0 0 4554k 0 0:01:46 0:00:16 0:01:30 4552k2015-01-03 16:29:02 -0600: Template already exists, waiting for it to be ready&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt; 20 473M 20 98.8M 0 0 5122k 0 0:01:34 0:00:19 0:01:15 7489k2015-01-03 16:29:05 -0600: Template VM found&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;100 473M 100 473M 0 0 9245k 0 0:00:52 0:00:52 --:--:-- 9.9M&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;Iteration 1: Trying to access nfcLease.info.entity ...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;HttpNfcLeaseComplete succeeded&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi_box_url = &amp;#39;&lt;/span&gt;/root/box-files/esxi55-vmware_ovf-1.1.box&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Creating VM...
+2015-01-03 16:29:42 -0600: Template fully prepared and ready to be &lt;span class=&quot;nv&quot;&gt;cloned&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Creating VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Powering on VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Powering on VM...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+ 
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&quot;&gt;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;B. Once the &amp;quot;vagrant up&amp;quot; command completes, you can check the status of the vms using &amp;quot;vagrant status&amp;quot;:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant status&lt;/span&gt;
+Current machine states:
+
+esx-01a running &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+esx-02a running &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant status NAME&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Looking in vCenter you will see the virtual machines that vagrant deployed:&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-esx-01a.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h4&gt;D. You can now ssh into either of the ESXi virtual machines using &amp;quot;vagrant ssh [vm_name]&amp;quot;:&lt;/h4&gt;
+
+&lt;p&gt;To connect to esx-01a you simply run &amp;quot;vagrant ssh esx-01a&amp;quot;:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh esx-01a&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: External IP &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; esx-01a: 192.168.1.177
+The &lt;span class=&quot;nb&quot;&gt;time &lt;/span&gt;and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools. Please
+see www.vmware.com/go/sysadmintools &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; more information.
+
+~ &lt;span class=&quot;c&quot;&gt;# esxcli network ip interface list&lt;/span&gt;
+vmk0
+ Name: vmk0
+ MAC Address: 00:50:56:6f:9d:66
+ Enabled: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt; &lt;/span&gt;Portset: vSwitch0
+ Portgroup: Management Network
+ Netstack Instance: defaultTcpipStack
+ VDS Name: N/A
+ VDS UUID: N/A
+ VDS Port: N/A
+ VDS Connection: -1
+ MTU: 1500
+ TSO MSS: 65535
+ Port ID: 33554437
+~ &lt;span class=&quot;c&quot;&gt;# exit&lt;/span&gt;
+Connection to 192.168.1.177 closed.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The same can be done for esx-02a:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh esx-02a&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: External IP &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; esx-02a: 192.168.1.178
+The &lt;span class=&quot;nb&quot;&gt;time &lt;/span&gt;and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools. Please
+see www.vmware.com/go/sysadmintools &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; more information.
+~ &lt;span class=&quot;c&quot;&gt;# esxcli network ip interface list&lt;/span&gt;
+vmk0
+ Name: vmk0
+ MAC Address: 00:50:56:67:d5:b7
+ Enabled: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt; &lt;/span&gt;Portset: vSwitch0
+ Portgroup: Management Network
+ Netstack Instance: defaultTcpipStack
+ VDS Name: N/A
+ VDS UUID: N/A
+ VDS Port: N/A
+ VDS Connection: -1
+ MTU: 1500
+ TSO MSS: 65535
+ Port ID: 33554437
+~ &lt;span class=&quot;c&quot;&gt;# exit&lt;/span&gt;
+Connection to 192.168.1.178 closed.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. Once we are done using our virtual machines they can be destroyed with a &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+    esx-02a: Are you sure you want to destroy the &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-02a&amp;#39;&lt;/span&gt; VM? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;y/N&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Powering off VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Destroying VM...
+    esx-01a: Are you sure you want to destroy the &lt;span class=&quot;s1&quot;&gt;&amp;#39;esx-01a&amp;#39;&lt;/span&gt; VM? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;y/N&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Powering off VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Destroying VM...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;F. If you are ever unsure of the state of the vagrant virtual machines you can run &amp;quot;vagrant status&amp;quot; to check:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant status&lt;/span&gt;
+Current machine states:
+
+esx-01a                   not created &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+esx-02a                   not created &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant status NAME&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;That all for this post covering the basics of getting vagrant and the vagrant-vcenter provider installed/configured on CentOS.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment</title>
@@ -442,6 +810,16 @@ Password:&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 ./esxi55.ovf
 ./metadata.json
 ./Vagrantfile
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ls -la&lt;/span&gt;
+total 968296
+drwxr-xr-x. &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; root root      &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:36 .
+drwxr-xr-x. &lt;span class=&quot;m&quot;&gt;9&lt;/span&gt; root root      &lt;span class=&quot;m&quot;&gt;4096&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 20:12 ..
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root &lt;span class=&quot;m&quot;&gt;496975360&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:32 esxi55-disk1.vmdk
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root       &lt;span class=&quot;m&quot;&gt;125&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:32 esxi55.mf
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root      &lt;span class=&quot;m&quot;&gt;7522&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:32 esxi55.ovf
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root &lt;span class=&quot;m&quot;&gt;494527542&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:36 esxi55-vmware_ovf-1.1.box
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root        &lt;span class=&quot;m&quot;&gt;26&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:34 metadata.json
+-rw-r--r--. &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root         &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt; Jan  &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; 15:34 Vagrantfile
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&amp;#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.&lt;/h3&gt;
