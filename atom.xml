@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-04T07:06:24+00:00</updated>
+ <updated>2015-01-04T07:10:32+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -444,7 +444,7 @@ Password:&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 ./Vagrantfile
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in becoming familiar with packer and getting it installed/configured on CentOS. The next blog post will be covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.&lt;/h3&gt;
+&lt;h3&gt;That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&amp;#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>
