@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-03T14:21:00+00:00</updated>
+ <updated>2015-01-04T02:38:40+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -13,11 +13,447 @@
 
  
  <entry>
+   <title>Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment</title>
+   <link href="http://sdorsett.github.io/2015/01/03/using-packer-on-centos/"/>
+   <updated>2015-01-03T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/01/03/using-packer-on-centos</id>
+   <content type="html">&lt;p&gt;In the previous post I demonstrated using packer to create a ESXi .box template on OS X with fusion and the vagrant vmware provider. Both of these pieces of software have a cost associated with their usages, so in this post I will show you how to use CentOS 6.5 and ESXi for the same basic results.  &lt;/p&gt;
+
+&lt;p&gt;In this post we will again talk about these two gosddc projects:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf&quot;&gt;gosddc/packer-post-processor-vagrant-vmware-ovf&lt;/a&gt;.
+This repo contains a packer post processor that leverages VMware OVF Tool to create a vmware_ovf Vagrant box that is compatible with vagrant-vcloud, vagrant-vcenter and vagrant-vcloudair vagrant providers. It is only compatible with the packer VMware builder. This project is a post processor that makes the generation of the .box file seemless. Unfortunately there currently seems to be &lt;a href=&quot;https://github.com/mitchellh/packer/issues/1457&quot;&gt;a bug with packer&lt;/a&gt; exporting the virtual machine artifact from a remote ESXi server. Hopefully this issue will be resolved with an upcoming release of packer which will allow this post processor to be used with remote ESXi.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-templates&quot;&gt;gosddc/packer-templates&lt;/a&gt;.
+This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating packer templates on VMware products.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We will also be using a virtual machine with a minimal install of CentOS 6.5 to install everything we will be using to build the template.&lt;/p&gt;
+
+&lt;h2&gt;1. Let&amp;#39;s get started by installing packer.&lt;/h2&gt;
+
+&lt;h4&gt;A.  Copy the linux 64bit packer installer URL from the following link:&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.packer.io/downloads.html&quot;&gt;https://www.packer.io/downloads.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;B.  Use wget on your CentOS vm to download the URL you copied&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://dl.bintray.com/mitchellh/packer/packer_0.7.5_linux_amd64.zip&lt;/span&gt;
+--2015-01-02 21:17:41-- https://dl.bintray.com/mitchellh/packer/packer_0.7.5_linux_amd64.zip
+Resolving dl.bintray.com... 108.168.194.91, 108.168.194.92
+Connecting to dl.bintray.com&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;108.168.194.91&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:443... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;302&lt;/span&gt; 
+Resolving d29vzk4ow07wi7.cloudfront.net... 54.230.5.16, 54.230.5.11, 54.230.5.30, ...
+Connecting to d29vzk4ow07wi7.cloudfront.net&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;54.230.5.16&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:443... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt; OK
+Length: &lt;span class=&quot;m&quot;&gt;87262135&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;83M&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;application/unknown&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+Saving to: &lt;span class=&quot;s2&quot;&gt;&amp;quot;packer_0.7.5_linux_amd64.zip&amp;quot;&lt;/span&gt;
+
+100%&lt;span class=&quot;o&quot;&gt;[==================================================================================================&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; 87,262,135 1.92M/s in 50s 
+
+2015-01-02 21:18:42 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1.65 MB/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; - &lt;span class=&quot;s2&quot;&gt;&amp;quot;packer_0.7.5_linux_amd64.zip&amp;quot;&lt;/span&gt; saved &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;87262135/87262135&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C.  Install the unzip package on our CentOS vm since that&amp;#39;s the format packer comes compressed in:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y unzip&lt;/span&gt;
+Loaded plugins: fastestmirror
+Setting up Install Process
+Loading mirror speeds from cached hostfile
+ * base: repos.dfw.quadranet.com
+ * extras: mirror.anl.gov
+ * updates: mirror.us.oneandone.net
+base                                                                                                                 &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 3.7 kB     00:00     
+extras                                                                                                               &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 3.4 kB     00:00     
+updates                                                                                                              &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 3.4 kB     00:00     
+Resolving Dependencies
+--&amp;gt; Running transaction check
+---&amp;gt; Package unzip.x86_64 0:6.0-1.el6 will be installed
+--&amp;gt; Finished Dependency Resolution
+
+Dependencies &lt;span class=&quot;nv&quot;&gt;Resolved&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;============================================================================================================================================&lt;/span&gt;
+ Package                         Arch                             Version                              Repository                      &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;============================================================================================================================================&lt;/span&gt;
+Installing:
+ unzip                           x86_64                           6.0-1.el6                            base                           &lt;span class=&quot;m&quot;&gt;149&lt;/span&gt; k
+
+Transaction &lt;span class=&quot;nv&quot;&gt;Summary&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;============================================================================================================================================&lt;/span&gt;
+Install       &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+Total download size: &lt;span class=&quot;m&quot;&gt;149&lt;/span&gt; k
+Installed size: &lt;span class=&quot;m&quot;&gt;313&lt;/span&gt; k
+Downloading Packages:
+unzip-6.0-1.el6.x86_64.rpm                                                                                           &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;149&lt;/span&gt; kB     00:00     
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : unzip-6.0-1.el6.x86_64                                                                                                   1/1 
+  Verifying  : unzip-6.0-1.el6.x86_64                                                                                                   1/1 
+
+Installed:
+  unzip.x86_64 0:6.0-1.el6                                                                                                                  
+
+Complete!
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D.  Create the /usr/local/packer_7.5 directory and unzip the packer download to this location.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir /usr/local/packer_7.5&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cp packer_0.7.5_linux_amd64.zip /usr/local/packer_7.5/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd /usr/local/packer_7.5/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# unzip packer_0.7.5_linux_amd64.zip&lt;/span&gt;
+Archive: packer_0.7.5_linux_amd64.zip
+inflating: packer 
+inflating: packer-builder-amazon-chroot 
+inflating: packer-builder-amazon-ebs 
+inflating: packer-builder-amazon-instance 
+inflating: packer-builder-digitalocean 
+inflating: packer-builder-docker 
+inflating: packer-builder-googlecompute 
+inflating: packer-builder-null 
+inflating: packer-builder-openstack 
+inflating: packer-builder-parallels-iso 
+inflating: packer-builder-parallels-pvm 
+inflating: packer-builder-qemu 
+inflating: packer-builder-virtualbox-iso 
+inflating: packer-builder-virtualbox-ovf 
+inflating: packer-builder-vmware-iso 
+inflating: packer-builder-vmware-vmx 
+inflating: packer-post-processor-atlas 
+inflating: packer-post-processor-compress 
+inflating: packer-post-processor-docker-import 
+inflating: packer-post-processor-docker-push 
+inflating: packer-post-processor-docker-save 
+inflating: packer-post-processor-docker-tag 
+inflating: packer-post-processor-vagrant 
+inflating: packer-post-processor-vagrant-cloud 
+inflating: packer-post-processor-vsphere 
+inflating: packer-provisioner-ansible-local 
+inflating: packer-provisioner-chef-client 
+inflating: packer-provisioner-chef-solo 
+inflating: packer-provisioner-file 
+inflating: packer-provisioner-puppet-masterless 
+inflating: packer-provisioner-puppet-server 
+inflating: packer-provisioner-salt-masterless 
+inflating: packer-provisioner-shell&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E.  Add /usr/local/packer_7.5 to your path by running the following command.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=&amp;quot;/usr/local/packer_7.5:$PATH&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat ~/.bash_profile&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;/usr/local/packer_7.5:$PATH&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. Stop iptables since packer will be using a http server to publish the ESXi kickstart files:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# service iptables stop&lt;/span&gt;
+iptables: Setting chains to policy ACCEPT: filter &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+iptables: Flushing firewall rules: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+iptables: Unloading modules: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle is what I used.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# chmod +x VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle&lt;/span&gt;
+Extracting VMware Installer...done.
+You must accept the VMware OVF Tool component &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; Linux End User
+License Agreement to &lt;span class=&quot;k&quot;&gt;continue&lt;/span&gt;. Press Enter to proceed.
+VMWARE END USER LICENSE AGREEMENT
+
+1.4 &lt;span class=&quot;s2&quot;&gt;&amp;quot;Intellectual Property Rights&amp;quot;&lt;/span&gt; means all worldwide intellectual
+property rights, including without limitation, copyrights, trademarks, service
+Do you agree? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;yes/no&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: yes
+
+The product is ready to be installed. Press Enter to begin
+installation or Ctrl-C to cancel.
+
+Installing VMware OVF Tool component &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; Linux 3.5.1
+Configuring...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;######################################################################] 100%&lt;/span&gt;
+Installation was successful.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Verify ovftool is successfully added to your path by running &amp;quot;ovftool -v&amp;quot;. This command should output the version of ovftool we installed.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ovftool -v&lt;/span&gt;
+VMware ovftool 3.5.1 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;build-1747221&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;3. Now we can download and install the gosddc packer components we will need.&lt;/h2&gt;
+
+&lt;h4&gt;A. Download the most recent linux amd64 version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&quot;&gt;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;B. Unzip packer-post-processor-vagrant-vmware-ovf and copy it to &amp;quot;/usr/local/packer_7.5&amp;quot;. Ensure the permissions of this file match the other files in this directory.&lt;/h4&gt;
+
+&lt;h4&gt;C. Create a directory to contain the packer templates:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir ~/packer&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/packer&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h5&gt;D. Clone the gosddc packer-templates repository:&lt;/h5&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# git clone https://github.com/gosddc/packer-templates.git&lt;/span&gt;
+Initialized empty Git repository in /root/packer/packer-templates/.git/
+remote: Counting objects: 195, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+remote: Total &lt;span class=&quot;m&quot;&gt;195&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;delta 0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reused &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;delta 0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Receiving objects: 100% &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;195/195&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 39.32 KiB, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.
+Resolving deltas: 100% &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;105/105&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;4. Next we need to download the ESXi 5.5 .iso and copy it into the proper directory location.&lt;/h2&gt;
+
+&lt;h4&gt;A. create an &amp;quot;iso&amp;quot; directory for storing the ESXi iso files:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd packer-templates/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir iso&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Download and copy the &amp;quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot; ESXi 5.5 installer to the iso directory.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cp ~/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso iso/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;5. Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.&lt;/h2&gt;
+
+&lt;h4&gt;A. modify ~/packer/packer-templates/templates/esxi.json to look like the following:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi templates/esxi.json&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat templates/esxi.json&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;variables&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;version&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;1.0&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;builders&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vm_name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmdk_name&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxi55-disk0&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmware-iso&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;headless&amp;quot;&lt;/span&gt;: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;disk_size&amp;quot;&lt;/span&gt;: 4096,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;guest_os_type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;centos-64&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_url&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_checksum&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;ef599dc7e647177027684c0eee346ccdbc8704f2&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;iso_checksum_type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;sha1&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;remote_host&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;192.168.1.201&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;remote_datastore&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esx01-local-sata&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;remote_username&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;root&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;remote_password&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;mySecretP@ssw0rd&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;remote_type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esx5&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_username&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;root&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_password&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vagrant&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;ssh_wait_timeout&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;60m&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;shutdown_command&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;esxcli system maintenanceMode set -e true -t 0 ; esxcli system shutdown poweroff -d 10 -r &amp;#39;Packer Shutdown&amp;#39; ; esxcli system maintenanceMode set -e false -t 0&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;tools_upload_flavor&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;linux&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;http_directory&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;.&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;boot_wait&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;5s&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmx_data&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;memsize&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;4096&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;numvcpus&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;2&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;vhv.enable&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;ethernet0.virtualDev&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;e1000&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;ethernet0.networkName&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vlan2&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;ethernet0.present&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmx_data_post&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;guestos&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;vmkernel5&amp;quot;&lt;/span&gt;,
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;ide1:0.present&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;boot_command&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;lt;enter&amp;gt;&amp;lt;wait&amp;gt;O&amp;lt;wait&amp;gt; ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/scripts/esxi-5-kickstart.cfg&amp;lt;enter&amp;gt;&amp;quot;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot;provisioners&amp;quot;&lt;/span&gt;: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;file&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;source&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;puppet/modules/vagrantbaseconfig/files/vagrant.pub&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;destination&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;/etc/ssh/keys-root/authorized_keys&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;shell&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;script&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;scripts/esxi-vmware-tools_install.sh&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,
+    &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;shell&amp;quot;&lt;/span&gt;,
+      &lt;span class=&quot;s2&quot;&gt;&amp;quot;script&amp;quot;&lt;/span&gt;: &lt;span class=&quot;s2&quot;&gt;&amp;quot;scripts/esxi-cloning_configuration.sh&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;There are several things I would like to point out in the esxi.json file we just created.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;builder - this section specifies that we will be using the &amp;quot;vmware-iso&amp;quot; builder, with a remote ESXi host, to create our packer template. You will need to modify several part of this to match your ESXi server:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt; remote_host - this is the IP address of our ESXi server.&lt;/li&gt;
+&lt;li&gt; remote_datastore - this is the datastore our virtual machine will be built on.&lt;/li&gt;
+&lt;li&gt; remote_username - the ESXi username used to connect&lt;/li&gt;
+&lt;li&gt; remote_password - the ESXi password used to connect&lt;/li&gt;
+&lt;li&gt; remote_type - this specifies the remote server is ESXi 5.x&lt;/li&gt;
+&lt;li&gt; ethernet0.networkName - this is the portgroup that the packer virtual machine connects to. This should be the same portgroup that the CentOS vm is one, since the ESXi install will need a kickstart file served by a http server included with packer.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Also in the builder section you might notice we are setting the &amp;quot;guest_os_type&amp;quot; to be &amp;quot;centos-64&amp;quot; during install. This is due to packer attempting to mount the vmtools .iso at the end of the install process. This has no impact on the install and we change it back to &amp;quot;vmkernel5&amp;quot; in the &amp;quot;vmx_data_post&amp;quot; section, which gets processed post after the virtual machine is powered down after the install process has completed.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;a file provisioner that will copy the vagrant public ssh key into our ESXi template&lt;/li&gt;
+&lt;li&gt;a shell script to install the vmware tools VIB for nested ESXi&lt;/li&gt;
+&lt;li&gt;a shell script to make necessary MAC address changes in our nested ESXi template.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;post-processors - I have removed the vagrant-vmware-ovf post processor due to the bug I mentioned earlier.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h4&gt;B. modify the esxi-cloning_configuration.sh script in the scripts directory to read as follows:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi scripts/esxi-cloning_configuration.sh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat scripts/esxi-cloning_configuration.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Settings to ensure that ESXi cloning goes smooth, thanks @lamw ! see:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# http://www.virtuallyghetto.com/2013/12/how-to-properly-clone-nested-esxi-vm.html&lt;/span&gt;
+esxcli system settings advanced &lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; -o /Net/FollowHardwareMac -i 1
+sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/\/system\/uuid/d&amp;#39;&lt;/span&gt; /etc/vmware/esx.conf
+sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&amp;#39;&lt;/span&gt; /etc/vmware/esx.conf
+
+&lt;span class=&quot;c&quot;&gt;# DHCP doesn&amp;#39;t refresh correctly upon boot, this will force a renew, it will&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# be executed on every boot, if you don&amp;#39;t like this behavior you can remove&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# the line during the Vagrant provisioning part.&lt;/span&gt;
+sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/exit 0/d&amp;#39;&lt;/span&gt; /etc/rc.local.d/local.sh 
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;esxcli network ip interface set -e false -i vmk0; esxcli network ip interface set -e true -i vmk0&amp;#39;&lt;/span&gt; &amp;gt;&amp;gt; /etc/rc.local.d/local.sh 
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;exit 0&amp;#39;&lt;/span&gt; &amp;gt;&amp;gt; /etc/rc.local.d/local.sh 
+
+&lt;span class=&quot;c&quot;&gt;# Ensure changes are persistent&lt;/span&gt;
+/sbin/auto-backup.sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.confg, in order to force it to be regenerated on each clones template:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&amp;#39;&lt;/span&gt; /etc/vmware/esx.conf&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Validate the packer esxi.json file is ready for building by running the following command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# packer validate templates/esxi.json &lt;/span&gt;
+Template validated successfully.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Start the build by running:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# packer build templates/esxi.json &lt;/span&gt;
+esxi55 output will be in this color.
+
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Downloading or copying ISO
+esxi55: Downloading or copying: file:///root/packer/packer-templates/iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Uploading ISO to remote machine...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Creating virtual machine &lt;span class=&quot;nv&quot;&gt;disk&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Building and writing VMX &lt;span class=&quot;nv&quot;&gt;file&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Starting HTTP server on port &lt;span class=&quot;nv&quot;&gt;8828&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Registering remote VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Starting virtual machine...
+esxi55: The VM will be run headless, without a GUI. If you want to
+esxi55: view the screen of the VM, connect via VNC without a password to
+esxi55: 192.168.1.201:5988
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Waiting 5s &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; boot...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Connecting to VM via &lt;span class=&quot;nv&quot;&gt;VNC&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Typing the boot &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;over VNC...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Connected to SSH!
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; /etc/ssh/keys-root/authorized_keys
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Provisioning with shell script: scripts/esxi-vmware-tools_install.sh
+esxi55: Installation Result
+esxi55: Message: The update completed successfully, but the system needs to be rebooted &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; the changes to be effective.
+esxi55: Reboot Required: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
+esxi55: VIBs Removed:
+esxi55: VIBs Skipped:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
+esxi55: diff: can&lt;span class=&quot;s1&quot;&gt;&amp;#39;t stat &amp;#39;&lt;/span&gt;/tmp/auto-backup.35224//etc/ssh/keys-root/authorized_keys&lt;span class=&quot;s1&quot;&gt;&amp;#39;: No such file or directory&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Saving current state in /bootbank&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Clock updated.&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Time: 04:39:41 Date: 01/03/2015 UTC&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; esxi55: Gracefully halting virtual machine...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Waiting for VMware to clean up after itself...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; esxi55: Deleting unnecessary VMware files...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Deleting: /vmfs/volumes/esx01-local-sata/output-esxi55/vmware.log&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; esxi55: Cleaning VMX prior to finishing up...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Unmounting floppy from VMX...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;esxi55: Detaching ISO from CD-ROM device...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; esxi55: Compacting the disk image&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; esxi55: Unregistering virtual machine...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;Build &amp;#39;&lt;/span&gt;esxi55&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt; finished.
+
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; Builds finished. The artifacts of successful builds are:
+--&amp;gt; esxi55: VM files in directory: /vmfs/volumes/esx01-local-sata/output-esxi55
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;esxi55: The VM will be run headless, without a GUI. If you want to
+esxi55: view the screen of the VM, connect via VNC without a password to
+esxi55: 192168.1.201:5988&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The other option to track the progress of the ESXi install is to open the console of the virtual machine in the VI or web client.&lt;/p&gt;
+
+&lt;h4&gt;D. The last line of the packer output shows the datastore location of the virtual machine that was created. We need to SSH to the ESXi host in order to re-register the virtual machine, in order to export it using ovftool:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ssh root@192.168.1.201 &amp;quot;vim-cmd solo/registervm /vmfs/volumes/esx01-local-sata/output-esxi55/*.vmx&amp;quot;&lt;/span&gt;
+Password: 
+70&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Update this command to reflect the IP address and path to the virtual machine that packer created. Also take note of the vmid that the command returns, since we&amp;#39;ll need this in a future step.&lt;/p&gt;
+
+&lt;h4&gt;E. Use the following command to export the virtual machine we just registered:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ovftool vi://root:[esxi_password]@192.168.1.201/esxi55 ./&lt;/span&gt;
+Opening VI &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt;: vi://root@192.168.1.201:443/esxi55
+Opening OVF target: ./
+Writing OVF package: ./esxi55/esxi55.ovf
+Transfer Completed 
+Completed successfully&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Replace the IP address, password and virtual machine name if needed.&lt;/p&gt;
+
+&lt;h4&gt;F. Unregister the virtual machine template using the following command with the vmid returned by the registration command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ssh root@192.168.1.201 &amp;quot;vim-cmd vmsvc/unregister 70&amp;quot;&lt;/span&gt;
+Password:&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;6. Since we disable the vagrant-vcenter-ovf post processor, we will need to create the .box file according to the specifications&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/wiki/vmware_ovf-Box-Format&quot;&gt; listed here&lt;/a&gt;:&lt;/h2&gt;
+
+&lt;h4&gt;A. Create the metadata.json file needed by the vagrant-vmware-ovf .box file:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo &amp;#39;{&amp;quot;provider&amp;quot;:&amp;quot;vmware_ovf&amp;quot;}&amp;#39; &amp;gt;&amp;gt; metadata.json&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;B. Create an empty Vagrantfile to include in the .box file:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Use tar to compress the files in this directory into a .box file:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar cvzf esxi55-vmware_ovf-1.1.box ./*&lt;/span&gt;
+./esxi55-disk1.vmdk
+./esxi55.mf
+./esxi55.ovf
+./metadata.json
+./Vagrantfile
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi55&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Hopefully you found this post helpful in becoming familiar with packer and getting it installed/configured on CentOS. The next blog post will be covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
+ 
+ <entry>
    <title>Using packer on OS X to create an ESXi .box template for vagrant deployment</title>
    <link href="http://sdorsett.github.io/2014/12/28/getting-packer-installed-on-OS-X/"/>
    <updated>2014-12-28T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2014/12/28/getting-packer-installed-on-OS-X</id>
-   <content type="html">&lt;p&gt;I&amp;#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and centos in a future post.&lt;/p&gt;
+   <content type="html">&lt;p&gt;I&amp;#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and CentOS in a future post.&lt;/p&gt;
 
 &lt;p&gt;Several github projects by gosddc have helped me in getting packer up and running on my Macbook:&lt;/p&gt;
 
@@ -248,7 +684,7 @@ sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/sp
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:packer-templates sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ls *.box
 esxi55-vmware_ovf-1.0.box&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
+&lt;h3&gt;Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on CentOS and build a packer virtual machine on a remote ESXi host.&lt;/h3&gt;
 
 &lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
 </content>

@@ -103,7 +103,7 @@
         <div class="post">
   <h1 class="post-title">Using packer on OS X to create an ESXi .box template for vagrant deployment</h1>
   <span class="post-date">28 Dec 2014</span>
-  <p>I&#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and centos in a future post.</p>
+  <p>I&#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and CentOS in a future post.</p>
 
 <p>Several github projects by gosddc have helped me in getting packer up and running on my Macbook:</p>
 
@@ -334,7 +334,7 @@ sdorsett-mbp:packer-templates sdorsett<span class="err">$</span></code></pre></d
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>ls *.box
 esxi55-vmware_ovf-1.0.box</code></pre></div>
 
-<h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on centos and build a packer virtual machine on a remote ESXi host.</h3>
+<h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on CentOS and build a packer virtual machine on a remote ESXi host.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
@@ -343,6 +343,15 @@ esxi55-vmware_ovf-1.0.box</code></pre></div>
 <div class="related">
   <h2>Related Posts</h2>
   <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2015/01/03/using-packer-on-centos/">
+            Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment
+            <small>03 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
     
       <li>
         <h3>
@@ -358,15 +367,6 @@ esxi55-vmware_ovf-1.0.box</code></pre></div>
           <a href="/2014/05/25/vagrant-vcloud/">
             Introducing the vagrant-vcloud provider
             <small>25 May 2014</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2014/05/06/vagrant-and-puppet/">
-            Creating a Puppet manifest and integrating it with Vagrant
-            <small>06 May 2014</small>
           </a>
         </h3>
       </li>
