@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-04T06:55:32+00:00</updated>
+ <updated>2015-01-04T07:02:56+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -332,7 +332,7 @@ sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/exit 0/d&amp;#39;&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# Ensure changes are persistent&lt;/span&gt;
 /sbin/auto-backup.sh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.confg, in order to force it to be regenerated on each clones template:&lt;/p&gt;
+&lt;p&gt;We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.conf, in order to force it to be regenerated on each clones template:&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sed -i &lt;span class=&quot;s1&quot;&gt;&amp;#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&amp;#39;&lt;/span&gt; /etc/vmware/esx.conf&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 

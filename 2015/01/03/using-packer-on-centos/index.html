@@ -418,7 +418,7 @@ sed -i <span class="s1">&#39;/exit 0/d&#39;</span> /etc/rc.local.d/local.sh
 <span class="c"># Ensure changes are persistent</span>
 /sbin/auto-backup.sh</code></pre></div>
 
-<p>We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.confg, in order to force it to be regenerated on each clones template:</p>
+<p>We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.conf, in order to force it to be regenerated on each clones template:</p>
 
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">sed -i <span class="s1">&#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&#39;</span> /etc/vmware/esx.conf</code></pre></div>
 
