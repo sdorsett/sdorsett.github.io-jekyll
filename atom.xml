@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-04T02:38:40+00:00</updated>
+ <updated>2015-01-04T06:53:49+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -17,9 +17,9 @@
    <link href="http://sdorsett.github.io/2015/01/03/using-packer-on-centos/"/>
    <updated>2015-01-03T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2015/01/03/using-packer-on-centos</id>
-   <content type="html">&lt;p&gt;In the previous post I demonstrated using packer to create a ESXi .box template on OS X with fusion and the vagrant vmware provider. Both of these pieces of software have a cost associated with their usages, so in this post I will show you how to use CentOS 6.5 and ESXi for the same basic results.  &lt;/p&gt;
+   <content type="html">&lt;p&gt;In the previous post I demonstrated using packer to create a ESXi .box template on OS X with fusion and the vagrant vmware provider. Both of these pieces of software have a cost associated with their usage, so in this post I will demonstrate how to use CentOS 6.5 and ESXi for the same results.  &lt;/p&gt;
 
-&lt;p&gt;In this post we will again talk about these two gosddc projects:&lt;/p&gt;
+&lt;p&gt;In this post we will again talk about two helpful gosddc projects:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf&quot;&gt;gosddc/packer-post-processor-vagrant-vmware-ovf&lt;/a&gt;.
@@ -28,7 +28,7 @@ This repo contains a packer post processor that leverages VMware OVF Tool to cre
 This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating packer templates on VMware products.&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;We will also be using a virtual machine with a minimal install of CentOS 6.5 to install everything we will be using to build the template.&lt;/p&gt;
+&lt;p&gt;We will be using a virtual machine with a minimal install of CentOS 6.5 to install everything we need to build the packer template.&lt;/p&gt;
 
 &lt;h2&gt;1. Let&amp;#39;s get started by installing packer.&lt;/h2&gt;
 
@@ -144,19 +144,21 @@ inflating: packer-provisioner-shell&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# export PATH=&amp;quot;/usr/local/packer_7.5:$PATH&amp;quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.&lt;/h4&gt;
+&lt;h4&gt;F. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat ~/.bash_profile&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;/usr/local/packer_7.5:$PATH&amp;quot;&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h4&gt;E. Stop iptables since packer will be using a http server to publish the ESXi kickstart files:&lt;/h4&gt;
+&lt;h4&gt;G. Stop iptables since packer will be using a http server to publish the ESXi kickstart files:&lt;/h4&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# service iptables stop&lt;/span&gt;
 iptables: Setting chains to policy ACCEPT: filter &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 iptables: Flushing firewall rules: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 iptables: Unloading modules: &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; OK &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant packer_7.5&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;2. The next thing we need to do is download and install ovftool:&lt;/h2&gt;
 
 &lt;h4&gt;A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle is what I used.&lt;/h4&gt;
 
