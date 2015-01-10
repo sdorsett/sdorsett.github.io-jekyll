@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-04T21:51:02+00:00</updated>
+ <updated>2015-01-10T20:24:04+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -13,13 +13,321 @@
 
  
  <entry>
+   <title>Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment</title>
+   <link href="http://sdorsett.github.io/2015/01/06/creating-vcsa-box-manually/"/>
+   <updated>2015-01-06T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/01/06/creating-vcsa-box-manually</id>
+   <content type="html">&lt;p&gt;In the last few blogs post we have created ESXi .box templates, but in order to create a complete virtual lab using vagrant we will also need a vCenter Server Appliance virtual machine. The vCSA comes as a .ova template, so we will need to convert it to a vagrant-vmware-ovf .box template before we can use it with vagrant.&lt;/p&gt;
+
+&lt;p&gt;In this post we will need several packages installed, that we have covered in the last few posts:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;vagrant - I used vagrant 1.7.1 for these steps&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/gosddc/vagrant-vcenter&quot;&gt;gosddc/vagrant-vcenter&lt;/a&gt;.
+This repo contains a vagrant plugin (provider) that will deploy a vagrant-vmware-ovf generated .box template to a vcenter instance. This provider allows vagrant to seamlessly deploy to vCenter.&lt;/li&gt;
+&lt;li&gt;ovftool - I have ovftool 3.5.1 installed on my CentOS vm.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I will be using the same CentOS virtual machine we used &lt;a href=&quot;https://sdorsett.github.io/2015/01/04/installing-vagrant-on-centos/&quot;&gt;in the last post&lt;/a&gt; since it already has all the packages we will be needing.&lt;/p&gt;
+
+&lt;h2&gt;1. Download the vCenter Server Appliance .iso from the &lt;a href=&quot;https://my.vmware.com/web/vmware/details?downloadGroup=VC55U2&amp;amp;productId=353&quot;&gt;vmware.com download page&lt;/a&gt;.&lt;/h2&gt;
+
+&lt;p&gt;I will be using &amp;quot;VMware-vCenter-Server-Appliance-5.5.0.20000-2063318_OVF10.ova&amp;quot;, which is the vCSA 5.5 U2 .ova. &lt;/p&gt;
+
+&lt;h2&gt;2. Use ovftool to upload the vCSA .ova to vCenter:&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ovftool --disableVerification  --noSSLVerify --datastore=esx01-local-sata --name=vcsa-5.5.0.20000-2063318 --network=vlan2 ~/VMware-vCenter-Server-Appliance-5.5.0.20000-2063318_OVF10.ova vi://root@192.168.1.201&lt;/span&gt;
+Opening OVA &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt;: VMware-vCenter-Server-Appliance-5.5.0.20000-2063318_OVF10.ova
+The manifest validates
+Enter login information &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; target vi://192.168.1.201/
+Username: root
+Password: **********
+Opening VI target: vi://root@192.168.1.201:443/
+Deploying to VI: vi://root@192.168.1.201:443/
+Transfer Completed
+Completed successfully
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You will need to modify the following parameters in the ovftool command:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;--datastore - this is the datastore that ovftool will deploy the virtual machine to&lt;/li&gt;
+&lt;li&gt;--name - this is the name the deployed virtual machine will be given&lt;/li&gt;
+&lt;li&gt;--network - this is the portgroup the deployed virtual machine will be connected to&lt;/li&gt;
+&lt;li&gt;vi://root://[esxi_host_ip_address] - update this part of the command with the IP address of one of your ESXi servers&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;3. Modify the vCSA virtual machine for vagrant deployment.&lt;/h2&gt;
+
+&lt;h4&gt;A. Power on the vcsa-5.5.0.20000-2063318 virtual machine in the VI or vSphere web client.&lt;/h4&gt;
+
+&lt;h4&gt;B. Once the vCSA virtual machine is up and running, SSH to the IP address that is acquired by DHCP.&lt;/h4&gt;
+
+&lt;h5&gt;C. Create the ~/.ssh directory&lt;/h5&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;localhost:~ &lt;span class=&quot;c&quot;&gt;# mkdir ~/.ssh&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. Add the vagrant public ssh key to ~/.ssh/authorized_keys:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;localhost:~ &lt;span class=&quot;c&quot;&gt;# cd .ssh&lt;/span&gt;
+localhost:~/.ssh &lt;span class=&quot;c&quot;&gt;# echo &amp;#39;ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key&amp;#39; &amp;gt; ~/.ssh/authorized_keys&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;E. Modify the permissions on ~/.ssh &amp;amp; ~/.ssh/authorized_keys since openssh is particular about file permissions:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;localhost:~/.ssh &lt;span class=&quot;c&quot;&gt;# chmod 700 ~/.ssh&lt;/span&gt;
+localhost:~/.ssh &lt;span class=&quot;c&quot;&gt;# chmod 600 ~/.ssh/authorized_keys&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;F. Modify the following lines in /etc/ssh/sshd_config:&lt;/h4&gt;
+
+&lt;p&gt;Uncomment and update the following lines:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;PubkeyAuthentication yes                  &lt;span class=&quot;c&quot;&gt;# line 47&lt;/span&gt;
+AuthorizedKeysFile ~/.ssh/authorized_keys &lt;span class=&quot;c&quot;&gt;# line 48&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Comment out the following line:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;c&quot;&gt;#MaxSessions 1                            # line 44&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;G. Power down the vcsa-5.5.0.20000-2063318 virtual machine in the VI or vSphere web client.&lt;/h4&gt;
+
+&lt;h2&gt;4. Use ovftool to export the vcsa-5.5.0.20000-2063318 virtual machine.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ovftool vi://root@192.168.1.201/vcsa-5.5.0.20000-2063318 ./&lt;/span&gt;
+Enter login information &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;source &lt;/span&gt;vi://192.168.1.201/
+Username: root
+Password: **********
+Opening VI &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt;: vi://root@192.168.1.201:443/vcsa-5.5.0.20000-2063318
+Opening OVF target: ./
+Writing OVF package: ./vcsa-5.5.0.20000-2063318/vcsa-5.5.0.20000-2063318.ovf
+Transfer Completed
+Completed successfully&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&amp;quot;vi://root@192.168.1.201&amp;quot; will need to be updated to use the IP address of the ESXi host that has your vcsa-5.5.0.20000-2063318 virtual machine.&lt;/p&gt;
+
+&lt;h2&gt;5. add the additional vagrant-vmware-ovf files and tar to up the vcsa-5.5.0.20000-2063318 .ovf as a .box file:&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vcsa-5.5.0.20000-2063318/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo &amp;#39;{&amp;quot;provider&amp;quot;:&amp;quot;vmware_ovf&amp;quot;}&amp;#39; &amp;gt;&amp;gt; metadata.json&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# tar cvzf vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box ./*&lt;/span&gt;
+./metadata.json
+./Vagrantfile
+./vcsa-5.5.0.20000-2063318-disk1.vmdk
+./vcsa-5.5.0.20000-2063318-disk2.vmdk
+./vcsa-5.5.0.20000-2063318.mf
+./vcsa-5.5.0.20000-2063318.ovf
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;6. Create a directory to keep our vagrant-vmware-ovf .box template in and move the vCSA template to it:&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir ~/box-files/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mv vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box ~/box-files/&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;C. Create directory and Vagrantfile for the vCSA virtual machines we will deploy with vagrant:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/vcsa-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vagrant-vms/vcsa-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;vcsa_box_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/root/box-files/vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;$script&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;lt;&amp;lt;SCRIPT&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;# Commands to configure all the necessary services to start the vCenter Service, thanks @lamw ! see:&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;# http://www.virtuallyghetto.com/2012/02/automating-vcenter-server-appliance.html&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt; &lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;echo &amp;quot;Accepting EULA ...&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/usr/sbin/vpxd_servicecfg eula accept&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt; &lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;echo &amp;quot;Configuring Embedded DB ...&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/usr/sbin/vpxd_servicecfg db write embedded&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt; &lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;echo &amp;quot;Configuring SSO...&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/usr/sbin/vpxd_servicecfg sso write embedded&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt; &lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;echo &amp;quot;Starting VCSA ...&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/usr/sbin/vpxd_servicecfg service start&lt;/span&gt;
+
+&lt;span class=&quot;s&quot;&gt;# http://www.virtuallyghetto.com/2014/02/how-to-automate-ntp-configurations-on.html&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/usr/sbin/vpxd_servicecfg timesync write ntp &amp;#39;pool.ntp.org&amp;#39; &amp;#39;&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;s&quot;&gt;# Command to set IP address to 192.168.1.81:&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;# http://www.virtuallyghetto.com/2013/02/automating-vcsa-network-configurations.html&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;echo &amp;quot;Setting static IP address to 192.168.1.81&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;/opt/vmware/share/vami/vami_set_network eth0 STATICV4 192.168.1.81 255.255.255.0 192.168.1.1 &amp;gt;&amp;amp;- 2&amp;gt;&amp;amp;- &amp;lt;&amp;amp;- &amp;amp;&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;SCRIPT&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;nodes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; :hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcsa-01a&amp;#39;&lt;/span&gt;, :box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcsa-5.5.0.20000-2063318&amp;#39;&lt;/span&gt;, :box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&amp;gt; vcsa_box_url&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+ 
+Vagrant.configure&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;2&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+ 
+  config.vm.provider :vcenter &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;vcenter&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    vcenter.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.195&amp;#39;&lt;/span&gt;
+    vcenter.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+    vcenter.password &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;mySecretP@ssw0rd&amp;#39;&lt;/span&gt;
+    vcenter.folder_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Vagrant/Deployed&amp;#39;&lt;/span&gt;
+    vcenter.datacenter_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;datacenter-01&amp;#39;&lt;/span&gt;
+    vcenter.computer_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;cluster-01&amp;#39;&lt;/span&gt;
+    vcenter.datastore_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vsanDatastore&amp;#39;&lt;/span&gt;
+    vcenter.template_folder_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Vagrant/Templates&amp;#39;&lt;/span&gt;
+    vcenter.network_name &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;vlan2&amp;#39;&lt;/span&gt;
+    vcenter.linked_clones &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;    &lt;/span&gt;vcenter.enable_vm_customization &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;  &lt;/span&gt;end
+ 
+  &lt;span class=&quot;c&quot;&gt;# Go through nodes and configure each of them.j&lt;/span&gt;
+  nodes.each &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+    config.vm.define node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;node_config&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;
+ 
+      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;.include? &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcsa-&amp;#39;&lt;/span&gt;
+        node_config.ssh.username &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+        node_config.ssh.insert_key &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;        &lt;/span&gt;node_config.vm.synced_folder &lt;span class=&quot;s1&quot;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;, &lt;span class=&quot;s1&quot;&gt;&amp;#39;/vagrant&amp;#39;&lt;/span&gt;, disabled: &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;        &lt;/span&gt;node_config.vm.provision &lt;span class=&quot;s2&quot;&gt;&amp;quot;shell&amp;quot;&lt;/span&gt;, inline: &lt;span class=&quot;nv&quot;&gt;$script&lt;/span&gt;
+      end 
+      node_config.vm.box &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.hostname &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:hostname&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+      node_config.vm.box_url &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; node&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;:box_url&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+    end
+  end
+end&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This Vagrantfile is specifying vagrant to use the vagrant-vcenter profiler to create one virtual machine (vcsa-01a) from the vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box file. You will need update the following properties to reflect your own vCenter configuration:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;vcenter.hostname = the IP address of your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.username = the username used to connect to your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.password = the password used to connect to your vCenter server&lt;/li&gt;
+&lt;li&gt;vcenter.datacenter_name = the vCenter virtual datacenter to use for virtual machine deployment&lt;/li&gt;
+&lt;li&gt;vcenter.computer_name = the vCenter host or cluster to use for virtual machine deployment. I&amp;#39;ve used the cluster in my example.&lt;/li&gt;
+&lt;li&gt;vcenter.datastore_name = the vCenter datastore to use for virtual machine deployment&lt;/li&gt;
+&lt;li&gt;vcenter.folder_name = the vm folder that the virtual machines will be deployed to&lt;/li&gt;
+&lt;li&gt;vcenter.template_folder_name = the vm folder that the vCSA template will be created in&lt;/li&gt;
+&lt;li&gt;vcenter.network_name = the vCenter portgroup to connect the vCSA template to. There should be a DHCP server on this portgroup to provide IP addresses to the deployed vCSA template.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There is also a script section at the top of the Vagrantfile I would like to point out. William Lam has posted several posts documenting how to automate vCSA configuration, and several of his suggestions have been included in this section. Namely those are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Accepting the EULA&lt;/li&gt;
+&lt;li&gt;Configuring the vCSA to use the internal database&lt;/li&gt;
+&lt;li&gt;Configuring internal SSO&lt;/li&gt;
+&lt;li&gt;Starting the vCenter services&lt;/li&gt;
+&lt;li&gt;Setting NTP&lt;/li&gt;
+&lt;li&gt;Assigning a static IP address using vami_set_network command&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You might want to adjust the last part of the script, since it will set vCSA to use 192.168.1.81 as it&amp;#39;s static IP address. &lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Setting static IP address to 192.168.1.81&amp;quot;&lt;/span&gt;
+/opt/vmware/share/vami/vami_set_network eth0 STATICV4 192.168.1.81 255.255.255.0 192.168.1.1 &amp;gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt;- 2&amp;gt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt;- &amp;lt;&lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt;- &lt;span class=&quot;p&quot;&gt;&amp;amp;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I prefer to set a static address for the vCSA, so that any scripts that follow the vCSA deployment will know exactly what IP address to use to connect to it. Also you might be wondering about extra characters following the VAMI command. Since this command is modifying the IP address of the virtual machine, we&amp;#39;re need to run this command in the background without expecting a response. Here the breakdown of what is being done:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&amp;gt;&amp;amp;- means close stdout.&lt;/li&gt;
+&lt;li&gt;2&amp;gt;&amp;amp;- means close stderr.&lt;/li&gt;
+&lt;li&gt;&amp;lt;&amp;amp;- means close stdin.&lt;/li&gt;
+&lt;li&gt;&amp;amp; means run in the background&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If we didn&amp;#39;t pipe the vami_set_network command through these commands, vagrant would keep waiting on output in the SSH session that the command was successfully run, but the IP address had been changed so it would never receive the expected response. &lt;/p&gt;
+
+&lt;h2&gt;4. &amp;quot;vagrant up&amp;quot;&lt;/h2&gt;
+
+&lt;h4&gt;A. Now that we have created a Vagrantfile config file and updated it with our vCenter information we can bring up our virtual machine by running &amp;quot;vagrant up&amp;quot; in the directory with the Vagrantfile.&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant up&lt;/span&gt;
+Bringing machine &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcsa-01a&amp;#39;&lt;/span&gt; up with &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcenter&amp;#39;&lt;/span&gt; provider...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Creating VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Powering on VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Running provisioner: shell...
+    vcsa-01a: Running: inline &lt;span class=&quot;nv&quot;&gt;script&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Accepting EULA ...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_CFG_RESULT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Configuring Embedded DB ...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: insserv: Service network is missed in the runlevels &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt; to use service &lt;span class=&quot;nv&quot;&gt;postgresql&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: insserv: Service syslog is missed in the runlevels &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt; to use service &lt;span class=&quot;nv&quot;&gt;postgresql&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_DB_SCHEMA_VERSION&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;VirtualCenter Database 5.5
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_DB_SCHEMA_INITIALIZED&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_CFG_RESULT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Configuring SSO...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_CFG_RESULT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Starting VCSA ...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_CFG_RESULT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: insserv: Service network is missed in the runlevels &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt; to use service &lt;span class=&quot;nv&quot;&gt;postgresql&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: insserv: Service syslog is missed in the runlevels &lt;span class=&quot;m&quot;&gt;4&lt;/span&gt; to use service &lt;span class=&quot;nv&quot;&gt;postgresql&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: &lt;span class=&quot;nv&quot;&gt;VC_CFG_RESULT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Setting static IP address to 192.168.1.81
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+ 
+
+&lt;h4&gt;B. Once the &amp;quot;vagrant up&amp;quot; command completes, you can check the status of the vCSA vm using &amp;quot;vagrant status&amp;quot;:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant status&lt;/span&gt;
+Current machine states:
+
+vcsa-01a                  running &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+The VM is running. To stop this VM, you can run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant halt&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt; to
+shut it down forcefully, or you can run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant &lt;span class=&quot;nb&quot;&gt;suspend&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt; to simply
+&lt;span class=&quot;nb&quot;&gt;suspend &lt;/span&gt;the virtual machine. In either &lt;span class=&quot;k&quot;&gt;case&lt;/span&gt;, to restart it again,
+simply run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant up&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;D. You can now ssh into the vCSA virtual machine using &amp;quot;vagrant ssh&amp;quot;:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant ssh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: External IP &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; vcsa-01a: 192.168.1.81
+Last login: Sat Jan &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt; 20:08:07 UTC &lt;span class=&quot;m&quot;&gt;2015&lt;/span&gt; from 192.168.1.24 on pts/0
+Last login: Sat Jan &lt;span class=&quot;m&quot;&gt;10&lt;/span&gt; 20:09:36 &lt;span class=&quot;m&quot;&gt;2015&lt;/span&gt; from 192.168.1.24
+localhost:~ &lt;span class=&quot;c&quot;&gt;# service vmware-vpxd status&lt;/span&gt;
+vmware-vpxd is running
+tomcat is running
+localhost:~ &lt;span class=&quot;c&quot;&gt;# exit&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;logout&lt;/span&gt;
+Connection to 192.168.1.81 closed.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I wanted to point out that vagrant automatically detected up the IP address change we made through vmtools, so we didn&amp;#39;t have to perform any additional steps for &amp;quot;vagrant ssh&amp;quot; to work.&lt;/p&gt;
+
+&lt;h4&gt;E. Once we are done using our virtual machine, it can be destroyed with a &amp;quot;vagrant destroy&amp;quot; command:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant destroy&lt;/span&gt;
+    vcsa-01a: Are you sure you want to destroy the &lt;span class=&quot;s1&quot;&gt;&amp;#39;vcsa-01a&amp;#39;&lt;/span&gt; VM? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;y/N&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Powering off VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; vcsa-01a: Destroying VM...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h4&gt;F. If you are ever unsure of the state of the vagrant virtual machine you can run &amp;quot;vagrant status&amp;quot; to check:&lt;/h4&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vagrant status&lt;/span&gt;
+Current machine states:
+
+vcsa-01a                  not created &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;vcenter&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+The environment has not yet been created. Run &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;vagrant up&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt; to
+create the environment. If a machine is not created, only the
+default provider will be shown. So &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; a provider is not listed,
+&lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; the machine is not created &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; that environment.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;That all for this post covering how to create a vCSA .box template and deploy it using the vagrant-vcenter provider.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
+ 
+ <entry>
    <title>Installing vagrant and the vagrant-vcenter provider on CentOS 6.5</title>
    <link href="http://sdorsett.github.io/2015/01/04/installing-vagrant-on-centos/"/>
    <updated>2015-01-04T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2015/01/04/installing-vagrant-on-centos</id>
-   <content type="html">&lt;p&gt;If you followed the steps in one of the two previous posts, you have a ESXi .box template in the vagrant-vmware-ovf format. This format allows for deploying the exact same template to vCenter, vCloud Director or vCloud Air, by simply specifying a different provider in vagrant. This post will cover using vCenter, since that is the most readily available of the three. &lt;/p&gt;
+   <content type="html">&lt;p&gt;If you followed the steps in one of the two previous posts, you have a ESXi .box template in the vagrant-vmware-ovf format. This format allows for deploying the exact same template to vCenter, vCloud Director or vCloud Air, by simply specifying a different provider in vagrant. This post will cover deploying to vCenter, since that is the most readily available of the three. &lt;/p&gt;
 
-&lt;p&gt;In this post we will again talk about two helpful gosddc projects:&lt;/p&gt;
+&lt;p&gt;In this post we will again talk about the following helpful gosddc project:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;https://github.com/gosddc/vagrant-vcenter&quot;&gt;gosddc/vagrant-vcenter&lt;/a&gt;.
@@ -268,8 +576,6 @@ Iteration 1: Trying to get host&lt;span class=&quot;s1&quot;&gt;&amp;#39;s IP ad
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-01a: Powering on VM...
 &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; esx-02a: Powering on VM...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
  
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&quot;&gt;https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases&lt;/a&gt;&lt;/p&gt;
 
 &lt;h4&gt;B. Once the &amp;quot;vagrant up&amp;quot; command completes, you can check the status of the vms using &amp;quot;vagrant status&amp;quot;:&lt;/h4&gt;
 
