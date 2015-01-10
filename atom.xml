@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-10T20:24:04+00:00</updated>
+ <updated>2015-01-10T20:29:30+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -104,7 +104,7 @@ Completed successfully&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;&amp;quot;vi://root@192.168.1.201&amp;quot; will need to be updated to use the IP address of the ESXi host that has your vcsa-5.5.0.20000-2063318 virtual machine.&lt;/p&gt;
 
-&lt;h2&gt;5. add the additional vagrant-vmware-ovf files and tar to up the vcsa-5.5.0.20000-2063318 .ovf as a .box file:&lt;/h2&gt;
+&lt;h2&gt;5. add the additional vagrant-vmware-ovf files and tar up the vcsa-5.5.0.20000-2063318 .ovf as a .box file:&lt;/h2&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vcsa-5.5.0.20000-2063318/&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo &amp;#39;{&amp;quot;provider&amp;quot;:&amp;quot;vmware_ovf&amp;quot;}&amp;#39; &amp;gt;&amp;gt; metadata.json&lt;/span&gt;
@@ -125,10 +125,10 @@ Completed successfully&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;C. Create directory and Vagrantfile for the vCSA virtual machines we will deploy with vagrant:&lt;/h4&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/vcsa-test/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd vagrant-vms/vcsa-test/&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi Vagrantfile&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant esxi-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir -p ~/vagrant-vms/vcsa-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-5.5.0.20000-2063318&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/vagrant-vms/vcsa-test/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# vi Vagrantfile&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@vagrant vcsa-test&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat Vagrantfile&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;vcsa_box_url&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/root/box-files/vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box&amp;#39;&lt;/span&gt;
 
 &lt;span class=&quot;nv&quot;&gt;$script&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;lt;&amp;lt;SCRIPT&lt;/span&gt;

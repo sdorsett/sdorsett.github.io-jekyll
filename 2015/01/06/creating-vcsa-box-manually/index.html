@@ -194,7 +194,7 @@ Completed successfully</code></pre></div>
 
 <p>&quot;vi://root@192.168.1.201&quot; will need to be updated to use the IP address of the ESXi host that has your vcsa-5.5.0.20000-2063318 virtual machine.</p>
 
-<h2>5. add the additional vagrant-vmware-ovf files and tar to up the vcsa-5.5.0.20000-2063318 .ovf as a .box file:</h2>
+<h2>5. add the additional vagrant-vmware-ovf files and tar up the vcsa-5.5.0.20000-2063318 .ovf as a .box file:</h2>
 
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd vcsa-5.5.0.20000-2063318/</span>
 <span class="o">[</span>root@vagrant vcsa-5.5.0.20000-2063318<span class="o">]</span><span class="c"># echo &#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39; &gt;&gt; metadata.json</span>
@@ -215,10 +215,10 @@ Completed successfully</code></pre></div>
 
 <h4>C. Create directory and Vagrantfile for the vCSA virtual machines we will deploy with vagrant:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/vcsa-test/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd vagrant-vms/vcsa-test/</span>
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vi Vagrantfile</span>
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vcsa-5.5.0.20000-2063318<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/vcsa-test/</span>
+<span class="o">[</span>root@vagrant vcsa-5.5.0.20000-2063318<span class="o">]</span><span class="c"># cd ~/vagrant-vms/vcsa-test/</span>
+<span class="o">[</span>root@vagrant vcsa-test<span class="o">]</span><span class="c"># vi Vagrantfile</span>
+<span class="o">[</span>root@vagrant vcsa-test<span class="o">]</span><span class="c"># cat Vagrantfile</span>
 <span class="nv">vcsa_box_url</span> <span class="o">=</span> <span class="s1">&#39;/root/box-files/vcsa-5.5.0.20000-2063318-vmware_ovf-1.0.box&#39;</span>
 
 <span class="nv">$script</span> <span class="o">=</span> <span class="s">&lt;&lt;SCRIPT</span>
