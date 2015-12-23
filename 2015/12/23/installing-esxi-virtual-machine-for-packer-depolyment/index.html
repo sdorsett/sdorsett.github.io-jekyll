@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Installing a ESXi 6.0 virtual machine for use with Packer &middot; sdorsett.github.io
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700|PT+Sans:400">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p></p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+
+    
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/about/">About</a>
+        
+      
+    
+      
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/posts/">All Posts</a>
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
+    <span class="sidebar-nav-item">Currently v1.0.0</span>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2015. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">sdorsett.github.io</a>
+            <small>Things I find interesting</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">Installing a ESXi 6.0 virtual machine for use with Packer</h1>
+  <span class="post-date">23 Dec 2015</span>
+  <p>In order to begin using Packer to create images, we will first need to lay the &quot;virtual&quot; ground work. Packer can create virtual machine templates on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor. This post will be covering installing ESXi as a virtual machine, there is no reason that would prevent you from using a physical server that has ESXi installed for Packer.</p>
+
+<p>There is nothing new about the steps that I will be covering, but I figured it would be best to go ahead and cover them. These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5, but the steps for setting up nested virtualization will be slightly different. I you are looking for for more information about creating ESXi virtual machines, I would suggest taking a look at <a href="http://www.virtuallyghetto.com/">William Lam&#39;s blog</a> which covers this subject in detail.</p>
+
+<h2>1. Log into the web client of your vCenter instance and create a new virtual machine.</h2>
+
+<p><img src="/assets/01-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<h2>2. Step through the new virtual machine wizard:</h2>
+
+<p><img src="/assets/02-create-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<p>Name the virtual machine what you would like and click next.</p>
+
+<p><img src="/assets/03-virtual-machine-name.jpg" alt="screenshot">  </p>
+
+<p>Select the vCenter cluster or resource pool and click next.</p>
+
+<p><img src="/assets/04-select-compute-resource.jpg" alt="screenshot">  </p>
+
+<p>Select the datastore you want the ESXi virtual machine to be created on and click next.</p>
+
+<p><img src="/assets/05-select-storage.jpg" alt="screenshot">  </p>
+
+<p>Select the compatibility (virtual hardware level) for the virtual machine and click next.</p>
+
+<p><img src="/assets/06-select-compatibility.jpg" alt="screenshot">  </p>
+
+<p>Select the guest operating system. vSphere 6.0 or newer will allow you to select ESXi 6.0 as you guest OS. Click next.</p>
+
+<p><img src="/assets/07-select-guest-os.jpg" alt="screenshot">  </p>
+
+<p>Customize to virtual hardware to have the necessary resources. I had created my ESXi vurtual machine with:</p>
+
+<ul>
+<li>2 vCPU</li>
+<li>16 GB of memory</li>
+<li>100GB virtual hard drive</li>
+</ul>
+
+<p><img src="/assets/08-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Make sure you expand CPU and enable &quot;Hardware virtualization.&quot; The ESXi installer will fail if this is not enabled.</p>
+
+<p><img src="/assets/09-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Click finish to create the virtual machine.</p>
+
+<p><img src="/assets/10-ready-to-complete.jpg" alt="screenshot">  </p>
+
+<h2>3. Connect the virtual CDROM to the ESXi 6.0 installer .iso and power on the new virtual machine.</h2>
+
+<p><img src="/assets/11-start-esxi-vm.jpg" alt="screenshot">  </p>
+
+<h2>4. Connect to the console of the ESXi virtual machine and step through the installer</h2>
+
+<p>Press enter to begin</p>
+
+<p><img src="/assets/12-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to accept the EULA</p>
+
+<p><img src="/assets/13-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select the 100GB virtual hard drive we created with the virtual machine</p>
+
+<p><img src="/assets/14-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select your keyboard layout and press enter</p>
+
+<p><img src="/assets/15-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Enter the root password twice and press enter</p>
+
+<p><img src="/assets/16-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/17-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to begin the install process</p>
+
+<p><img src="/assets/18-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Disconnect the .iso file from the virtual CDROM before rebooting the virtual machine</p>
+
+<p><img src="/assets/19-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/20-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/21-esxi-post-install.jpg" alt="screenshot">  </p>
+
+<h2>5. Press F2 to log into ESXi, set the management IP address/subnet/gateway and enable ssh</h2>
+
+<p><img src="/assets/22-set-ip-address.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/23-apply-network-config.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/24-enable-ssh.jpg" alt="screenshot">  </p>
+
+<h2>6. On your local machine download the embedded host client .vib</h2>
+
+<p>You can download the embedded host client .vib from <a href="https://labs.vmware.com/flings/esxi-embedded-host-client">this link</a>.</p>
+
+<p><img src="/assets/25-download-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<h2>7. SCP the .vib to the ESXi virtual machine</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+The authenticity of host <span class="s1">&#39;192.168.1.51 (192.168.1.51)&#39;</span> cant be established.
+RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
+Warning: Permanently added <span class="s1">&#39;192.168.1.51&#39;</span> <span class="o">(</span>RSA<span class="o">)</span> to the list of known hosts.
+Password: ********
+esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
+sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+
+<h2>7. SSH to the ESXi virtual machine and install the embedded host client .vib</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ssh root@192.168.1.51
+Password: ********
+The <span class="nb">time </span>and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools.  Please
+see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation <span class="k">for</span> more information.
+<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd </span>tmp
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> ls
+esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli software vib install -v /tmp/esxui_signed.vib
+Installation Result
+   Message: Operation finished successfully.
+   Reboot Required: <span class="nb">false</span>
+<span class="nb">   </span>VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
+   VIBs Removed:
+   VIBs Skipped:
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span></code></pre></div>
+
+<h2>8. Enable guest ip hack on the ESXi virtual machine because Packer will need this capability</h2>
+
+<p><img src="/assets/28-enable-guest-ip-hack.jpg" alt="screenshot">  </p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli system settings advanced <span class="nb">set</span> -o /Net/GuestIPHack -i 1
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> <span class="nb">exit</span>
+Connection to 192.168.1.51 closed.
+sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+
+<h2>9. Log into the embedded host client using the browser on your local machine to validate that it it working properly</h2>
+
+<p><img src="/assets/26-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/27-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<p>That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.
+Please provide any feedback or suggestions to my twitter account located on the about page.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2015/12/22/pipeline-for-creating-packer-box-files/">
+            Setting up a pipeline for creating packer .box files
+            <small>22 Dec 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/01/06/creating-vcsa-box-manually/">
+            Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment
+            <small>06 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/01/04/installing-vagrant-on-centos/">
+            Installing vagrant and the vagrant-vcenter provider on CentOS 6.5
+            <small>04 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+  </body>
+</html>

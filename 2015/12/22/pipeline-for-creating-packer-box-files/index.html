@@ -10,7 +10,7 @@
 
   <title>
     
-      All Posts &middot; sdorsett.github.io
+      Setting up a pipeline for creating packer .box files &middot; sdorsett.github.io
     
   </title>
 
@@ -66,7 +66,7 @@
     
       
         
-          <a class="sidebar-nav-item active" href="/posts/">All Posts</a>
+          <a class="sidebar-nav-item" href="/posts/">All Posts</a>
         
       
     
@@ -104,66 +104,58 @@
       </div>
 
       <div class="container content">
-        <div class="page">
-  <h1 class="page-title">All Posts</h1>
-  <p>This is a complete list of all blog posts:</p>
+        <div class="post">
+  <h1 class="post-title">Setting up a pipeline for creating packer .box files</h1>
+  <span class="post-date">22 Dec 2015</span>
+  <p>Recently at work, the vCloud Air Zombie team has been using packer to generate Vagrant templates for use in development and testing.  I have previously covered <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">how to use packer to create create a .box template for use with Vagrant</a>, but I thought it might be useful to others to have me demonstrate how we are using Packer within our development team.</p>
+
+<p>This will be the first of several blog posts in which I intend to cover:</p>
 
 <ul>
-  
-    <li>
-      <a href="/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a>
-    </li>
-  
-    <li>
-      <a href="/2015/12/22/pipeline-for-creating-packer-box-files/">Setting up a pipeline for creating packer .box files</a>
-    </li>
-  
-    <li>
-      <a href="/2015/01/06/creating-vcsa-box-manually/">Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment</a>
-    </li>
-  
-    <li>
-      <a href="/2015/01/04/installing-vagrant-on-centos/">Installing vagrant and the vagrant-vcenter provider on CentOS 6.5</a>
-    </li>
-  
-    <li>
-      <a href="/2015/01/03/using-packer-on-centos/">Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment</a>
-    </li>
-  
-    <li>
-      <a href="/2014/12/28/getting-packer-installed-on-OS-X/">Using packer on OS X to create an ESXi .box template for vagrant deployment</a>
-    </li>
-  
-    <li>
-      <a href="/2014/05/26/vagrant-install/">Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x</a>
-    </li>
-  
-    <li>
-      <a href="/2014/05/25/vagrant-vcloud/">Introducing the vagrant-vcloud provider</a>
-    </li>
-  
-    <li>
-      <a href="/2014/05/06/vagrant-and-puppet/">Creating a Puppet manifest and integrating it with Vagrant</a>
-    </li>
-  
-    <li>
-      <a href="/2014/04/24/vagrant-and-vcenter-guest-customization/">Using advanced vagrant-vsphere provider settings and vCenter guest customization</a>
-    </li>
-  
-    <li>
-      <a href="/2014/04/20/vagrant-boxes/">Creating a CentOS 6.x template that is customized for Vagrant</a>
-    </li>
-  
-    <li>
-      <a href="/2014/04/19/vagrant-install/">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</a>
-    </li>
-  
-    <li>
-      <a href="/2014/04/16/vagrant-explained/">Vagrant and why it is useful in learning Puppet</a>
-    </li>
-  
+<li><a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a>.</li>
+<li>Setting up Packer, ovftool and Apache web server on a CentOS virtual machine.</li>
+<li>Creating up our first packer template for installing CentOS 6.7 and vmtools.</li>
+<li>Installing the Puppet agent in our CentOS 6.7 template .</li>
+<li>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files</li>
+<li>Hosting the resulting Vagrant .box files on a web server so they can be downloaded by Vagrant.</li>
 </ul>
 
+<p>These posts will hopefully be helpful by providing details on the process of using Packer to generate Vagrant .box files.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">
+            Installing a ESXi 6.0 virtual machine for use with Packer
+            <small>23 Dec 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/01/06/creating-vcsa-box-manually/">
+            Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment
+            <small>06 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/01/04/installing-vagrant-on-centos/">
+            Installing vagrant and the vagrant-vcenter provider on CentOS 6.5
+            <small>04 Jan 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
 </div>
 
       </div>

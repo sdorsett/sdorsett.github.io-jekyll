@@ -108,6 +108,199 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">
+        Installing a ESXi 6.0 virtual machine for use with Packer
+      </a>
+    </h1>
+
+    <span class="post-date">23 Dec 2015</span>
+
+    <p>In order to begin using Packer to create images, we will first need to lay the &quot;virtual&quot; ground work. Packer can create virtual machine templates on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor. This post will be covering installing ESXi as a virtual machine, there is no reason that would prevent you from using a physical server that has ESXi installed for Packer.</p>
+
+<p>There is nothing new about the steps that I will be covering, but I figured it would be best to go ahead and cover them. These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5, but the steps for setting up nested virtualization will be slightly different. I you are looking for for more information about creating ESXi virtual machines, I would suggest taking a look at <a href="http://www.virtuallyghetto.com/">William Lam&#39;s blog</a> which covers this subject in detail.</p>
+
+<h2>1. Log into the web client of your vCenter instance and create a new virtual machine.</h2>
+
+<p><img src="/assets/01-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<h2>2. Step through the new virtual machine wizard:</h2>
+
+<p><img src="/assets/02-create-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<p>Name the virtual machine what you would like and click next.</p>
+
+<p><img src="/assets/03-virtual-machine-name.jpg" alt="screenshot">  </p>
+
+<p>Select the vCenter cluster or resource pool and click next.</p>
+
+<p><img src="/assets/04-select-compute-resource.jpg" alt="screenshot">  </p>
+
+<p>Select the datastore you want the ESXi virtual machine to be created on and click next.</p>
+
+<p><img src="/assets/05-select-storage.jpg" alt="screenshot">  </p>
+
+<p>Select the compatibility (virtual hardware level) for the virtual machine and click next.</p>
+
+<p><img src="/assets/06-select-compatibility.jpg" alt="screenshot">  </p>
+
+<p>Select the guest operating system. vSphere 6.0 or newer will allow you to select ESXi 6.0 as you guest OS. Click next.</p>
+
+<p><img src="/assets/07-select-guest-os.jpg" alt="screenshot">  </p>
+
+<p>Customize to virtual hardware to have the necessary resources. I had created my ESXi vurtual machine with:</p>
+
+<ul>
+<li>2 vCPU</li>
+<li>16 GB of memory</li>
+<li>100GB virtual hard drive</li>
+</ul>
+
+<p><img src="/assets/08-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Make sure you expand CPU and enable &quot;Hardware virtualization.&quot; The ESXi installer will fail if this is not enabled.</p>
+
+<p><img src="/assets/09-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Click finish to create the virtual machine.</p>
+
+<p><img src="/assets/10-ready-to-complete.jpg" alt="screenshot">  </p>
+
+<h2>3. Connect the virtual CDROM to the ESXi 6.0 installer .iso and power on the new virtual machine.</h2>
+
+<p><img src="/assets/11-start-esxi-vm.jpg" alt="screenshot">  </p>
+
+<h2>4. Connect to the console of the ESXi virtual machine and step through the installer</h2>
+
+<p>Press enter to begin</p>
+
+<p><img src="/assets/12-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to accept the EULA</p>
+
+<p><img src="/assets/13-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select the 100GB virtual hard drive we created with the virtual machine</p>
+
+<p><img src="/assets/14-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select your keyboard layout and press enter</p>
+
+<p><img src="/assets/15-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Enter the root password twice and press enter</p>
+
+<p><img src="/assets/16-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/17-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to begin the install process</p>
+
+<p><img src="/assets/18-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Disconnect the .iso file from the virtual CDROM before rebooting the virtual machine</p>
+
+<p><img src="/assets/19-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/20-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/21-esxi-post-install.jpg" alt="screenshot">  </p>
+
+<h2>5. Press F2 to log into ESXi, set the management IP address/subnet/gateway and enable ssh</h2>
+
+<p><img src="/assets/22-set-ip-address.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/23-apply-network-config.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/24-enable-ssh.jpg" alt="screenshot">  </p>
+
+<h2>6. On your local machine download the embedded host client .vib</h2>
+
+<p>You can download the embedded host client .vib from <a href="https://labs.vmware.com/flings/esxi-embedded-host-client">this link</a>.</p>
+
+<p><img src="/assets/25-download-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<h2>7. SCP the .vib to the ESXi virtual machine</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+The authenticity of host <span class="s1">&#39;192.168.1.51 (192.168.1.51)&#39;</span> cant be established.
+RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
+Warning: Permanently added <span class="s1">&#39;192.168.1.51&#39;</span> <span class="o">(</span>RSA<span class="o">)</span> to the list of known hosts.
+Password: ********
+esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
+sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+
+<h2>7. SSH to the ESXi virtual machine and install the embedded host client .vib</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ssh root@192.168.1.51
+Password: ********
+The <span class="nb">time </span>and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools.  Please
+see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation <span class="k">for</span> more information.
+<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd </span>tmp
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> ls
+esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli software vib install -v /tmp/esxui_signed.vib
+Installation Result
+   Message: Operation finished successfully.
+   Reboot Required: <span class="nb">false</span>
+<span class="nb">   </span>VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
+   VIBs Removed:
+   VIBs Skipped:
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span></code></pre></div>
+
+<h2>8. Enable guest ip hack on the ESXi virtual machine because Packer will need this capability</h2>
+
+<p><img src="/assets/28-enable-guest-ip-hack.jpg" alt="screenshot">  </p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli system settings advanced <span class="nb">set</span> -o /Net/GuestIPHack -i 1
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> <span class="nb">exit</span>
+Connection to 192.168.1.51 closed.
+sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+
+<h2>9. Log into the embedded host client using the browser on your local machine to validate that it it working properly</h2>
+
+<p><img src="/assets/26-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/27-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<p>That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.
+Please provide any feedback or suggestions to my twitter account located on the about page.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2015/12/22/pipeline-for-creating-packer-box-files/">
+        Setting up a pipeline for creating packer .box files
+      </a>
+    </h1>
+
+    <span class="post-date">22 Dec 2015</span>
+
+    <p>Recently at work, the vCloud Air Zombie team has been using packer to generate Vagrant templates for use in development and testing.  I have previously covered <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">how to use packer to create create a .box template for use with Vagrant</a>, but I thought it might be useful to others to have me demonstrate how we are using Packer within our development team.</p>
+
+<p>This will be the first of several blog posts in which I intend to cover:</p>
+
+<ul>
+<li><a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a>.</li>
+<li>Setting up Packer, ovftool and Apache web server on a CentOS virtual machine.</li>
+<li>Creating up our first packer template for installing CentOS 6.7 and vmtools.</li>
+<li>Installing the Puppet agent in our CentOS 6.7 template .</li>
+<li>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files</li>
+<li>Hosting the resulting Vagrant .box files on a web server so they can be downloaded by Vagrant.</li>
+</ul>
+
+<p>These posts will hopefully be helpful by providing details on the process of using Packer to generate Vagrant .box files.</p>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2015/01/06/creating-vcsa-box-manually/">
         Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment
       </a>
@@ -1235,519 +1428,6 @@ drwxr-xr-x. <span class="m">9</span> root root      <span class="m">4096</span> 
 <span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c">#</span></code></pre></div>
 
 <h3>That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2014/12/28/getting-packer-installed-on-OS-X/">
-        Using packer on OS X to create an ESXi .box template for vagrant deployment
-      </a>
-    </h1>
-
-    <span class="post-date">28 Dec 2014</span>
-
-    <p>I&#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and CentOS in a future post.</p>
-
-<p>Several github projects by gosddc have helped me in getting packer up and running on my Macbook:</p>
-
-<ul>
-<li><p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf">gosddc/packer-post-processor-vagrant-vmware-ovf</a>.
-This repo contains a packer post processor that leverages VMware OVF Tool to create a vmware_ovf Vagrant box that is compatible with vagrant-vcloud, vagrant-vcenter and vagrant-vcloudair vagrant providers. It is only compatible with the packer VMware builder.</p></li>
-<li><p><a href="https://github.com/gosddc/packer-templates">gosddc/packer-templates</a>.
-This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating pakcer templates on VMware products.</p></li>
-</ul>
-
-<h2>1. Let&#39;s get started by installing packer.</h2>
-
-<h4>A.  Download packer from the following link:</h4>
-
-<p><a href="https://www.packer.io/downloads.html">https://www.packer.io/downloads.html</a></p>
-
-<h4>B.  Unzip the downloaded files to /usr/local/packer_7.5:</h4>
-
-<h4>C.  Add /usr/local/packer_7.5 to your path by running the following command.</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span></code></pre></div>
-
-<h4>D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>cat ~/.bash_profile
-<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span>
-sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
-
-<h2>2. Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.</h2>
-
-<h4>A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.0-1274719-mac.x64.dmg is what I used.</h4>
-
-<h4>B. Verify ovftool is succesfully added to your path by running &quot;ovftool -v&quot;. This command should output the version of ovftool we installed.</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ovftool -v
-VMware ovftool 3.5.0 <span class="o">(</span>build-1274719<span class="o">)</span></code></pre></div>
-
-<h2>3. Now we can download and install the gosddc packer components we will need.</h2>
-
-<h4>A. Download the most recent version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:</h4>
-
-<p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases">https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases</a></p>
-
-<h4>B. Unzip packer-post-processor-vagrant-vmware-ovf and copy it to &quot;usr/local/packer_7.5&quot;. Ensure the permissions of this file match the other files in this directory.</h4>
-
-<h4>C. Create a directory to contain the packer templates:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer
-sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">cd</span> ~/Documents/packer/</code></pre></div>
-
-<h5>D. Clone the gosddc packer-templates repository:</h5>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer sdorsett<span class="nv">$ </span>git clone https://github.com/gosddc/packer-templates.git
-sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span>packer-templates</code></pre></div>
-
-<h2>4. Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.</h2>
-
-<h4>A. create an &quot;iso&quot; directory for storing the ESXi iso files:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer/packer-templates/iso</code></pre></div>
-
-<h4>B. Download and copy the &quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot; ESXi 5.5 installer to the iso directory.</h4>
-
-<h2>5. Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.</h2>
-
-<h4>A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>cat templates/esxi.json
-<span class="o">{</span>
-  <span class="s2">&quot;variables&quot;</span>: <span class="o">{</span>
-    <span class="s2">&quot;version&quot;</span>: <span class="s2">&quot;1.0&quot;</span>
-  <span class="o">}</span>,
-  <span class="s2">&quot;builders&quot;</span>: <span class="o">[</span>
-    <span class="o">{</span>
-      <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;esxi55&quot;</span>,
-      <span class="s2">&quot;vm_name&quot;</span>: <span class="s2">&quot;esxi55&quot;</span>,
-      <span class="s2">&quot;vmdk_name&quot;</span>: <span class="s2">&quot;esxi55-disk0&quot;</span>,
-      <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;vmware-iso&quot;</span>,
-      <span class="s2">&quot;headless&quot;</span>: <span class="nb">true</span>,
-      <span class="s2">&quot;disk_size&quot;</span>: 4096,
-      <span class="s2">&quot;guest_os_type&quot;</span>: <span class="s2">&quot;vmkernel5&quot;</span>,
-      <span class="s2">&quot;iso_url&quot;</span>: <span class="s2">&quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot;</span>,
-      <span class="s2">&quot;iso_checksum&quot;</span>: <span class="s2">&quot;ef599dc7e647177027684c0eee346ccdbc8704f2&quot;</span>,
-      <span class="s2">&quot;iso_checksum_type&quot;</span>: <span class="s2">&quot;sha1&quot;</span>,
-      <span class="s2">&quot;ssh_username&quot;</span>: <span class="s2">&quot;root&quot;</span>,
-      <span class="s2">&quot;ssh_password&quot;</span>: <span class="s2">&quot;vagrant&quot;</span>,
-      <span class="s2">&quot;ssh_wait_timeout&quot;</span>: <span class="s2">&quot;60m&quot;</span>,
-      <span class="s2">&quot;shutdown_command&quot;</span>: <span class="s2">&quot;esxcli system maintenanceMode set -e true -t 0 ; esxcli system shutdown poweroff -d 10 -r &#39;Packer Shutdown&#39; ; esxcli system maintenanceMode set -e false -t 0&quot;</span>,
-      <span class="s2">&quot;http_directory&quot;</span>: <span class="s2">&quot;.&quot;</span>,
-      <span class="s2">&quot;boot_wait&quot;</span>: <span class="s2">&quot;5s&quot;</span>,
-      <span class="s2">&quot;vmx_data&quot;</span>: <span class="o">{</span>
-        <span class="s2">&quot;memsize&quot;</span>: <span class="s2">&quot;4096&quot;</span>,
-        <span class="s2">&quot;numvcpus&quot;</span>: <span class="s2">&quot;2&quot;</span>,
-        <span class="s2">&quot;vhv.enable&quot;</span>: <span class="s2">&quot;TRUE&quot;</span>
-      <span class="o">}</span>,
-      <span class="s2">&quot;boot_command&quot;</span>: <span class="o">[</span>
-        <span class="s2">&quot;&lt;enter&gt;&lt;wait&gt;O&lt;wait&gt; ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/scripts/esxi-5-kickstart.cfg&lt;enter&gt;&quot;</span>
-      <span class="o">]</span>
-    <span class="o">}</span>
-  <span class="o">]</span>,
-  <span class="s2">&quot;provisioners&quot;</span>: <span class="o">[</span>
-    <span class="o">{</span>
-      <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;file&quot;</span>,
-      <span class="s2">&quot;source&quot;</span>: <span class="s2">&quot;puppet/modules/vagrantbaseconfig/files/vagrant.pub&quot;</span>,
-      <span class="s2">&quot;destination&quot;</span>: <span class="s2">&quot;/etc/ssh/keys-root/authorized_keys&quot;</span>
-    <span class="o">}</span>,
-    <span class="o">{</span>
-      <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;shell&quot;</span>,
-      <span class="s2">&quot;script&quot;</span>: <span class="s2">&quot;scripts/esxi-vmware-tools_install.sh&quot;</span>
-    <span class="o">}</span>,
-    <span class="o">{</span>
-      <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;shell&quot;</span>,
-      <span class="s2">&quot;script&quot;</span>: <span class="s2">&quot;scripts/esxi-cloning_configuration.sh&quot;</span>
-    <span class="o">}</span>
-  <span class="o">]</span>,
-  <span class="s2">&quot;post-processors&quot;</span>: <span class="o">[</span>
-   <span class="o">{</span>
-     <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;vagrant-vmware-ovf&quot;</span>,
-     <span class="s2">&quot;compression_level&quot;</span>: 9,
-     <span class="s2">&quot;output&quot;</span>: <span class="s2">&quot;{{.BuildName}}-{{.Provider}}-{{user `version`}}.box&quot;</span>
-
-   <span class="o">}</span>
-  <span class="o">]</span>
-<span class="o">}</span></code></pre></div>
-
-<p>There are several things I would like to point out in the esxi.json file we just created.</p>
-
-<ol>
-<li>builder - this section specifies that we will be using the &quot;vmware-iso&quot; builder, with VMware fusion, to create our packer template. We can modify attributes of our template virtual machine in this section:
-
-<ul>
-<li>disk size ( disk_size)</li>
-<li>memory ( memsize )</li>
-<li>vCPU count ( numvcpus )</li>
-</ul></li>
-<li>provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:
-
-<ul>
-<li>a file provisioner that will copy the vagrant public ssh key into our ESXi template</li>
-<li>a shell script to install the vmware tools VIB for nested ESXi</li>
-<li>a shell script to make necessary MAC address changes in our nested ESXi template.</li>
-</ul></li>
-<li>post-processors - this final section will convert the virtual machine artifact generated in VMware fusion into a vmware-ovf .box file we can use with vagrant</li>
-</ol>
-
-<h4>B. Validate the packer esxi.json file is ready for building by running the following command:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer validate templates/esxi.json
-Template validated successfully.</code></pre></div>
-
-<h4>C. Start the build by running:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer build templates/esxi.json
-esxi55 output will be in this color.
-
-<span class="o">==</span>&gt; esxi55: Downloading or copying ISO
-    esxi55: Downloading or copying: file:///Users/sdorsett/Documents/packer/packer-templates/iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso
-<span class="o">==</span>&gt; esxi55: Creating virtual machine <span class="nv">disk</span>
-<span class="o">==</span>&gt; esxi55: Building and writing VMX <span class="nv">file</span>
-<span class="o">==</span>&gt; esxi55: Starting HTTP server on port <span class="nv">8351</span>
-<span class="o">==</span>&gt; esxi55: Starting virtual machine...
-    esxi55: The VM will be run headless, without a GUI. If you want to
-    esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986
-<span class="o">==</span>&gt; esxi55: Waiting 5s <span class="k">for</span> boot...
-<span class="o">==</span>&gt; esxi55: Connecting to VM via <span class="nv">VNC</span>
-<span class="o">==</span>&gt; esxi55: Typing the boot <span class="nb">command </span>over VNC...
-<span class="o">==</span>&gt; esxi55: Waiting <span class="k">for</span> SSH to become available...
-<span class="o">==</span>&gt; esxi55: Connected to SSH!
-<span class="o">==</span>&gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub <span class="o">=</span>&gt; /etc/ssh/keys-root/authorized_keys
-<span class="o">==</span>&gt; esxi55: Provisioning with shell script: scripts/esxi-vmware-tools_install.sh
-    esxi55: Installation Result
-    esxi55: Message: The update completed successfully, but the system needs to be rebooted <span class="k">for</span> the changes to be effective.
-    esxi55: Reboot Required: <span class="nb">true</span>
-<span class="nb">    </span>esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
-    esxi55: VIBs Removed:
-    esxi55: VIBs Skipped:
-<span class="o">==</span>&gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
-    esxi55: diff: can<span class="s1">&#39;t stat &#39;</span>/tmp/auto-backup.35216//etc/ssh/keys-root/authorized_keys<span class="s1">&#39;: No such file or directory</span>
-<span class="s1">    esxi55: Saving current state in /bootbank</span>
-<span class="s1">    esxi55: Clock updated.</span>
-<span class="s1">    esxi55: Time: 02:09:44   Date: 12/30/2014   UTC</span>
-<span class="s1">==&gt; esxi55: Gracefully halting virtual machine...</span>
-<span class="s1">    esxi55: Waiting for VMware to clean up after itself...</span>
-<span class="s1">==&gt; esxi55: Deleting unnecessary VMware files...</span>
-<span class="s1">    esxi55: Deleting: output-esxi55/564d2ab2-395b-a9ba-9c17-2fe36682237c.vmem</span>
-<span class="s1">    esxi55: Deleting: output-esxi55/esxi55.plist</span>
-<span class="s1">    esxi55: Deleting: output-esxi55/vmware.log</span>
-<span class="s1">==&gt; esxi55: Cleaning VMX prior to finishing up...</span>
-<span class="s1">    esxi55: Unmounting floppy from VMX...</span>
-<span class="s1">    esxi55: Detaching ISO from CD-ROM device...</span>
-<span class="s1">==&gt; esxi55: Compacting the disk image</span>
-<span class="s1">==&gt; esxi55: Running post-processor: vagrant-vmware-ovf</span>
-<span class="s1">==&gt; esxi55 (vagrant-vmware-ovf): Creating Vagrant box for &#39;</span>vmware_ovf<span class="s1">&#39; provider</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Deleting key: ide1:0.filename</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Deleting key: floppy0.present</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Setting key: floppy0.present = FALSE</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Setting key: ide1:0.present = FALSE</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Creating directory: output-esxi55/ovf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Starting ovftool</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Reading files in output-esxi55/ovf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55-disk1.vmdk</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55.mf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Copying: esxi55.ovf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: Vagrantfile</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55-disk1.vmdk</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.mf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.ovf</span>
-<span class="s1">    esxi55 (vagrant-vmware-ovf): Compressing: metadata.json</span>
-<span class="s1">Build &#39;</span>esxi55<span class="s1">&#39; finished.</span>
-
-<span class="s1">==&gt; Builds finished. The artifacts of successful builds are:</span>
-<span class="s1">--&gt; esxi55: &#39;</span>vmware_ovf<span class="err">&#39;</span> provider box: esxi55-vmware_ovf-1.0.box
-sdorsett-mbp:packer-templates sdorsett<span class="err">$</span></code></pre></div>
-
-<p>If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:</p>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">esxi55: The VM will be run headless, without a GUI. If you want to
-    esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986</code></pre></div>
-
-<p>When I connected the &quot;Chicken of the VNC&quot; client installed on my macbook to &quot;127.0.0.1:5986&quot; I could see where the build was at during the install process:</p>
-
-<p><img src="/assets/01-esxi-vnc-client.png" alt="screenshot">  </p>
-
-<h4>D. Once the packer build completes you should end up with a &quot;esxi55-vmware_ovf-1.0.box&quot; file in the same directory you ran the &quot;packer build&quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>ls *.box
-esxi55-vmware_ovf-1.0.box</code></pre></div>
-
-<h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on CentOS and build a packer virtual machine on a remote ESXi host.</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2014/05/26/vagrant-install/">
-        Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x
-      </a>
-    </h1>
-
-    <span class="post-date">26 May 2014</span>
-
-    <p>In this post I&#39;m setting out to explain how to create a CentOS 6.4 vm, from template, in vCHS (or a vCloud Director instance) and then install vagrant-vcloud on that. </p>
-
-<h3>1. Create a CentOS 6.x minimal virtual machine from a template in a vCHS organization.</h3>
-
-<p>I will demonstrate creating a new CentOS vm in vCHS using a template, but you could just as easily create a new CentOS virtual machine from scratch in vCloud Director.</p>
-
-<h4>A. Log into vCHS using your credentials and click on your virtual datacenter.</h4>
-
-<h4>B. Next click on the &quot;Virtual Machines&quot; tab and then click the &quot;Deploy a Virtual Machine&quot; button:</h4>
-
-<p><img src="/assets/01-create-centos-64-vm.png" alt="screenshot"></p>
-
-<h4>C. Select the &quot;CentOS 6.4 64 Bit&quot; template and click &quot;Continue&quot;</h4>
-
-<p><img src="/assets/02-select-centos-64-template.png" alt="screenshot"></p>
-
-<h4>D. Name the virtual machine and set the guest OS name of your new virtual machine. Click &quot;Deploy This Virtual Machine&quot;:</h4>
-
-<p>I named my virtual machine and set the guest OS name both to &quot;vagrant&quot;, but you can change these to what ever you prefer.</p>
-
-<p><img src="/assets/03-virtual-machine-resource-settings.png" alt="screenshot"></p>
-
-<h4>E. Power on and then click the name of the virtual machine you just created:</h4>
-
-<p><img src="/assets/04-centos-vm-created.png" alt="screenshot"></p>
-
-<h4>F. Click the &quot;Launch Console&quot; link to open the console of the virtual machine you just created.</h4>
-
-<p>Notice that the guest OS password created by guest customization is displayed on the left. Log into the virtual machine, using &quot;root&quot; and the displayed password, then change this password immediately to something else:</p>
-
-<p><img src="/assets/05-open-console-and-log-in.png" alt="screenshot"></p>
-
-<h3>2. Modify /etc/resolv.conf</h3>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/resolv.conf</span>
-nameserver 8.8.8.8 
-nameserver 8.8.4.4</code></pre></div>
-
-<p>At this point you should have network connectivity to your new vagrant vapp. While I won&#39;t cover it in the post, you can now either setup a DNAT rule to forward SSH to the vagrant vapp or continue the configuration using the vapp console.</p>
-
-<h3>3. Install Ruby 1.9.3 using ruby-build:</h3>
-
-<h4>A. Use yum to install the packages we&#39;ll need to get ruby, rubygems and vagrant installed:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span></code></pre></div>
-
-<h4>B. Pull down the latest version of ruby-build using git:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span></code></pre></div>
-
-<h4>C. Change to the directory the previous command created:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span></code></pre></div>
-
-<h4>D. Run the &#39;install.sh&#39; script to install ruby-build:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span></code></pre></div>
-
-<h4>E. I would recommend installing Ruby version 1.9.3-p545 with the following command:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
-Downloading yaml-0.1.6.tar.gz...
--&gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
-Installing yaml-0.1.6...
-Installed yaml-0.1.6 to /usr/local/
-
-Downloading ruby-1.9.3-p545.tar.gz...
--&gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
-Installing ruby-1.9.3-p545...
-
-Installed ruby-1.9.3-p545 to /usr/local/</code></pre></div>
-
-<h3>4. Install rubygems by downloading the latest version from <a href="https://rubygems.org/pages/download">rubygems.org</a> and install it:</h3>
-
-<h4>A. Use wget to download the latest version listed on the rubygems download page:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span></code></pre></div>
-
-<h4>B. Use tar to unzip the tar-gzipped file we downloaded:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar xvzf rubygems-2.2.2.tgz</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.2.2</span></code></pre></div>
-
-<h4>C. Install rubygems by running the &#39;setup.rb&#39; script:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># ruby setup.rb</span></code></pre></div>
-
-<h3>5. Install Vagrant</h3>
-
-<h4>A. Use wget to download the latest version listed on the <a href="https://www.vagrantup.com/downloads.html">Vagrant download</a> page:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm</span></code></pre></div>
-
-<h4>B. Use the &#39;rpm&#39; command to install the RPM package we downloaded in the previous step:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.6.2_x86_64.rpm</span></code></pre></div>
-
-<h4>C. Export the directory that the vagrant executable was install to, in order to make it easier to run:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># export PATH=$PATH:/opt/vagrant/bin/</span></code></pre></div>
-
-<h3>6. Installing the vagrant-vcloud plugin</h3>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant blog<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vcloud</span>
-Installing the <span class="s1">&#39;vagrant-vcloud&#39;</span> plugin. This can take a few minutes...
-Installed the plugin <span class="s1">&#39;vagrant-vcloud (0.3.3)&#39;</span>!</code></pre></div>
-
-<h3>7. Creating a Vagrantfile for testing vagrant-vcloud install</h3>
-
-<h4>A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by <a href="http://blog.tsugliani.fr/">Timo Sugliani</a>:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/precise32-test</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat ~/vagrant-vms/precise32-test/Vagrantfile </span>
-<span class="nv">precise32_vm_box_url</span> <span class="o">=</span> <span class="s2">&quot;http://vagrant.tsugliani.fr/precise32.box&quot;</span>
-
-<span class="nv">nodes</span> <span class="o">=</span> <span class="o">[</span>
-  <span class="o">{</span> :hostname <span class="o">=</span>&gt; <span class="s2">&quot;test-vm&quot;</span>,  
-    :box <span class="o">=</span>&gt; <span class="s2">&quot;precise32&quot;</span>, 
-    :box_url <span class="o">=</span>&gt; precise32_vm_box_url <span class="o">}</span>
-<span class="o">]</span>
-
-Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
-
-  <span class="c"># vCloud Director provider settings</span>
-  config.vm.provider :vcloud <span class="k">do</span> <span class="p">|</span>vcloud<span class="p">|</span>
-
-    vcloud.hostname <span class="o">=</span> <span class="s1">&#39;https://[Your_vCD_URL]:443&#39;</span>
-    vcloud.username <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_username@somedomain.com]&#39;</span>
-    vcloud.password <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_password]&#39;</span>
-
-    vcloud.org_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_name]&#39;</span>
-    vcloud.vdc_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]&#39;</span>
-    vcloud.catalog_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_catalog]&#39;</span>
-    vcloud.network_bridge <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vcloud.vdc_network_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]-default-routed&#39;</span>
-
-  end
-
-  nodes.each <span class="k">do</span> <span class="p">|</span>node<span class="p">|</span>
-    config.vm.define node<span class="o">[</span>:hostname<span class="o">]</span> <span class="k">do</span> <span class="p">|</span>node_config<span class="p">|</span>
-      node_config.vm.box <span class="o">=</span> node<span class="o">[</span>:box<span class="o">]</span>
-      node_config.vm.hostname <span class="o">=</span> node<span class="o">[</span>:hostname<span class="o">]</span>
-      node_config.vm.box_url <span class="o">=</span> node<span class="o">[</span>:box_url<span class="o">]</span>
-    end
-  end
-end</code></pre></div>
-
-<p>In this configuration file:</p>
-
-<ul>
-<li>&quot;vcloud.hostname&quot; is your vCloud Director FQDN or IP address. This should be the base URL and not by the specific URL for your org.</li>
-<li>&quot;vcloud.username&quot; is the username we will be using to connect to vCHS or vCloud Director</li>
-<li>&quot;vcloud.password&quot; is the password we will be using to connect to vCHS or vCloud Director</li>
-<li>&quot;vcloud.org_name&quot; will be the name of your vCHS or vCloud Director organization</li>
-<li>&quot;vcloud.vdc_name&quot; will be the name of your vCHS or vCloud Director virtual datacenter</li>
-<li>&quot;vcloud.catalog_name&quot; will be the name of your organization catalog a template derived from the .box file will be created in</li>
-<li>&quot;vcloud.dc_network_name&quot; is the organization network the vagrant vapp will be connected to</li>
-</ul>
-
-<h4>B.  Now we can change directory to that directory and test everything with a &quot;vagrant up --provider=vcloud&quot;:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ~/vagrant-vms/precise32-test</span>
-oot@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant up --provider=vcloud</span>
-Bringing machine <span class="s1">&#39;test-vm&#39;</span> up with <span class="s1">&#39;vcloud&#39;</span> provider...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Box <span class="s1">&#39;precise32&#39;</span> could not be found. Attempting to find and install...
-    <span class="nb">test</span>-vm: Box Provider: vcloud
-    <span class="nb">test</span>-vm: Box Version: &gt;<span class="o">=</span> <span class="nv">0</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Adding box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> provider: vcloud
-    <span class="nb">test</span>-vm: Downloading: http://vagrant.tsugliani.fr/precise32.box
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Successfully added box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> <span class="s1">&#39;vcloud&#39;</span>!
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Catalog item <span class="o">[</span>precise32<span class="o">]</span> in Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span> does not exist!
-    <span class="nb">test</span>-vm: Would you like to upload the <span class="o">[</span>precise32<span class="o">]</span> box to <span class="o">[</span>Org Private Catalog<span class="o">]</span> Catalog?
-    <span class="nb">test</span>-vm: Choice <span class="o">(</span>yes/no<span class="o">)</span>: <span class="nv">yes</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Uploading <span class="o">[</span>precise32<span class="o">]</span>...
-Uploading Box...
-Uploading Box...
-Uploading Box... Progress: 22%  ETA: 00:02:16</code></pre></div>
-
-<p>Once the .box files has started uploading, you can check the progress in the org catalog of your vCloud Director instance:</p>
-
-<p><img src="/assets/06-precise32-upload.png" alt="screenshot"></p>
-
-<h4>C. The uploading progress will get to 100% and you will see the vApp getting created, powered on and SSH access achieved:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">Uploading Box...
-Uploading Box... Progress: 100% Time: 00:02:32                                                                                                   
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Adding <span class="o">[</span>precise32<span class="o">]</span> to Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Building vApp...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Powering on VM...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># root@vagrant precise32-test]#</span></code></pre></div>
-
-<h4>D. Test network connectivity by running &quot;vagrant ssh&quot;:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant ssh</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: External IP <span class="k">for</span> <span class="nb">test</span>-vm: 192.168.109.4
-Welcome to Ubuntu 12.04 LTS <span class="o">(</span>GNU/Linux 3.2.0-23-generic-pae i686<span class="o">)</span>
-
- * Documentation:  https://help.ubuntu.com/
-Welcome to your Vagrant-built virtual machine.
-Last login: Thu Jul <span class="m">18</span> 11:20:25 2013
-vagrant@test-vm:~<span class="nv">$ </span>hostname -f
-<span class="nb">test</span>-vm</code></pre></div>
-
-<h4>E. Run &quot;vagrant vcloud --status&quot; to validate the vCloud Director status of your vagrant vapp:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant vcloud --status</span>
-Initializing vCloud Director provider...
-Fetching vCloud Director status...
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span>  Vagrant vCloud Director Status : https://<span class="o">[</span>Your_vCD_URL<span class="o">]</span>:443            <span class="p">|</span>
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span> Organization Name             <span class="p">|</span> <span class="o">[</span>Your_vCHS_org_name<span class="o">]</span>                    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Name         <span class="p">|</span> vCHS-vagrant-demo                       <span class="p">|</span>
-<span class="p">|</span> Organization vDC ID           <span class="p">|</span> b9494d6a-ebda-4368-8f76-0e93b7edcb17    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Network Name <span class="p">|</span> <span class="o">[</span>Your_vCHS_vdc_name<span class="o">]</span>-default-routed     <span class="p">|</span>
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span> vApp Name                     <span class="p">|</span> Vagrant-root-vagrant-8b9115d1           <span class="p">|</span>
-<span class="p">|</span> vAppID                        <span class="p">|</span> ec918e84-6026-42b2-8639-5390d8c88b0c    <span class="p">|</span>
-<span class="p">|</span> -&gt; <span class="nb">test</span>-vm                    <span class="p">|</span> 4fc82b9b-c79d-483b-9a71-a87d22289102    <span class="p">|</span>
-+-------------------------------+-----------------------------------------+</code></pre></div>
-
-<h4>F. Run &quot;vagrant vcloud --network&quot; to validate the vCloud Director network mapping of your vagrant vapp:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant vcloud --network</span>
-Initializing vCloud Director provider...
-Fetching vCloud Director network settings ...
-+---------+---------------+------------+
-<span class="p">|</span>             Network Map              <span class="p">|</span>
-+---------+---------------+------------+
-<span class="p">|</span> VM Name <span class="p">|</span> IP Address    <span class="p">|</span> Connection <span class="p">|</span>
-+---------+---------------+------------+
-<span class="p">|</span> <span class="nb">test</span>-vm <span class="p">|</span> 192.168.109.4 <span class="p">|</span> Direct     <span class="p">|</span>
-+---------+---------------+------------+</code></pre></div>
-
-<h4>g. Destroy the cloned vm by running &quot;vagrant destroy&quot; command:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant destroy</span>
-    <span class="nb">test</span>-vm: Are you sure you want to destroy the <span class="s1">&#39;test-vm&#39;</span> VM? <span class="o">[</span>y/N<span class="o">]</span> <span class="nv">y</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Powering off VM...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Single VM left in the vApp, Powering off vApp...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Destroying vApp...
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c">#</span></code></pre></div>
-
-<p>You should see &quot;Power Off vapp&quot; and &quot;Delete vapp&quot; tasks being run and then completing on your organizations vapps.</p>
-
-<h3>Hopefully you found this post helpful in getting vagrant and the vagrant-cloud plugin installed and configured. The next blog post will be covering how to modify the Vagrantfile to create a vapp in a vCHS or vCloud Director instance that doesn&#39;t contain the vagrant vm.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 

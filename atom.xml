@@ -4,13 +4,198 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-01-10T20:44:09+00:00</updated>
+ <updated>2015-12-23T04:25:38+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Installing a ESXi 6.0 virtual machine for use with Packer</title>
+   <link href="http://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/"/>
+   <updated>2015-12-23T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment</id>
+   <content type="html">&lt;p&gt;In order to begin using Packer to create images, we will first need to lay the &amp;quot;virtual&amp;quot; ground work. Packer can create virtual machine templates on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor. This post will be covering installing ESXi as a virtual machine, there is no reason that would prevent you from using a physical server that has ESXi installed for Packer.&lt;/p&gt;
+
+&lt;p&gt;There is nothing new about the steps that I will be covering, but I figured it would be best to go ahead and cover them. These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5, but the steps for setting up nested virtualization will be slightly different. I you are looking for for more information about creating ESXi virtual machines, I would suggest taking a look at &lt;a href=&quot;http://www.virtuallyghetto.com/&quot;&gt;William Lam&amp;#39;s blog&lt;/a&gt; which covers this subject in detail.&lt;/p&gt;
+
+&lt;h2&gt;1. Log into the web client of your vCenter instance and create a new virtual machine.&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-new-virtual-machine.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;2. Step through the new virtual machine wizard:&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/02-create-new-virtual-machine.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Name the virtual machine what you would like and click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/03-virtual-machine-name.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select the vCenter cluster or resource pool and click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/04-select-compute-resource.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select the datastore you want the ESXi virtual machine to be created on and click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/05-select-storage.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select the compatibility (virtual hardware level) for the virtual machine and click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/06-select-compatibility.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select the guest operating system. vSphere 6.0 or newer will allow you to select ESXi 6.0 as you guest OS. Click next.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/07-select-guest-os.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Customize to virtual hardware to have the necessary resources. I had created my ESXi vurtual machine with:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;2 vCPU&lt;/li&gt;
+&lt;li&gt;16 GB of memory&lt;/li&gt;
+&lt;li&gt;100GB virtual hard drive&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08-customize-hardware.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Make sure you expand CPU and enable &amp;quot;Hardware virtualization.&amp;quot; The ESXi installer will fail if this is not enabled.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/09-customize-hardware.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Click finish to create the virtual machine.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/10-ready-to-complete.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;3. Connect the virtual CDROM to the ESXi 6.0 installer .iso and power on the new virtual machine.&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/11-start-esxi-vm.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;4. Connect to the console of the ESXi virtual machine and step through the installer&lt;/h2&gt;
+
+&lt;p&gt;Press enter to begin&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/12-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Press F11 to accept the EULA&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/13-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select the 100GB virtual hard drive we created with the virtual machine&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/14-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Select your keyboard layout and press enter&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/15-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Enter the root password twice and press enter&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/16-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/17-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Press F11 to begin the install process&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/18-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Disconnect the .iso file from the virtual CDROM before rebooting the virtual machine&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/19-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/20-esxi-installer.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/21-esxi-post-install.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;5. Press F2 to log into ESXi, set the management IP address/subnet/gateway and enable ssh&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/22-set-ip-address.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/23-apply-network-config.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/24-enable-ssh.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;6. On your local machine download the embedded host client .vib&lt;/h2&gt;
+
+&lt;p&gt;You can download the embedded host client .vib from &lt;a href=&quot;https://labs.vmware.com/flings/esxi-embedded-host-client&quot;&gt;this link&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/25-download-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;7. SCP the .vib to the ESXi virtual machine&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+The authenticity of host &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.51 (192.168.1.51)&amp;#39;&lt;/span&gt; cant be established.
+RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+Are you sure you want to &lt;span class=&quot;k&quot;&gt;continue&lt;/span&gt; connecting &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;yes/no&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;? yes
+Warning: Permanently added &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.51&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;RSA&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; to the list of known hosts.
+Password: ********
+esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
+sdorsett-mbp:~ sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;7. SSH to the ESXi virtual machine and install the embedded host client .vib&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ssh root@192.168.1.51
+Password: ********
+The &lt;span class=&quot;nb&quot;&gt;time &lt;/span&gt;and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools.  Please
+see www.vmware.com/go/sysadmintools &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; more information.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;tmp
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; ls
+esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; esxcli software vib install -v /tmp/esxui_signed.vib
+Installation Result
+   Message: Operation finished successfully.
+   Reboot Required: &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;   &lt;/span&gt;VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
+   VIBs Removed:
+   VIBs Skipped:
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;8. Enable guest ip hack on the ESXi virtual machine because Packer will need this capability&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/28-enable-guest-ip-hack.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; esxcli system settings advanced &lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; -o /Net/GuestIPHack -i 1
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;
+Connection to 192.168.1.51 closed.
+sdorsett-mbp:~ sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;9. Log into the embedded host client using the browser on your local machine to validate that it it working properly&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/26-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/27-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.
+Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Setting up a pipeline for creating packer .box files</title>
+   <link href="http://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files/"/>
+   <updated>2015-12-22T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files</id>
+   <content type="html">&lt;p&gt;Recently at work, the vCloud Air Zombie team has been using packer to generate Vagrant templates for use in development and testing.  I have previously covered &lt;a href=&quot;https://sdorsett.github.io/2015/01/03/using-packer-on-centos/&quot;&gt;how to use packer to create create a .box template for use with Vagrant&lt;/a&gt;, but I thought it might be useful to others to have me demonstrate how we are using Packer within our development team.&lt;/p&gt;
+
+&lt;p&gt;This will be the first of several blog posts in which I intend to cover:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;Installing a ESXi 6.0 virtual machine for use with Packer&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine.&lt;/li&gt;
+&lt;li&gt;Creating up our first packer template for installing CentOS 6.7 and vmtools.&lt;/li&gt;
+&lt;li&gt;Installing the Puppet agent in our CentOS 6.7 template .&lt;/li&gt;
+&lt;li&gt;Using ovftool to convert Packer generated virtual machines, into Vagrant .box files&lt;/li&gt;
+&lt;li&gt;Hosting the resulting Vagrant .box files on a web server so they can be downloaded by Vagrant.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These posts will hopefully be helpful by providing details on the process of using Packer to generate Vagrant .box files.&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Creating a vCSA 5.5 .box template on CentOS 6.5 for vagrant deployment</title>
