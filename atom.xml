@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-23T18:56:08+00:00</updated>
+ <updated>2015-12-23T19:30:28+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -618,7 +618,7 @@ Accept any certificate warnings and log in using root as the username and the pa
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;Installing a ESXi 6.0 virtual machine for use with Packer&lt;/a&gt; - this is what Packer will be using to create the image.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/&quot;&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine&lt;/a&gt; - this will be where the Packer templates are run from.&lt;/li&gt;
-&lt;li&gt;Creating up our first Packer template for installing CentOS 6.7 along with vmtools - templates are the &amp;quot;recipes&amp;quot; for what ingredients go into a Packer image.&lt;/li&gt;
+&lt;li&gt;Creating our first Packer template for installing CentOS 6.7 along with vmtools - templates are the &amp;quot;recipes&amp;quot; for what ingredients go into a Packer image.&lt;/li&gt;
 &lt;li&gt;Copying our existing CentOS 6.7 template and adding the Puppet agent - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.&lt;/li&gt;
 &lt;li&gt;Using ovftool to convert Packer generated virtual machines, into Vagrant .box files - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
 &lt;li&gt;Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.&lt;/li&gt;
