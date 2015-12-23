@@ -4,13 +4,412 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-23T16:05:32+00:00</updated>
+ <updated>2015-12-23T18:56:08+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
-   <name>Mark Otto</name>
+   <name>Stan Dorsett</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Setting up Packer, ovftool and Apache web server on a CentOS virtual machine</title>
+   <link href="http://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/"/>
+   <updated>2015-12-24T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos</id>
+   <content type="html">&lt;p&gt;In the &lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;last post&lt;/a&gt; we setup a ESXi virtual machine that would be the target for creating Packer images. In order to follow along with this post you will need two things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A fresh CentOS virtual machine on which we will install Packer - I&amp;#39;m using CentOS 6.6 minimal install named &amp;quot;packer-centos&amp;quot; with 2 vCPU, 4GB of memory and a 100GB virtual hard drive. I also gave this virtual machine the IP address of 192.168.1.52&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://my.vmware.com/web/vmware/details?productId=491&amp;amp;downloadGroup=OVFTOOL410&quot;&gt;VMware ovftool&lt;/a&gt; - if you followed the previous post and are using ESXi 6.0 you will need a copy of ovftool 4.1.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s get started...&lt;/p&gt;
+
+&lt;h2&gt;1. SSH to CentOS virtual machine you created.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ssh root@192.168.1.52
+The authenticity of host &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.52 (192.168.1.52)&amp;#39;&lt;/span&gt; cant be established.
+RSA key fingerprint is 58:f5:22:2e:f6:64:04:59:6b:0b:76:2f:33:6f:03:85.
+Are you sure you want to &lt;span class=&quot;k&quot;&gt;continue&lt;/span&gt; connecting &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;yes/no&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;? yes
+Warning: Permanently added &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.52&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;RSA&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; to the list of known hosts.
+root@192.168.1.52&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;s password:
+Last login: Thu Oct &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt; 17:52:17 &lt;span class=&quot;m&quot;&gt;2015&lt;/span&gt; from 192.168.1.1
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;2. Install the EPEL repository&lt;/h2&gt;
+
+&lt;p&gt;There will be several package we need to install that are coming from the CentOS EPEL repository, so we will need to install it.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y epel-release&lt;/span&gt;
+Loaded plugins: fastestmirror
+Setting up Install Process
+Determining fastest mirrors
+ * base: yum.tamu.edu
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+base
+base/primary_db
+extras
+extras/primary_db
+updates
+updates/primary_db
+Resolving Dependencies
+--&amp;gt; Running transaction check
+---&amp;gt; Package epel-release.noarch 0:6-8 will be installed
+--&amp;gt; Finished Dependency Resolution
+
+Dependencies &lt;span class=&quot;nv&quot;&gt;Resolved&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;=============================================================&lt;/span&gt;
+ Package          Arch       Version     Repository     &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;=============================================================&lt;/span&gt;
+Installing:
+ epel-release     noarch     6-8         extras         &lt;span class=&quot;m&quot;&gt;14&lt;/span&gt; k
+
+Transaction &lt;span class=&quot;nv&quot;&gt;Summary&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;=============================================================&lt;/span&gt;
+Install       &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+Total download size: &lt;span class=&quot;m&quot;&gt;14&lt;/span&gt; k
+Installed size: &lt;span class=&quot;m&quot;&gt;22&lt;/span&gt; k
+Downloading Packages:
+epel-release-6-8.noarch.rpm     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;14&lt;/span&gt; kB     00:00
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : epel-release-6-8.noarch     1/1
+  Verifying  : epel-release-6-8.noarch     1/1
+
+Installed:
+  epel-release.noarch 0:6-8
+
+Complete!
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;3. Use yum to make sure the following packages are installed:&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;git - for version control and the ability to pull down git repositories&lt;/li&gt;
+&lt;li&gt;wget - provides the ability to download packages from URLs&lt;/li&gt;
+&lt;li&gt;unzip - needed to unzip Packer, since it comes as a .zip&lt;/li&gt;
+&lt;li&gt;sshpass - used for running SSH commands, but it allows us to specify a password to use&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y git wget unzip sshpass&lt;/span&gt;
+Loaded plugins: fastestmirror
+Setting up Install Process
+Loading mirror speeds from cached hostfile
+ * base: yum.tamu.edu
+ * epel: fedora-epel.mirror.lstn.net
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+Package git-1.7.1-3.el6_4.1.x86_64 already installed and latest version
+Package wget-1.12-5.el6_6.1.x86_64 already installed and latest version
+Resolving Dependencies
+--&amp;gt; Running transaction check
+---&amp;gt; Package sshpass.x86_64 0:1.05-1.el6 will be installed
+---&amp;gt; Package unzip.x86_64 0:6.0-2.el6_6 will be installed
+--&amp;gt; Finished Dependency Resolution
+
+Dependencies &lt;span class=&quot;nv&quot;&gt;Resolved&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;============================================================&lt;/span&gt;
+ Package     Arch       Version        Repository     &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;============================================================&lt;/span&gt;
+Installing:
+ sshpass     x86_64     1.05-1.el6     epel           &lt;span class=&quot;m&quot;&gt;19&lt;/span&gt; k
+ unzip       x86_64     6.0-2.el6_6    base           &lt;span class=&quot;m&quot;&gt;149&lt;/span&gt; k
+
+Transaction &lt;span class=&quot;nv&quot;&gt;Summary&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;============================================================&lt;/span&gt;
+Install       &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+Total download size: &lt;span class=&quot;m&quot;&gt;168&lt;/span&gt; k
+Installed size: &lt;span class=&quot;m&quot;&gt;346&lt;/span&gt; k
+Downloading Packages:
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1/2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: sshpass-1.05-1.el6.x86_64.rpm     &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;19&lt;/span&gt; kB     00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;2/2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: unzip-6.0-2.el6_6.x86_64.rpm      &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;149&lt;/span&gt; kB     00:00
+------------------------------------------------------------
+Total                                                                                                                                                                     &lt;span class=&quot;m&quot;&gt;593&lt;/span&gt; kB/s &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;168&lt;/span&gt; kB     00:00
+warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID 0608b895: NOKEY
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+Importing GPG key 0x0608B895:
+ Userid : EPEL &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &amp;lt;epel@fedoraproject.org&amp;gt;
+ Package: epel-release-6-8.noarch &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;@extras&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ From   : /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : sshpass-1.05-1.el6.x86_64     1/2
+  Installing : unzip-6.0-2.el6_6.x86_64      2/2
+  Verifying  : unzip-6.0-2.el6_6.x86_64      1/2
+  Verifying  : sshpass-1.05-1.el6.x86_64     2/2
+
+Installed:
+  sshpass.x86_64 0:1.05-1.el6     unzip.x86_64 0:6.0-2.el6_6
+
+Complete!
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;4. Install Packer&lt;/h2&gt;
+
+&lt;p&gt;Go to &lt;a href=&quot;https://packer.io/downloads.html&quot;&gt;https://packer.io/downloads.html&lt;/a&gt; and copy the URL for the Linux 64-bit package. In the SSH session to our CentOS virtual machine, perform the following steps:&lt;/p&gt;
+
+&lt;p&gt;Create a new directory to install packer into&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir /usr/local/packer_0.8.6&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Download Packer using the URL you copied from the packer.io download page:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# wget https://releases.hashicorp.com/packer/0.8.6/packer_0.8.6_linux_amd64.zip&lt;/span&gt;
+--2015-12-23 17:22:03--  https://releases.hashicorp.com/packer/0.8.6/packer_0.8.6_linux_amd64.zip
+Resolving releases.hashicorp.com... 23.235.44.69
+Connecting to releases.hashicorp.com&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;23.235.44.69&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:443... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt; OK
+Length: &lt;span class=&quot;m&quot;&gt;132616691&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;126M&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;application/zip&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+Saving to: “packer_0.8.6_linux_amd64.zip”
+
+100%&lt;span class=&quot;o&quot;&gt;[====================================&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; 132,616,691 6.97M/s   in 18s
+
+2015-12-23 17:22:22 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;6.95 MB/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; - “packer_0.8.6_linux_amd64.zip” saved &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;132616691/132616691&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# unzip packer_0.8.6_linux_amd64.zip -d /usr/local/packer_8.6/&lt;/span&gt;
+Archive:  packer_0.8.6_linux_amd64.zip
+  inflating: /usr/local/packer_8.6/packer
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-chroot
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-ebs
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-instance
+  inflating: /usr/local/packer_8.6/packer-builder-digitalocean
+  inflating: /usr/local/packer_8.6/packer-builder-docker
+  inflating: /usr/local/packer_8.6/packer-builder-file
+  inflating: /usr/local/packer_8.6/packer-builder-googlecompute
+  inflating: /usr/local/packer_8.6/packer-builder-null
+  inflating: /usr/local/packer_8.6/packer-builder-openstack
+  inflating: /usr/local/packer_8.6/packer-builder-parallels-iso
+  inflating: /usr/local/packer_8.6/packer-builder-parallels-pvm
+  inflating: /usr/local/packer_8.6/packer-builder-qemu
+  inflating: /usr/local/packer_8.6/packer-builder-virtualbox-iso
+  inflating: /usr/local/packer_8.6/packer-builder-virtualbox-ovf
+  inflating: /usr/local/packer_8.6/packer-builder-vmware-iso
+  inflating: /usr/local/packer_8.6/packer-builder-vmware-vmx
+  inflating: /usr/local/packer_8.6/packer-post-processor-artifice
+  inflating: /usr/local/packer_8.6/packer-post-processor-atlas
+  inflating: /usr/local/packer_8.6/packer-post-processor-compress
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-import
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-push
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-save
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-tag
+  inflating: /usr/local/packer_8.6/packer-post-processor-vagrant
+  inflating: /usr/local/packer_8.6/packer-post-processor-vagrant-cloud
+  inflating: /usr/local/packer_8.6/packer-post-processor-vsphere
+  inflating: /usr/local/packer_8.6/packer-provisioner-ansible-local
+  inflating: /usr/local/packer_8.6/packer-provisioner-chef-client
+  inflating: /usr/local/packer_8.6/packer-provisioner-chef-solo
+  inflating: /usr/local/packer_8.6/packer-provisioner-file
+  inflating: /usr/local/packer_8.6/packer-provisioner-powershell
+  inflating: /usr/local/packer_8.6/packer-provisioner-puppet-masterless
+  inflating: /usr/local/packer_8.6/packer-provisioner-puppet-server
+  inflating: /usr/local/packer_8.6/packer-provisioner-salt-masterless
+  inflating: /usr/local/packer_8.6/packer-provisioner-shell
+  inflating: /usr/local/packer_8.6/packer-provisioner-shell-local
+  inflating: /usr/local/packer_8.6/packer-provisioner-windows-restart
+  inflating: /usr/local/packer_8.6/packer-provisioner-windows-shell
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Update ~/.bashrc to add &amp;quot;/usr/local/packer_8.6&amp;quot; to our path. Run &amp;quot;source ~/.bashrc&amp;quot; to re-read ~/.bashrc and validate $PATH has been updated.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo &amp;#39;export PATH=&amp;quot;/usr/local/packer_8.6:$PATH&amp;quot;&amp;#39; &amp;gt;&amp;gt; ~/.bashrc&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# source ~/.bashrc&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo $PATH&lt;/span&gt;
+/usr/local/packer_8.6:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Ensure the packer binary can be found and is showing the proper version&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# which packer&lt;/span&gt;
+/usr/local/packer_8.6/packer
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# packer -v&lt;/span&gt;
+0.8.6
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;5. Stop the iptables firewall and disable it from started on reboot of the virtual machine&lt;/h2&gt;
+
+&lt;p&gt;Packer will start a web server service for providing kickstart and script files to Packer images during install. This service will use a random port within a range, so we will need to stop iptables in order to allow the Packer images to connect.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# service iptables stop&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# chkconfig iptables off&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;6. Install ovftool on the CentOS virtual machine&lt;/h2&gt;
+
+&lt;p&gt;Download linux 64bit version of ovftool 4.1 on your local machine&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-download-ovftool-linux-64bit.png&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;SCP the downloaded file to the CentOS virtual machine&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;scp ~/Downloads/VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle root@192.168.1.52:/root/
+root@192.168.1.52&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;s password:
+VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle                    100%   37MB  12.4MB/s   00:03
+sdorsett-mbp:~ sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Install ovftool on the CentOS virtual machine and validate the version&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ls&lt;/span&gt;
+anaconda-ks.cfg  install.log  install.log.syslog  packer_0.8.6_linux_amd64.zip  VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ./VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle&lt;/span&gt;
+Extracting VMware Installer...done.
+You must accept the VMware OVF Tool component &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; Linux End User
+License Agreement to &lt;span class=&quot;k&quot;&gt;continue&lt;/span&gt;.  Press Enter to proceed.
+VMWARE END USER LICENSE AGREEMENT
+
+PLEASE NOTE THAT THE TERMS OF THIS END USER LICENSE AGREEMENT SHALL GOVERN YOUR
+USE OF THE SOFTWARE, REGARDLESS OF ANY TERMS THAT MAY APPEAR DURING THE
+INSTALLATION OF THE SOFTWARE.
+
+IMPORTANT-READ CAREFULLY:   BY DOWNLOADING, INSTALLING, OR USING THE SOFTWARE,
+YOU &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;THE INDIVIDUAL OR LEGAL ENTITY&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; AGREE TO BE BOUND BY THE TERMS OF THIS END
+USER LICENSE AGREEMENT &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;EULA&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;.  IF YOU DO NOT AGREE TO THE TERMS OF THIS
+EULA, YOU MUST NOT DOWNLOAD, INSTALL, OR USE THE SOFTWARE, AND YOU MUST DELETE
+OR RETURN THE UNUSED SOFTWARE TO THE VENDOR FROM WHICH YOU ACQUIRED IT WITHIN
+THIRTY &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;30&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; DAYS AND REQUEST A REFUND OF THE LICENSE FEE, IF ANY, THAT YOU PAID
+FOR THE SOFTWARE.
+...
+
+Do you agree? &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;yes/no&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;: yes
+
+The product is ready to be installed.  Press Enter to begin
+installation or Ctrl-C to cancel.
+
+Installing VMware OVF Tool component &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; Linux 4.1.0
+    Configuring...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;######################################################################] 100%&lt;/span&gt;
+Installation was successful.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# which ovftool&lt;/span&gt;
+/usr/bin/ovftool
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ovftool -v&lt;/span&gt;
+VMware ovftool 4.1.0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;build-2459827&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;7. Install apache web server on the CentOS virtual machine&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# yum install -y httpd&lt;/span&gt;
+Loaded plugins: fastestmirror
+Setting up Install Process
+Loading mirror speeds from cached hostfile
+ * base: yum.tamu.edu
+ * epel: fedora-epel.mirror.lstn.net
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+Resolving Dependencies
+--&amp;gt; Running transaction check
+---&amp;gt; Package httpd.x86_64 0:2.2.15-47.el6.centos.1 will be installed
+--&amp;gt; Processing Dependency: httpd-tools &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 2.2.15-47.el6.centos.1 &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&amp;gt; Processing Dependency: apr-util-ldap &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&amp;gt; Processing Dependency: /etc/mime.types &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&amp;gt; Processing Dependency: libaprutil-1.so.0&lt;span class=&quot;o&quot;&gt;()(&lt;/span&gt;64bit&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&amp;gt; Processing Dependency: libapr-1.so.0&lt;span class=&quot;o&quot;&gt;()(&lt;/span&gt;64bit&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&amp;gt; Running transaction check
+---&amp;gt; Package apr.x86_64 0:1.3.9-5.el6_2 will be installed
+---&amp;gt; Package apr-util.x86_64 0:1.3.9-3.el6_0.1 will be installed
+---&amp;gt; Package apr-util-ldap.x86_64 0:1.3.9-3.el6_0.1 will be installed
+---&amp;gt; Package httpd-tools.x86_64 0:2.2.15-47.el6.centos.1 will be installed
+---&amp;gt; Package mailcap.noarch 0:2.1.31-2.el6 will be installed
+--&amp;gt; Finished Dependency Resolution
+
+Dependencies &lt;span class=&quot;nv&quot;&gt;Resolved&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;======================================================================&lt;/span&gt;
+ Package        Arch       Version                  Repository   &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;======================================================================&lt;/span&gt;
+Installing:
+ httpd          x86_64     2.2.15-47.el6.centos.1   updates      &lt;span class=&quot;m&quot;&gt;830&lt;/span&gt; k
+Installing &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; dependencies:
+ apr            x86_64     1.3.9-5.el6_2            base         &lt;span class=&quot;m&quot;&gt;123&lt;/span&gt; k
+ apr-util       x86_64     1.3.9-3.el6_0.1          base         &lt;span class=&quot;m&quot;&gt;87&lt;/span&gt; k
+ apr-util-ldap  x86_64     1.3.9-3.el6_0.1          base         &lt;span class=&quot;m&quot;&gt;15&lt;/span&gt; k
+ httpd-tools    x86_64     2.2.15-47.el6.centos.1   updates      &lt;span class=&quot;m&quot;&gt;77&lt;/span&gt; k
+ mailcap        noarch     2.1.31-2.el6             base         &lt;span class=&quot;m&quot;&gt;27&lt;/span&gt; k
+
+Transaction &lt;span class=&quot;nv&quot;&gt;Summary&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;======================================================================&lt;/span&gt;
+Install       &lt;span class=&quot;m&quot;&gt;6&lt;/span&gt; Package&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+Total download size: 1.1 M
+Installed size: 3.6 M
+Downloading Packages:
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: apr-1.3.9-5.el6_2.x86_64.rpm                   &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;123&lt;/span&gt; kB  00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;2/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: apr-util-1.3.9-3.el6_0.1.x86_64.rpm            &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;87&lt;/span&gt; kB  00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;3/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: apr-util-ldap-1.3.9-3.el6_0.1.x86_64.rpm       &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;15&lt;/span&gt; kB  00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;4/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: httpd-2.2.15-47.el6.centos.1.x86_64.rpm        &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;830&lt;/span&gt; kB  00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;5/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: httpd-tools-2.2.15-47.el6.centos.1.x86_64.rpm  &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;77&lt;/span&gt; kB  00:00
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;6/6&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: mailcap-2.1.31-2.el6.noarch.rpm                &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;  &lt;span class=&quot;m&quot;&gt;27&lt;/span&gt; kB  00:00
+----------------------------------------------------------------------
+Total                                        &lt;span class=&quot;m&quot;&gt;711&lt;/span&gt; kB/s &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; 1.1 MB  00:01
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : apr-1.3.9-5.el6_2.x86_64                         1/6
+  Installing : apr-util-1.3.9-3.el6_0.1.x86_64                  2/6
+  Installing : httpd-tools-2.2.15-47.el6.centos.1.x86_64        3/6
+  Installing : apr-util-ldap-1.3.9-3.el6_0.1.x86_64             4/6
+  Installing : mailcap-2.1.31-2.el6.noarch                      5/6
+  Installing : httpd-2.2.15-47.el6.centos.1.x86_64              6/6
+  Verifying  : httpd-tools-2.2.15-47.el6.centos.1.x86_64        1/6
+  Verifying  : httpd-2.2.15-47.el6.centos.1.x86_64              2/6
+  Verifying  : apr-util-ldap-1.3.9-3.el6_0.1.x86_64             3/6
+  Verifying  : apr-1.3.9-5.el6_2.x86_64                         4/6
+  Verifying  : mailcap-2.1.31-2.el6.noarch                      5/6
+  Verifying  : apr-util-1.3.9-3.el6_0.1.x86_64                  6/6
+
+Installed:
+  httpd.x86_64 0:2.2.15-47.el6.centos.1
+
+Dependency Installed:
+  apr.x86_64 0:1.3.9-5.el6_2    apr-util.x86_64 0:1.3.9-3.el6_0.1    
+  apr-util-ldap.x86_64 0:1.3.9-3.el6_0.1  httpd-tools.x86_64 0:2.2.15-47.el6.centos.1     
+  mailcap.noarch 0:2.1.31-2.el6
+
+Complete!
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;7. Remove the apache welcome.conf, to enable directory browsing, and start the httpd service&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rm /etc/httpd/conf.d/welcome.conf&lt;/span&gt;
+rm: remove regular file &lt;span class=&quot;s1&quot;&gt;&amp;#39;/etc/httpd/conf.d/welcome.conf&amp;#39;&lt;/span&gt;? y
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# service httpd start&lt;/span&gt;
+Starting httpd:                                            &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;  OK  &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;8. create the directory /var/www/html/box-files and test that the directory is visible in a browser&lt;/h2&gt;
+
+&lt;p&gt;Create the /var/www/hmlt/box-files/ directory and an empty test-file.txt&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir /var/www/html/box-files&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# touch /var/www/html/box-files/test-file.txt&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Open the ip address of the CentOS virtual machine in a browser and verify that the test-file.txt is visible&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/02-browse-apache-box-file-directory.png&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;p&gt;Delete /var/www/html/box-files/test-file.txt, since it will not be needed:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# rm /var/www/html/box-files/test-file.txt&lt;/span&gt;
+rm: remove regular empty file &lt;span class=&quot;s1&quot;&gt;&amp;#39;/var/www/html/box-files/test-file.txt&amp;#39;&lt;/span&gt;? y
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;That all for this post covering how to install Packer, ovftool and Apache web server on a CentOS virtual machine. In the next post we will create a Packer template that uses what we have setup so far.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Installing a ESXi 6.0 virtual machine for use with Packer</title>
@@ -218,7 +617,7 @@ Accept any certificate warnings and log in using root as the username and the pa
 
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;Installing a ESXi 6.0 virtual machine for use with Packer&lt;/a&gt; - this is what Packer will be using to create the image.&lt;/li&gt;
-&lt;li&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine - this will be where Packer is run from.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/&quot;&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine&lt;/a&gt; - this will be where the Packer templates are run from.&lt;/li&gt;
 &lt;li&gt;Creating up our first Packer template for installing CentOS 6.7 along with vmtools - templates are the &amp;quot;recipes&amp;quot; for what ingredients go into a Packer image.&lt;/li&gt;
 &lt;li&gt;Copying our existing CentOS 6.7 template and adding the Puppet agent - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.&lt;/li&gt;
 &lt;li&gt;Using ovftool to convert Packer generated virtual machines, into Vagrant .box files - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
