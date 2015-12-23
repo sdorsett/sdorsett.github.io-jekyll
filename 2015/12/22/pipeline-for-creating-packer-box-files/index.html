@@ -10,7 +10,7 @@
 
   <title>
     
-      Setting up a pipeline for creating packer .box files &middot; sdorsett.github.io
+      Setting up a pipeline for creating Packer .box files &middot; sdorsett.github.io
     
   </title>
 
@@ -105,19 +105,19 @@
 
       <div class="container content">
         <div class="post">
-  <h1 class="post-title">Setting up a pipeline for creating packer .box files</h1>
+  <h1 class="post-title">Setting up a pipeline for creating Packer .box files</h1>
   <span class="post-date">22 Dec 2015</span>
-  <p>Recently at work, the vCloud Air Zombie team has been using packer to generate Vagrant templates for use in development and testing.  I have previously covered <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">how to use packer to create create a .box template for use with Vagrant</a>, but I thought it might be useful to others to have me demonstrate how we are using Packer within our development team.</p>
+  <p>Recently at work, the vCloud Air Zombie team has been using Packer to generate Vagrant templates for use in development and testing.  I have previously covered <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">how to use Packer to create create a .box template for use with Vagrant</a>, but I thought it might be useful to others to demonstrate how we are using Packer to create images.</p>
 
 <p>This will be the first of several blog posts in which I intend to cover:</p>
 
 <ul>
-<li><a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a>.</li>
-<li>Setting up Packer, ovftool and Apache web server on a CentOS virtual machine.</li>
-<li>Creating up our first packer template for installing CentOS 6.7 and vmtools.</li>
-<li>Installing the Puppet agent in our CentOS 6.7 template .</li>
-<li>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files</li>
-<li>Hosting the resulting Vagrant .box files on a web server so they can be downloaded by Vagrant.</li>
+<li><a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a> - this is what Packer will be using to create the image.</li>
+<li>Setting up Packer, ovftool and Apache web server on a CentOS virtual machine - this will be where Packer is run from.</li>
+<li>Creating up our first Packer template for installing CentOS 6.7 along with vmtools - templates are the &quot;recipes&quot; for what ingredients go into a Packer image.</li>
+<li>Copying our existing CentOS 6.7 template and adding the Puppet agent - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.</li>
+<li>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.</li>
+<li>Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.</li>
 </ul>
 
 <p>These posts will hopefully be helpful by providing details on the process of using Packer to generate Vagrant .box files.</p>
