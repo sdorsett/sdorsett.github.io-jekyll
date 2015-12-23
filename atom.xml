@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-23T04:25:38+00:00</updated>
+ <updated>2015-12-23T04:51:04+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Mark Otto</name>
@@ -17,9 +17,16 @@
    <link href="http://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/"/>
    <updated>2015-12-23T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment</id>
-   <content type="html">&lt;p&gt;In order to begin using Packer to create images, we will first need to lay the &amp;quot;virtual&amp;quot; ground work. Packer can create virtual machine templates on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor. This post will be covering installing ESXi as a virtual machine, there is no reason that would prevent you from using a physical server that has ESXi installed for Packer.&lt;/p&gt;
+   <content type="html">&lt;p&gt;In order to begin using Packer to create images, we will first need to lay the &amp;quot;virtual&amp;quot; ground work. Packer can create virtual machine images on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor.&lt;/p&gt;
 
-&lt;p&gt;There is nothing new about the steps that I will be covering, but I figured it would be best to go ahead and cover them. These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5, but the steps for setting up nested virtualization will be slightly different. I you are looking for for more information about creating ESXi virtual machines, I would suggest taking a look at &lt;a href=&quot;http://www.virtuallyghetto.com/&quot;&gt;William Lam&amp;#39;s blog&lt;/a&gt; which covers this subject in detail.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;This post will be covering installing ESXi as a virtual machine, there is no reason that would prevent you from using a physical server that has ESXi installed for Packer.&lt;/li&gt;
+&lt;li&gt;These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5, but the steps for setting up nested virtualization will be slightly different.&lt;/li&gt;
+&lt;li&gt;There is nothing new about the steps covered, but I figured it would be best to go ahead and document them.&lt;/li&gt;
+&lt;li&gt;If you are looking for the best resources regarding creating ESXi virtual machines, I would suggest taking a look at &lt;a href=&quot;http://www.virtuallyghetto.com/&quot;&gt;William Lam&amp;#39;s blog&lt;/a&gt; which covers this subject in great detail. Williams site also provides more details about the embedded host client we will install.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s get started...&lt;/p&gt;
 
 &lt;h2&gt;1. Log into the web client of your vCenter instance and create a new virtual machine.&lt;/h2&gt;
 
@@ -67,7 +74,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/10-ready-to-complete.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
-&lt;h2&gt;3. Connect the virtual CDROM to the ESXi 6.0 installer .iso and power on the new virtual machine.&lt;/h2&gt;
+&lt;h2&gt;3. Connect the virtual CDROM of the ESXi virtual machine to the ESXi 6.0 installer .iso and power it on.&lt;/h2&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/11-start-esxi-vm.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
@@ -107,7 +114,13 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/21-esxi-post-install.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
-&lt;h2&gt;5. Press F2 to log into ESXi, set the management IP address/subnet/gateway and enable ssh&lt;/h2&gt;
+&lt;h2&gt;5. Press F2 to log into ESXi and make the following changes:&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Set the management IP address, subnet mask and gateway&lt;/li&gt;
+&lt;li&gt;Set the hostname, dns servers and search domain&lt;/li&gt;
+&lt;li&gt;Enable ssh&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/22-set-ip-address.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
@@ -121,7 +134,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/25-download-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
-&lt;h2&gt;7. SCP the .vib to the ESXi virtual machine&lt;/h2&gt;
+&lt;h2&gt;7. SCP the downloaded .vib to the ESXi virtual machine&lt;/h2&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
 The authenticity of host &lt;span class=&quot;s1&quot;&gt;&amp;#39;192.168.1.51 (192.168.1.51)&amp;#39;&lt;/span&gt; cant be established.
@@ -143,9 +156,11 @@ see www.vmware.com/go/sysadmintools &lt;span class=&quot;k&quot;&gt;for&lt;/span
 
 The ESXi Shell can be disabled by an administrative user. See the
 vSphere Security documentation &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; more information.
+
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;tmp
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; ls
 esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
+
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; esxcli software vib install -v /tmp/esxui_signed.vib
 Installation Result
    Message: Operation finished successfully.
@@ -153,9 +168,12 @@ Installation Result
 &lt;span class=&quot;nb&quot;&gt;   &lt;/span&gt;VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
    VIBs Removed:
    VIBs Skipped:
+
 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-esxi:/tmp&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h2&gt;8. Enable guest ip hack on the ESXi virtual machine because Packer will need this capability&lt;/h2&gt;
+&lt;h2&gt;8. Enable guest ip hack on the ESXi virtual machine&lt;/h2&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://www.packer.io/docs/builders/vmware-iso.html&quot;&gt;Packer VMware .iso builder documentation&lt;/a&gt; lists the following esxcli command as needing to be run on the ESXi virtual machine:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/28-enable-guest-ip-hack.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
@@ -168,10 +186,13 @@ sdorsett-mbp:~ sdorsett&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;&lt;/code
 
 &lt;p&gt;&lt;img src=&quot;/assets/26-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
+&lt;p&gt;Under Storage | Datastores we can see a datastore name &amp;quot;datastore1&amp;quot; was automatically created using the extra space of the virtual hard drive.&lt;/p&gt;
+
 &lt;p&gt;&lt;img src=&quot;/assets/27-embedded-host-client.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
-&lt;p&gt;That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.
-Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/p&gt;
+&lt;p&gt;That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.&lt;/p&gt;
+
+&lt;p&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/p&gt;
 </content>
  </entry>
  
