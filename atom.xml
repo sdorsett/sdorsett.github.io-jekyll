@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-24T04:26:10+00:00</updated>
+ <updated>2015-12-24T18:09:11+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -1121,11 +1121,10 @@ Build &lt;span class=&quot;s1&quot;&gt;&amp;#39;centos67&amp;#39;&lt;/span&gt; f
 
 &lt;h3&gt;This seems like a good point to take break. We covered a lot of ground in this post, but as a result of all our work we have a working Packer template to build on.&lt;/h3&gt;
 
-&lt;h3&gt;If you would like to not have to manually create the files in the scripts/ and templates/ directories you can clone down the following github repository:&lt;/h3&gt;
+&lt;h3&gt;If you would like to not have to manually create the files covered in this post, you can clone down &lt;a href=&quot;https://github.com/sdorsett/packer-templates/tree/first-packer-template&quot;&gt;this github repository&lt;/a&gt; by running the following command:&lt;/h3&gt;
 
 &lt;pre&gt;
-git clone https://github.com/sdorsett/packer-templates.git
-git checkout &quot;first-packer-template&quot;
+git clone -b &quot;first-packer-template&quot; https://github.com/sdorsett/packer-templates.git
 &lt;/pre&gt;  
 
 &lt;h3&gt;You will still need to create the iso/ directory, download the needed .iso files and create the packer-remote-info.json file as covered in this post.&lt;/h3&gt;
