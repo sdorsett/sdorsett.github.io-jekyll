@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-24T18:09:11+00:00</updated>
+ <updated>2015-12-24T20:56:49+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -1598,7 +1598,7 @@ rm: remove regular empty file &lt;span class=&quot;s1&quot;&gt;&amp;#39;/var/www
 
 &lt;p&gt;&lt;img src=&quot;/assets/10-ready-to-complete.jpg&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
 
-&lt;h2&gt;3. Enable promiscuous mode on virtual porgroup being used by ESXi virtual machine&lt;/h2&gt;
+&lt;h2&gt;3. Enable promiscuous mode on virtual portgroup being used by ESXi virtual machine&lt;/h2&gt;
 
 &lt;p&gt;You will need to ensure the portgroup (virtual network) you are connecting the ESXi virtual machine to has promiscuous mode enabled. Enabling promiscuous mode is required for the ESXi virtual machine to pass traffic to the child virtual machines running on it.&lt;/p&gt;
 
