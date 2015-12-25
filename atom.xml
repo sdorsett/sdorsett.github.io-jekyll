@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-25T04:29:06+00:00</updated>
+ <updated>2015-12-25T04:43:49+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -856,7 +856,7 @@ centos67 output will be in this color.
     centos67: --the VMware team
     centos67:&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The final provisioner is a shell provisioner that will run the scripts/centos-vmware-cleanup.sh bash script. This script clean up the Centos67 virtual machine and zero out all unused disk space to reduce the size of the image.&lt;/p&gt;
+&lt;p&gt;The final provisioner is a shell provisioner that will run the scripts/centos-vmware-cleanup.sh bash script. This script will clean up the centos67 virtual machine and zero out all unused disk space to reduce the size of the image.&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Provisioning with shell script: scripts/centos-vmware-cleanup.sh
     centos67: &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; Pausing &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt; seconds...
@@ -912,7 +912,7 @@ centos67 output will be in this color.
     centos67: 12969+0 records out
     centos67: &lt;span class=&quot;m&quot;&gt;13599232000&lt;/span&gt; bytes &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;14&lt;/span&gt; GB&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; copied, 413.4 s, 32.9 MB/s&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;With the provisioners block having been completed, Packer will now shutdown the CentOS 6.7 virtual machine and unregister it from the ESXi virtual machine.&lt;/p&gt;
+&lt;p&gt;With the provisioners block having been completed, Packer will now shutdown the centos67 virtual machine and unregister it from the ESXi virtual machine.&lt;/p&gt;
 
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Gracefully halting virtual machine...
     centos67: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; VMware to clean up after itself...
@@ -1552,9 +1552,9 @@ Accept any certificate warnings and log in using root as the username and the pa
 &lt;p&gt;This will be the first of several blog posts in which I intend to cover:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;Installing a ESXi 6.0 virtual machine for use with Packer&lt;/a&gt; - this is what Packer will be using to create the image.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/&quot;&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine&lt;/a&gt; - this will be where the Packer templates are run from.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/25/creating-a-packer-template-for-installing-centos-67/&quot;&gt;Creating our first Packer template for installing CentOS 6.7 with vmtools&lt;/a&gt; - templates are the &amp;quot;recipes&amp;quot; for what ingredients go into a Packer image.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/&quot;&gt;Installing a ESXi 6.0 virtual machine for use with Packer&lt;/a&gt; - this is where Packer will be creating the virtual machine image.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/&quot;&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine&lt;/a&gt; - this will be where we will be editing and running the Packer templates.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/25/creating-a-packer-template-for-installing-centos-67/&quot;&gt;Creating our first Packer template for installing CentOS 6.7 with vmtools&lt;/a&gt; - templates are the instructions for how a Packer image should be built.&lt;/li&gt;
 &lt;li&gt;Copying our existing CentOS 6.7 template and adding the Puppet agent - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.&lt;/li&gt;
 &lt;li&gt;Using ovftool to convert Packer generated virtual machines, into Vagrant .box files - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
 &lt;li&gt;Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.&lt;/li&gt;

@@ -946,7 +946,7 @@ centos67 output will be in this color.
     centos67: --the VMware team
     centos67:</code></pre></div>
 
-<p>The final provisioner is a shell provisioner that will run the scripts/centos-vmware-cleanup.sh bash script. This script clean up the Centos67 virtual machine and zero out all unused disk space to reduce the size of the image.</p>
+<p>The final provisioner is a shell provisioner that will run the scripts/centos-vmware-cleanup.sh bash script. This script will clean up the centos67 virtual machine and zero out all unused disk space to reduce the size of the image.</p>
 
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">==</span>&gt; centos67: Provisioning with shell script: scripts/centos-vmware-cleanup.sh
     centos67: <span class="o">==</span>&gt; Pausing <span class="k">for</span> <span class="m">0</span> seconds...
@@ -1002,7 +1002,7 @@ centos67 output will be in this color.
     centos67: 12969+0 records out
     centos67: <span class="m">13599232000</span> bytes <span class="o">(</span><span class="m">14</span> GB<span class="o">)</span> copied, 413.4 s, 32.9 MB/s</code></pre></div>
 
-<p>With the provisioners block having been completed, Packer will now shutdown the CentOS 6.7 virtual machine and unregister it from the ESXi virtual machine.</p>
+<p>With the provisioners block having been completed, Packer will now shutdown the centos67 virtual machine and unregister it from the ESXi virtual machine.</p>
 
 <div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">==</span>&gt; centos67: Gracefully halting virtual machine...
     centos67: Waiting <span class="k">for</span> VMware to clean up after itself...
