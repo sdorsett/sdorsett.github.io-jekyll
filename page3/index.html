@@ -112,273 +112,6 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="/2014/05/26/vagrant-install/">
-        Installing Vagrant and the vagrant-vcloud plugin on CentOS 6.x
-      </a>
-    </h1>
-
-    <span class="post-date">26 May 2014</span>
-
-    <p>In this post I&#39;m setting out to explain how to create a CentOS 6.4 vm, from template, in vCHS (or a vCloud Director instance) and then install vagrant-vcloud on that. </p>
-
-<h3>1. Create a CentOS 6.x minimal virtual machine from a template in a vCHS organization.</h3>
-
-<p>I will demonstrate creating a new CentOS vm in vCHS using a template, but you could just as easily create a new CentOS virtual machine from scratch in vCloud Director.</p>
-
-<h4>A. Log into vCHS using your credentials and click on your virtual datacenter.</h4>
-
-<h4>B. Next click on the &quot;Virtual Machines&quot; tab and then click the &quot;Deploy a Virtual Machine&quot; button:</h4>
-
-<p><img src="/assets/01-create-centos-64-vm.png" alt="screenshot"></p>
-
-<h4>C. Select the &quot;CentOS 6.4 64 Bit&quot; template and click &quot;Continue&quot;</h4>
-
-<p><img src="/assets/02-select-centos-64-template.png" alt="screenshot"></p>
-
-<h4>D. Name the virtual machine and set the guest OS name of your new virtual machine. Click &quot;Deploy This Virtual Machine&quot;:</h4>
-
-<p>I named my virtual machine and set the guest OS name both to &quot;vagrant&quot;, but you can change these to what ever you prefer.</p>
-
-<p><img src="/assets/03-virtual-machine-resource-settings.png" alt="screenshot"></p>
-
-<h4>E. Power on and then click the name of the virtual machine you just created:</h4>
-
-<p><img src="/assets/04-centos-vm-created.png" alt="screenshot"></p>
-
-<h4>F. Click the &quot;Launch Console&quot; link to open the console of the virtual machine you just created.</h4>
-
-<p>Notice that the guest OS password created by guest customization is displayed on the left. Log into the virtual machine, using &quot;root&quot; and the displayed password, then change this password immediately to something else:</p>
-
-<p><img src="/assets/05-open-console-and-log-in.png" alt="screenshot"></p>
-
-<h3>2. Modify /etc/resolv.conf</h3>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/resolv.conf</span>
-nameserver 8.8.8.8 
-nameserver 8.8.4.4</code></pre></div>
-
-<p>At this point you should have network connectivity to your new vagrant vapp. While I won&#39;t cover it in the post, you can now either setup a DNAT rule to forward SSH to the vagrant vapp or continue the configuration using the vapp console.</p>
-
-<h3>3. Install Ruby 1.9.3 using ruby-build:</h3>
-
-<h4>A. Use yum to install the packages we&#39;ll need to get ruby, rubygems and vagrant installed:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span></code></pre></div>
-
-<h4>B. Pull down the latest version of ruby-build using git:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span></code></pre></div>
-
-<h4>C. Change to the directory the previous command created:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span></code></pre></div>
-
-<h4>D. Run the &#39;install.sh&#39; script to install ruby-build:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span></code></pre></div>
-
-<h4>E. I would recommend installing Ruby version 1.9.3-p545 with the following command:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
-Downloading yaml-0.1.6.tar.gz...
--&gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
-Installing yaml-0.1.6...
-Installed yaml-0.1.6 to /usr/local/
-
-Downloading ruby-1.9.3-p545.tar.gz...
--&gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
-Installing ruby-1.9.3-p545...
-
-Installed ruby-1.9.3-p545 to /usr/local/</code></pre></div>
-
-<h3>4. Install rubygems by downloading the latest version from <a href="https://rubygems.org/pages/download">rubygems.org</a> and install it:</h3>
-
-<h4>A. Use wget to download the latest version listed on the rubygems download page:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span></code></pre></div>
-
-<h4>B. Use tar to unzip the tar-gzipped file we downloaded:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar xvzf rubygems-2.2.2.tgz</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.2.2</span></code></pre></div>
-
-<h4>C. Install rubygems by running the &#39;setup.rb&#39; script:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># ruby setup.rb</span></code></pre></div>
-
-<h3>5. Install Vagrant</h3>
-
-<h4>A. Use wget to download the latest version listed on the <a href="https://www.vagrantup.com/downloads.html">Vagrant download</a> page:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm</span></code></pre></div>
-
-<h4>B. Use the &#39;rpm&#39; command to install the RPM package we downloaded in the previous step:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.6.2_x86_64.rpm</span></code></pre></div>
-
-<h4>C. Export the directory that the vagrant executable was install to, in order to make it easier to run:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># export PATH=$PATH:/opt/vagrant/bin/</span></code></pre></div>
-
-<h3>6. Installing the vagrant-vcloud plugin</h3>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant blog<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vcloud</span>
-Installing the <span class="s1">&#39;vagrant-vcloud&#39;</span> plugin. This can take a few minutes...
-Installed the plugin <span class="s1">&#39;vagrant-vcloud (0.3.3)&#39;</span>!</code></pre></div>
-
-<h3>7. Creating a Vagrantfile for testing vagrant-vcloud install</h3>
-
-<h4>A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by <a href="http://blog.tsugliani.fr/">Timo Sugliani</a>:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/precise32-test</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat ~/vagrant-vms/precise32-test/Vagrantfile </span>
-<span class="nv">precise32_vm_box_url</span> <span class="o">=</span> <span class="s2">&quot;http://vagrant.tsugliani.fr/precise32.box&quot;</span>
-
-<span class="nv">nodes</span> <span class="o">=</span> <span class="o">[</span>
-  <span class="o">{</span> :hostname <span class="o">=</span>&gt; <span class="s2">&quot;test-vm&quot;</span>,  
-    :box <span class="o">=</span>&gt; <span class="s2">&quot;precise32&quot;</span>, 
-    :box_url <span class="o">=</span>&gt; precise32_vm_box_url <span class="o">}</span>
-<span class="o">]</span>
-
-Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
-
-  <span class="c"># vCloud Director provider settings</span>
-  config.vm.provider :vcloud <span class="k">do</span> <span class="p">|</span>vcloud<span class="p">|</span>
-
-    vcloud.hostname <span class="o">=</span> <span class="s1">&#39;https://[Your_vCD_URL]:443&#39;</span>
-    vcloud.username <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_username@somedomain.com]&#39;</span>
-    vcloud.password <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_password]&#39;</span>
-
-    vcloud.org_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_name]&#39;</span>
-    vcloud.vdc_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]&#39;</span>
-    vcloud.catalog_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_catalog]&#39;</span>
-    vcloud.network_bridge <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vcloud.vdc_network_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]-default-routed&#39;</span>
-
-  end
-
-  nodes.each <span class="k">do</span> <span class="p">|</span>node<span class="p">|</span>
-    config.vm.define node<span class="o">[</span>:hostname<span class="o">]</span> <span class="k">do</span> <span class="p">|</span>node_config<span class="p">|</span>
-      node_config.vm.box <span class="o">=</span> node<span class="o">[</span>:box<span class="o">]</span>
-      node_config.vm.hostname <span class="o">=</span> node<span class="o">[</span>:hostname<span class="o">]</span>
-      node_config.vm.box_url <span class="o">=</span> node<span class="o">[</span>:box_url<span class="o">]</span>
-    end
-  end
-end</code></pre></div>
-
-<p>In this configuration file:</p>
-
-<ul>
-<li>&quot;vcloud.hostname&quot; is your vCloud Director FQDN or IP address. This should be the base URL and not by the specific URL for your org.</li>
-<li>&quot;vcloud.username&quot; is the username we will be using to connect to vCHS or vCloud Director</li>
-<li>&quot;vcloud.password&quot; is the password we will be using to connect to vCHS or vCloud Director</li>
-<li>&quot;vcloud.org_name&quot; will be the name of your vCHS or vCloud Director organization</li>
-<li>&quot;vcloud.vdc_name&quot; will be the name of your vCHS or vCloud Director virtual datacenter</li>
-<li>&quot;vcloud.catalog_name&quot; will be the name of your organization catalog a template derived from the .box file will be created in</li>
-<li>&quot;vcloud.dc_network_name&quot; is the organization network the vagrant vapp will be connected to</li>
-</ul>
-
-<h4>B.  Now we can change directory to that directory and test everything with a &quot;vagrant up --provider=vcloud&quot;:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ~/vagrant-vms/precise32-test</span>
-oot@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant up --provider=vcloud</span>
-Bringing machine <span class="s1">&#39;test-vm&#39;</span> up with <span class="s1">&#39;vcloud&#39;</span> provider...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Box <span class="s1">&#39;precise32&#39;</span> could not be found. Attempting to find and install...
-    <span class="nb">test</span>-vm: Box Provider: vcloud
-    <span class="nb">test</span>-vm: Box Version: &gt;<span class="o">=</span> <span class="nv">0</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Adding box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> provider: vcloud
-    <span class="nb">test</span>-vm: Downloading: http://vagrant.tsugliani.fr/precise32.box
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Successfully added box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> <span class="s1">&#39;vcloud&#39;</span>!
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Catalog item <span class="o">[</span>precise32<span class="o">]</span> in Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span> does not exist!
-    <span class="nb">test</span>-vm: Would you like to upload the <span class="o">[</span>precise32<span class="o">]</span> box to <span class="o">[</span>Org Private Catalog<span class="o">]</span> Catalog?
-    <span class="nb">test</span>-vm: Choice <span class="o">(</span>yes/no<span class="o">)</span>: <span class="nv">yes</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Uploading <span class="o">[</span>precise32<span class="o">]</span>...
-Uploading Box...
-Uploading Box...
-Uploading Box... Progress: 22%  ETA: 00:02:16</code></pre></div>
-
-<p>Once the .box files has started uploading, you can check the progress in the org catalog of your vCloud Director instance:</p>
-
-<p><img src="/assets/06-precise32-upload.png" alt="screenshot"></p>
-
-<h4>C. The uploading progress will get to 100% and you will see the vApp getting created, powered on and SSH access achieved:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">Uploading Box...
-Uploading Box... Progress: 100% Time: 00:02:32                                                                                                   
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Adding <span class="o">[</span>precise32<span class="o">]</span> to Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Building vApp...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Powering on VM...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Waiting <span class="k">for</span> SSH Access on 192.168.109.4:22 ... 
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># root@vagrant precise32-test]#</span></code></pre></div>
-
-<h4>D. Test network connectivity by running &quot;vagrant ssh&quot;:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant ssh</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: External IP <span class="k">for</span> <span class="nb">test</span>-vm: 192.168.109.4
-Welcome to Ubuntu 12.04 LTS <span class="o">(</span>GNU/Linux 3.2.0-23-generic-pae i686<span class="o">)</span>
-
- * Documentation:  https://help.ubuntu.com/
-Welcome to your Vagrant-built virtual machine.
-Last login: Thu Jul <span class="m">18</span> 11:20:25 2013
-vagrant@test-vm:~<span class="nv">$ </span>hostname -f
-<span class="nb">test</span>-vm</code></pre></div>
-
-<h4>E. Run &quot;vagrant vcloud --status&quot; to validate the vCloud Director status of your vagrant vapp:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant vcloud --status</span>
-Initializing vCloud Director provider...
-Fetching vCloud Director status...
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span>  Vagrant vCloud Director Status : https://<span class="o">[</span>Your_vCD_URL<span class="o">]</span>:443            <span class="p">|</span>
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span> Organization Name             <span class="p">|</span> <span class="o">[</span>Your_vCHS_org_name<span class="o">]</span>                    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Name         <span class="p">|</span> vCHS-vagrant-demo                       <span class="p">|</span>
-<span class="p">|</span> Organization vDC ID           <span class="p">|</span> b9494d6a-ebda-4368-8f76-0e93b7edcb17    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Network Name <span class="p">|</span> <span class="o">[</span>Your_vCHS_vdc_name<span class="o">]</span>-default-routed     <span class="p">|</span>
-+-------------------------------+-----------------------------------------+
-<span class="p">|</span> vApp Name                     <span class="p">|</span> Vagrant-root-vagrant-8b9115d1           <span class="p">|</span>
-<span class="p">|</span> vAppID                        <span class="p">|</span> ec918e84-6026-42b2-8639-5390d8c88b0c    <span class="p">|</span>
-<span class="p">|</span> -&gt; <span class="nb">test</span>-vm                    <span class="p">|</span> 4fc82b9b-c79d-483b-9a71-a87d22289102    <span class="p">|</span>
-+-------------------------------+-----------------------------------------+</code></pre></div>
-
-<h4>F. Run &quot;vagrant vcloud --network&quot; to validate the vCloud Director network mapping of your vagrant vapp:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant vcloud --network</span>
-Initializing vCloud Director provider...
-Fetching vCloud Director network settings ...
-+---------+---------------+------------+
-<span class="p">|</span>             Network Map              <span class="p">|</span>
-+---------+---------------+------------+
-<span class="p">|</span> VM Name <span class="p">|</span> IP Address    <span class="p">|</span> Connection <span class="p">|</span>
-+---------+---------------+------------+
-<span class="p">|</span> <span class="nb">test</span>-vm <span class="p">|</span> 192.168.109.4 <span class="p">|</span> Direct     <span class="p">|</span>
-+---------+---------------+------------+</code></pre></div>
-
-<h4>g. Destroy the cloned vm by running &quot;vagrant destroy&quot; command:</h4>
-
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c"># vagrant destroy</span>
-    <span class="nb">test</span>-vm: Are you sure you want to destroy the <span class="s1">&#39;test-vm&#39;</span> VM? <span class="o">[</span>y/N<span class="o">]</span> <span class="nv">y</span>
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Powering off VM...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Single VM left in the vApp, Powering off vApp...
-<span class="o">==</span>&gt; <span class="nb">test</span>-vm: Destroying vApp...
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c">#</span></code></pre></div>
-
-<p>You should see &quot;Power Off vapp&quot; and &quot;Delete vapp&quot; tasks being run and then completing on your organizations vapps.</p>
-
-<h3>Hopefully you found this post helpful in getting vagrant and the vagrant-cloud plugin installed and configured. The next blog post will be covering how to modify the Vagrantfile to create a vapp in a vCHS or vCloud Director instance that doesn&#39;t contain the vagrant vm.</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
       <a href="/2014/05/25/vagrant-vcloud/">
         Introducing the vagrant-vcloud provider
       </a>
@@ -1088,6 +821,240 @@ Connection to 192.168.1.133 closed.
 <span class="o">==</span>&gt; default: Calling vShpere Destroy</code></pre></div>
 
 <h3>Hopefully you found this post helpful in demonstrating how to create a vagrant specific template to use with the vagrant-vsphere plugin. The next blog post will be covering how to take advantage of customization specifications and advanced Vagrantfile configurations on a vm deployed using vagrant.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="/2014/04/19/vagrant-install/">
+        Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x
+      </a>
+    </h1>
+
+    <span class="post-date">19 Apr 2014</span>
+
+    <p>Some readers might find this post to be a little &quot;in the weeds&quot; and cover details they are already familiar with. I struggled in my first attempts to get Vagrant working on CentOS, because I couldn&#39;t find any good tutorials that covered the entire process. If you get bored with basic network configuration or have another preferred method for installing Ruby, please understand I&#39;m trying to provide as much detail as possible to those without much linux experience. I am also assuming you have a working vCenter, ESXi hosts and dhcp server configured to assign IP addresses for the Vagrant virtual machines we will be deploying.</p>
+
+<h3>1. Create a CentOS 6.x minimal virtual machine for installing Vagrant.</h3>
+
+<p>Create or clone a fresh CentOS 6.x minimal virtual machine. I already had an existing Centos 6.5 minimal template that I simply cloned for this purpose.</p>
+
+<h3>2. Power on the new cloned vm and connect to the virtual machine console</h3>
+
+<h3>3. Modify /etc/sysconfig/network, /etc/sysconfig/network-scripts/ifcfg-eth0 &amp; /etc/resolv.conf to reflect the network settings for your vagrant vm:</h3>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network </span>
+<span class="nv">NETWORKING</span><span class="o">=</span>yes 
+<span class="nv">HOSTNAME</span><span class="o">=</span>vagrant.mylab.net 
+<span class="nv">GATEWAY</span><span class="o">=</span>192.168.1.1 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/sysconfig/network-scripts/ifcfg-eth0 </span>
+<span class="nv">DEVICE</span><span class="o">=</span>eth0 
+<span class="nv">TYPE</span><span class="o">=</span>Ethernet 
+<span class="nv">ONBOOT</span><span class="o">=</span>yes 
+<span class="nv">NM_CONTROLLED</span><span class="o">=</span>no 
+<span class="nv">BOOTPROTO</span><span class="o">=</span>static 
+<span class="nv">IPADDR</span><span class="o">=</span>192.168.1.40 
+<span class="nv">NETMASK</span><span class="o">=</span>255.255.255.0 
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cat /etc/resolv.conf</span>
+ search mylab.net 
+nameserver 192.168.1.1 
+nameserver 8.8.8.8 
+nameserver 8.8.4.4</code></pre></div>
+
+<h3>4. Restart the vm for the hostname change to take affect</h3>
+
+<h3>5. SSH to the vagrant vm using the IP address you assigned in /etc/sysconf/network-scripts/ifcfg-eth0</h3>
+
+<h3>6. Install Ruby 1.9.3. There are <a href="http://www.agilesysadmin.net/acquiring-a-modern-ruby-part-one">several ways</a> to install ruby 1.9.3 on CentOS, but I&#39;ll cover using ruby-build to accomplish this:</h3>
+
+<h4>A. Use yum to install the packages we&#39;ll need to get ruby, rubygems and vagrant installed:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span></code></pre></div>
+
+<h4>B. Pull down the latest version of ruby-build using git:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span></code></pre></div>
+
+<h4>C. Change to the directory the previous command created:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span></code></pre></div>
+
+<h4>D. Run the &#39;install.sh&#39; script to install ruby-build:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span></code></pre></div>
+
+<h4>E. I have not been successful in getting vagrant-vsphere to run on any version of ruby newer than 1.9.3-p545. As a result I would recommend installing that version with the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
+Downloading yaml-0.1.6.tar.gz...
+-&gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
+Installing yaml-0.1.6...
+Installed yaml-0.1.6 to /usr/local/
+
+Downloading ruby-1.9.3-p545.tar.gz...
+-&gt; http://dqw8nmjcqpjn7.cloudfront.net/8e8f6e4d7d0bb54e0edf8d9c4120f40c
+Installing ruby-1.9.3-p545...
+
+Installed ruby-1.9.3-p545 to /usr/local/</code></pre></div>
+
+<h3>7. We will next need to install rubygems. The process I used was to download the latest version from <a href="https://rubygems.org/pages/download">rubygems.org</a> and install it:</h3>
+
+<h4>A. Use wget to download the latest version listed on the rubygems download page:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span></code></pre></div>
+
+<h4>B. Use tar to unzip the tar-gzipped file we downloaded:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar xvzf rubygems-2.2.2.tgz</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.2.2</span></code></pre></div>
+
+<h4>C. Install rubygems by running the &#39;setup.rb&#39; script:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># ruby setup.rb</span></code></pre></div>
+
+<h3>8. Installing Vagrant</h3>
+
+<h4>A. Use wget to download the latest version listed on the <a href="https://www.vagrantup.com/downloads.html">Vagrant download</a> page:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.5.2_x86_64.rpm</span></code></pre></div>
+
+<h4>B. Use the &#39;rpm&#39; command to install the RPM package we downloaded in the previous step:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.5.2_x86_64.rpm</span></code></pre></div>
+
+<h4>C. Export the directory that the vagrant executable was install to, in order to make it easier to run:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># export PATH=$PATH:/opt/vagrant/bin/</span></code></pre></div>
+
+<h3>9. Installing the vagrant-vsphere plugin</h3>
+
+<h4>A. The nokogiri gem, which is a ruby HTML, XML &amp; SAM parser, is required by vagrant-vsphere so we will install it with the following commands:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install nokogiri</span>
+Building native extensions.  This could take a <span class="k">while</span>...
+Successfully installed nokogiri-1.6.1
+unable to convert <span class="s2">&quot;\x89&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/tests/xmlspec/logo-REC, skipping
+unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/libxslt/xslt.c, skipping
+unable to convert <span class="s2">&quot;\xF6&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/ChangeLog, skipping
+unable to convert <span class="s2">&quot;\xE1&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/NEWS, skipping
+unable to convert <span class="s2">&quot;\xFD&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxslt/1.1.26/libxslt-1.1.26/win32/Readme.txt, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/test/XInclude/ents/isolatin.txt, skipping
+unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/doc/examples/testWriter.c, skipping
+unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/testapi.c, skipping
+unable to convert <span class="s2">&quot;\xE9&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/runtest.c, skipping
+unable to convert <span class="s2">&quot;\xF8&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ext/nokogiri/tmp/x86_64-redhat-linux/ports/libxml2/2.8.0/libxml2-2.8.0/entities.c, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxslt/1.1.26/bin/xsltproc, skipping
+unable to convert <span class="s2">&quot;\xE4&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/share/doc/libxml2-2.8.0/html/testWriter.c, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmllint, skipping
+unable to convert <span class="s2">&quot;\xC0&quot;</span> from ASCII-8BIT to UTF-8 <span class="k">for</span> ports/x86_64-redhat-linux/libxml2/2.8.0/bin/xmlcatalog, skipping
+<span class="m">1</span> gem installed</code></pre></div>
+
+<h4>B. Next we will install the rbvmomi gem with the following command. rbvmomi is a ruby interface for using the vSphere API.</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># gem install rbvmomi</span>
+Successfully installed rbvmomi-1.8.1
+<span class="m">1</span> gem installed</code></pre></div>
+
+<h4>C. Now we can install the vagrant-vsphere plugin with the following command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vsphere</span>
+Installing the <span class="s1">&#39;vagrant-vsphere&#39;</span> plugin. This can take a few minutes...
+Installed the plugin <span class="s1">&#39;vagrant-vsphere (0.8.1)&#39;</span>!</code></pre></div>
+
+<h3>8. Configuring vagrant-vsphere</h3>
+
+<p>The vagrant-vsphere <a href="https://github.com/nsidc/vagrant-vsphere">README.md on github</a> mentions we need to create a vSphere box from the metadata.json located in the example_box directory. </p>
+
+<h4>A.  We can use the linux the &quot;find&quot; command to determine the path to the example_box directory:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># find / -name example_box</span>
+/root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box</code></pre></div>
+
+<h4>B.  Now we can change directory to that directory and create the necessary dummy box file:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd /root/.vagrant.d/gems/gems/vagrant-vsphere-0.8.1/example_box</span>
+<span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># tar cvzf dummy.box ./metadata.json</span>
+./metadata.json</code></pre></div>
+
+<h4>C.  Next we will create a new folder under /root for storing the box file we created and other vagrant configuration files</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/example_box</span>
+<span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># mv dummy.box ~/vagrant-vms/example_box</span></code></pre></div>
+
+<h4>D. Vagrant reads it&#39;s configuration from a file named Vagrantfile, located in the directory from which the &quot;vagrant up&quot; command is run in. We need to go back to our &quot;vagrant-vms&quot; folder and create this file:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant example_box<span class="o">]</span><span class="c"># cd ~/vagrant-vms/</span>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># touch Vagrantfile</span></code></pre></div>
+
+<h4>E. Modify the Vagrantfile to reflect your vsphere configuration. Here&#39;s an example of my working Vagrantfile:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+
+Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
+  config.vm.box <span class="o">=</span> <span class="s1">&#39;dummy&#39;</span>
+  config.vm.box_url <span class="o">=</span> <span class="s1">&#39;./example_box/dummy.box&#39;</span>
+
+  config.vm.provider :vsphere <span class="k">do</span> <span class="p">|</span>vsphere<span class="p">|</span>
+    vsphere.host <span class="o">=</span> <span class="s1">&#39;vcenter.mylab.net&#39;</span>
+    vsphere.name <span class="o">=</span> <span class="s1">&#39;vagrant-test&#39;</span>
+    vsphere.clone_from_vm <span class="o">=</span> <span class="nb">true</span>
+<span class="nb">    </span>vsphere.template_name <span class="o">=</span> <span class="s1">&#39;Centos-6.5&#39;</span>
+    vsphere.user <span class="o">=</span> <span class="s1">&#39;root@localos&#39;</span>
+    vsphere.password <span class="o">=</span> <span class="s1">&#39;S0meR@nd0mP@ssw0rd&#39;</span>
+    vsphere.insecure <span class="o">=</span> <span class="nb">true</span>
+<span class="nb">  </span>end
+end</code></pre></div>
+
+<p>In this configuration file:</p>
+
+<ul>
+<li>&quot;vsphere.host&quot; is your vCenter server FQDN or IP address</li>
+<li>&quot;vsphere.name&quot; will be the name of the virtual machine that gets created</li>
+<li>&quot;vsphere.clone_from_vm&quot; specifies we will be cloning a vm rather than template</li>
+<li>&quot;vsphere.template_name&quot; is the name of the vm we will be cloning</li>
+<li>&quot;vsphere.user&quot; is the username we will be using to connect to vCenter</li>
+<li>&quot;vsphere.password&quot; is the password we will be using to connect ot vCenter</li>
+<li>&quot;vsphere.insecure&quot; tells vagrant to not worry about validating the certificate on the vCenter server</li>
+</ul>
+
+<h3>9. Vargrant up!!!!</h3>
+
+<p>If everything has gone correctly up to this point we can issue a &quot;vagrant up --provider=vsphere&quot; command from the directory that contains the Vagrantfile:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
+Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
+<span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
+<span class="o">==</span>&gt; default:  -- Source VM: CentOS-6.5
+<span class="o">==</span>&gt; default:  -- Name: vagrant-test
+<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...</code></pre></div>
+
+<p>You should see a &quot;Clone virtual machine&quot; task being run on your vCenter server and then completing.</p>
+
+<h3>10. Canceling the &quot;Vagrant up&quot; command and destroying our cloned vm.</h3>
+
+<p>Since we have not properly prepared the vm we are cloning (I will have another blog post covering this topic) Vagrant will never be able to successfully connect to the cloned vm using SSH. As a result we will need to cancel the &quot;vagrant up&quot; command:</p>
+
+<h4>A. Press [control-c] to attempt to gracefully exit &quot;vagrant-up&quot;</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">^C<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> cleanup before exiting...</code></pre></div>
+
+<p>I&#39;ve never seen this task complete so I will press [control-c] again to immediately exit:</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">^C<span class="o">==</span>&gt; default: Exiting immediately, without cleanup!</code></pre></div>
+
+<h4>B. Destroy the cloned vm by running &quot;vagrant destroy&quot; command:</h4>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
+<span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
+<span class="o">==</span>&gt; default: Calling vShpere Destroy</code></pre></div>
+
+<p>You should see a &quot;Power Off virtual machine&quot; and &quot;Delet virtual machine&quot; tasks being run and then completing on your vCenter server.</p>
+
+<h3>Hopefully you found this post helpful in getting vagrant and the vagrant-vsphere plugin installed and configured. The next blog post will be covering how to create a template vm that has been prepared for vagrant to connect seemlessly using SSH.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
