@@ -112,6 +112,217 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
+        Using ovftool to convert Packer generated virtual machines, into Vagrant .box files
+      </a>
+    </h1>
+
+    <span class="post-date">27 Dec 2015</span>
+
+    <p>This is the sixth in a series of posts on <a href="https://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files/">using a Packer pipeline to generate Vagrant .box files</a>.</p>
+
+<p>In the last post we covered <a href="https://sdorsett.github.io/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">copying our existing CentOS 6.7 template and adding the Puppet agent</a> in order to generate a new Packer template. In this post we will be covering how to use ovftool to convert Packer generated virtual machines into Vagrant .box files. This post will be going over the manual steps on purpose, since I feel it will make more sense when we start to cover automating the steps that you can already performed by hand.</p>
+
+<p>Let&#39;s get started...</p>
+
+<h2>1. Start off by connecting by SSH to CentOS virtual machine we have been using in previous posts.</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ssh root@192.168.1.52
+root@192.168.1.52<span class="err">&#39;</span>s password:
+Last login: Sat Dec <span class="m">26</span> 20:52:17 <span class="m">2015</span> from 192.168.1.163
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>2. Create two new directories for downloading virtual machines, one for .ovf and one for .vmx virtual machine formats.</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">root@packer-centos ~<span class="o">]</span><span class="c"># mkdir -p ~/box_files/{ovf,vmx}</span>
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># tree ~/box_files/</span>
+/root/box_files/
+├── ovf
+└── vmx
+
+<span class="m">2</span> directories, <span class="m">0</span> files
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>3. Now that we have locations for our ovftool exported virtual machine, we need to re-register the Packer created virtual machines. SSH to your ESXi virtual machine and cd to the datastore that you created the Packer virtual machines on.</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:Desktop sdorsett<span class="nv">$ </span>ssh root@192.168.1.51
+Password:
+The <span class="nb">time </span>and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools.  Please
+see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation <span class="k">for</span> more information.
+<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd</span> /vmfs/volumes/datastore1/
+<span class="o">[</span>root@packer-esxi:/vmfs/volumes/5679efd9-3e1658e4-f977-0050569b912b<span class="o">]</span> ls output-*
+output-centos67:
+centos67-flat.vmdk  centos67.vmdk       centos67.vmx
+centos67.nvram      centos67.vmsd       centos67.vmxf
+
+output-centos67-pe-puppet-382:
+centos67-pe-puppet-382-flat.vmdk  centos67-pe-puppet-382.vmsd
+centos67-pe-puppet-382.nvram      centos67-pe-puppet-382.vmx
+centos67-pe-puppet-382.vmdk       centos67-pe-puppet-382.vmxf
+<span class="o">[</span>root@packer-esxi:/vmfs/volumes/5679efd9-3e1658e4-f977-0050569b912b<span class="o">]</span></code></pre></div>
+
+<h2>4. We next need to register both of the .vmx files of the Packer virtual machines displayed above on the ESXi virtual machine.</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-esxi:/vmfs/volumes/<span class="o">]</span> vim-cmd solo/registervm /vmfs
+/volumes/datastore1/output-centos67/*.vmx
+15
+<span class="o">[</span>root@packer-esxi:/vmfs/volumes/<span class="o">]</span> vim-cmd solo/registervm /vmfs
+/volumes/datastore1/output-centos67-pe-puppet-382/*.vmx
+16
+<span class="o">[</span>root@packer-esxi:/vmfs/volumes/<span class="o">]</span></code></pre></div>
+
+<p>You will notice that each of the vim-cmd commands returned a number. That number is the vmid of the virtual machine that was registered. Also if you check the embedded host client, you will see those virtual machines we just registered with the vim-cmd command listed under &quot;Virtual Machines.&quot;</p>
+
+<p><img src="/assets/01-registered-virtual-machines.png" alt="screenshot">  </p>
+
+<h2>5. Once the Packer virtual machines have been registered, we can use ovftool on the CentOS virtual machine to export them as .ovf files.</h2>
+
+<p>After the files are exported, we can then compress the .ovf files into a vmware_ovf compatible .box file. Using the vmware_ovf format will provide a generic .box file that can be deployed to vCenter, vCloud Director or vCloud Air Vagrant providers.</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># ovftool vi://root@192.168.1.51/centos67 /root/box_files/ovf/</span>
+Enter login information <span class="k">for</span> <span class="nb">source </span>vi://192.168.1.51/
+Username: root
+Password: ********
+Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67
+Opening OVF target: /root/box_files/ovf/
+Writing OVF package: /root/box_files/ovf/centos67/centos67.ovf
+Transfer Completed
+Completed successfully
+
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># ovftool vi://root@192.168.1.51/centos67-pe-puppet-382 /root/box_files/ovf/</span>
+Enter login information <span class="k">for</span> <span class="nb">source </span>vi://192.168.1.51/
+Username: root
+Password: ********
+Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67-pe-puppet-382
+Opening OVF target: /root/box_files/ovf/
+Writing OVF package: /root/box_files/ovf/centos67-pe-puppet-382/centos67-pe-puppet-382.ovf
+Transfer Completed
+Completed successfully
+
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>6. We can also use ovftool to export the Packer virtual machines in a .vmx format for use with VMware Fusion or Workstation:</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># ovftool -tt=vmx vi://root@192.168.1.51/centos67 /root/box_files/vmx/Enter login information for source vi://192.168.1.51/</span>
+Username: root
+Password: ********
+Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67
+Opening VMX target: /root/box_files/vmx/
+Writing VMX file: /root/box_files/vmx/centos67/centos67.vmx
+Transfer Completed
+Completed successfully
+
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># ovftool -tt=vmx vi://root@192.168.1.51/centos67-pe-puppet-382 /root/box_files/vmx/</span>
+Enter login information <span class="k">for</span> <span class="nb">source </span>vi://192.168.1.51/
+Username: root
+Password: ********
+Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67-pe-puppet-382
+Opening VMX target: /root/box_files/vmx/
+Writing VMX file: /root/box_files/vmx/centos67-pe-puppet-382/centos67-pe-puppet-382.vmx
+Transfer Completed
+Completed successfully
+
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>7. We will start with converting the .ovf exported templates.</h2>
+
+<p>Each of the exported template directories will need a metadata.js and Vagrantfile created. After creating the metadata.js and Vagrantfile files, we will tar all of the files in each directory into a .box file.</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># cd /root/box_files/ovf/centos67</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># echo &#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39; &gt;&gt; metadata.json</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># touch Vagrantfile</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># tar cvzf /root/box_files/centos67-vmware_ovf-1.0.box ./*</span>
+./centos67-disk1.vmdk
+./centos67.mf
+./centos67.ovf
+./metadata.json
+./Vagrantfile
+
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># cd /root/box_files/ovf/centos67-pe-puppet-382</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># echo &#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39; &gt;&gt; metadata.json</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># touch Vagrantfile</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># tar cvzf /root/box_files/centos67-pe-puppet-382-vmware_ovf-1.0.box ./*</span>
+./centos67-pe-puppet-382-disk1.vmdk
+./centos67-pe-puppet-382.mf
+./centos67-pe-puppet-382.ovf
+./metadata.json
+./Vagrantfile
+
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>8. Next we will convert the .vmx exported templates.</h2>
+
+<p>Each of the exported template directories will also need a slightly different metadata.js file created, Vagrantfile created and finally tar all of the files in each directory into a .box file.</p>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># cd /root/box_files/vmx/centos67</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># echo &#39;{&quot;provider&quot;:&quot;vmware_desktop&quot;}&#39; &gt;&gt; metadata.json</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># touch Vagrantfile</span>
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># tar cvzf /root/box_files/centos67-vmware_desktop-1.0.box ./*</span>
+./centos67-disk1.vmdk
+./centos67.vmx
+./metadata.json
+./Vagrantfile
+
+<span class="o">[</span>root@packer-centos centos67<span class="o">]</span><span class="c"># cd /root/box_files/vmx/centos67-pe-puppet-382/</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># echo &#39;{&quot;provider&quot;:&quot;vmware_desktop&quot;}&#39; &gt;&gt; metadata.json</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># touch Vagrantfile</span>
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># tar cvzf /root/box_files/centos67-pe-puppet-382-vmware_desktop-1.0.box ./*</span>
+./centos67-pe-puppet-382-disk1.vmdk
+./centos67-pe-puppet-382.vmx
+./metadata.json
+./Vagrantfile
+
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h2>9. Finally we can use the tree command to see the overall directory structure of the .ovf and .vmx templates, as well as the list of the .box files:</h2>
+
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c"># tree /root/box_files/</span>
+/root/box_files/
+├── centos67-pe-puppet-382-vmware_desktop-1.0.box
+├── centos67-pe-puppet-382-vmware_ovf-1.0.box
+├── centos67-vmware_desktop-1.0.box
+├── centos67-vmware_ovf-1.0.box
+├── ovf
+│   ├── centos67
+│   │   ├── centos67-disk1.vmdk
+│   │   ├── centos67.mf
+│   │   ├── centos67.ovf
+│   │   ├── metadata.json
+│   │   └── Vagrantfile
+│   └── centos67-pe-puppet-382
+│       ├── centos67-pe-puppet-382-disk1.vmdk
+│       ├── centos67-pe-puppet-382.mf
+│       ├── centos67-pe-puppet-382.ovf
+│       ├── metadata.json
+│       └── Vagrantfile
+└── vmx
+    ├── centos67
+    │   ├── centos67-disk1.vmdk
+    │   ├── centos67.vmx
+    │   ├── metadata.json
+    │   └── Vagrantfile
+    └── centos67-pe-puppet-382
+        ├── centos67-pe-puppet-382-disk1.vmdk
+        ├── centos67-pe-puppet-382.vmx
+        ├── metadata.json
+        └── Vagrantfile
+
+<span class="m">6</span> directories, <span class="m">22</span> files
+<span class="o">[</span>root@packer-centos centos67-pe-puppet-382<span class="o">]</span><span class="c">#</span></code></pre></div>
+
+<h3>This brings us to the end of this post. Again I&#39;m sorry for this post not covering any automated ways of converting the Packer templates to .box files, but in the next post you&#39;ll learn how we can ease this manual pain with some  scripts.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
         Copying our existing CentOS 6.7 template and adding the Puppet agent
       </a>
@@ -2554,34 +2765,6 @@ Accept any certificate warnings and log in using root as the username and the pa
 <h3>That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2015/12/22/pipeline-for-creating-packer-box-files/">
-        Setting up a pipeline for creating Packer .box files
-      </a>
-    </h1>
-
-    <span class="post-date">22 Dec 2015</span>
-
-    <p>Recently at work, the vCloud Air Zombie team has been using Packer to generate Vagrant templates for use in development and testing.  I have previously covered <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">how to use Packer to create create a .box template for use with Vagrant</a>, but I thought it might be useful to others to demonstrate how we are using Packer to create images.</p>
-
-<p>This will be the first of several blog posts in which I intend to cover:</p>
-
-<ul>
-<li><a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">Installing a ESXi 6.0 virtual machine for use with Packer</a> - this is where Packer will be creating the virtual machine image.</li>
-<li><a href="https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/">Setting up Packer, ovftool and Apache web server on a CentOS virtual machine</a> - this will be where we will be editing and running the Packer templates.</li>
-<li><a href="https://sdorsett.github.io/2015/12/25/creating-a-packer-template-for-installing-centos-67/">Creating our first Packer template for installing CentOS 6.7 with vmtools</a> - templates are the instructions for how a Packer image should be built.</li>
-<li><a href="https://sdorsett.github.io/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">Copying our existing CentOS 6.7 template and adding the Puppet agent</a> - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.</li>
-<li>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.</li>
-<li>Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.</li>
-</ul>
-
-<p>I have also created a github repository to contain the Packer configuration files using during this series. You can access the github repository at <a href="https://github.com/sdorsett/packer-templates">https://github.com/sdorsett/packer-templates</a>.</p>
-
-<p>These posts will hopefully be helpful by providing details on the process of using Packer to generate Vagrant .box files.</p>
 
   </div>
   
