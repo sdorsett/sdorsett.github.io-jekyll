@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-27T05:19:28+00:00</updated>
+ <updated>2015-12-27T05:22:35+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -13,7 +13,7 @@
 
  
  <entry>
-   <title>Using ovftool to convert Packer generated virtual machines, into Vagrant .box files</title>
+   <title>Using ovftool to convert Packer generated virtual machines into Vagrant .box files</title>
    <link href="http://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/"/>
    <updated>2015-12-27T00:00:00+00:00</updated>
    <id>http://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines</id>
@@ -2664,7 +2664,7 @@ Accept any certificate warnings and log in using root as the username and the pa
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/24/installing-packer-and-ovftool-on-centos/&quot;&gt;Setting up Packer, ovftool and Apache web server on a CentOS virtual machine&lt;/a&gt; - this will be where we will be editing and running the Packer templates.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/25/creating-a-packer-template-for-installing-centos-67/&quot;&gt;Creating our first Packer template for installing CentOS 6.7 with vmtools&lt;/a&gt; - templates are the instructions for how a Packer image should be built.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/&quot;&gt;Copying our existing CentOS 6.7 template and adding the Puppet agent&lt;/a&gt; - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/&quot;&gt;Using ovftool to convert Packer generated virtual machines, into Vagrant .box files&lt;/a&gt; - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/&quot;&gt;Using ovftool to convert Packer generated virtual machines into Vagrant .box files&lt;/a&gt; - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
 &lt;li&gt;Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.&lt;/li&gt;
 &lt;/ul&gt;
 
