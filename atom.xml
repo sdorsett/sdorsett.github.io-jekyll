@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-29T14:58:18+00:00</updated>
+ <updated>2015-12-29T15:09:27+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -2907,7 +2907,7 @@ Accept any certificate warnings and log in using root as the username and the pa
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/25/creating-a-packer-template-for-installing-centos-67/&quot;&gt;Creating our first Packer template for installing CentOS 6.7 with vmtools&lt;/a&gt; - templates are the instructions for how a Packer image should be built.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/&quot;&gt;Copying our existing CentOS 6.7 template and adding the Puppet agent&lt;/a&gt; - having the puppet agent in an image allows us to use puppet to describe configurations using puppet in either Packer and Vagrant.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/&quot;&gt;Using ovftool to convert Packer generated virtual machines into Vagrant .box files&lt;/a&gt; - ovftool allows you to export the Packer created images in either a Fusion or vSphere compatible format.&lt;/li&gt;
-&lt;li&gt;Hosting the resulting Vagrant .box files on a web server - Hosting the .box files on a web server allows them to be easily used within Vagrantfiles.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://sdorsett.github.io/2015/12/28/scripted-packer-build-and-export/&quot;&gt;Scripted Packer build, ovftool export and Vagrant .box file creation&lt;/a&gt; - pulling everything we have done with Packer template creation and ovftool export into a single script&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;I have also created a github repository to contain the Packer configuration files using during this series. You can access the github repository at &lt;a href=&quot;https://github.com/sdorsett/packer-templates&quot;&gt;https://github.com/sdorsett/packer-templates&lt;/a&gt;.&lt;/p&gt;
