@@ -4,13 +4,255 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-27T05:22:35+00:00</updated>
+ <updated>2015-12-29T14:58:18+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>Scripted Packer build, ovftool export and Vagrant .box file creation</title>
+   <link href="http://sdorsett.github.io/2015/12/28/scripted-packer-build-and-export/"/>
+   <updated>2015-12-28T00:00:00+00:00</updated>
+   <id>http://sdorsett.github.io/2015/12/28/scripted-packer-build-and-export</id>
+   <content type="html">&lt;p&gt;This is the seventh in a series of posts on &lt;a href=&quot;https://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files/&quot;&gt;using a Packer pipeline to generate Vagrant .box files&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In the last post we covered &lt;a href=&quot;https://sdorsett.github.io/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/&quot;&gt;using ovftool to convert Packer generated virtual machines into Vagrant .box files&lt;/a&gt;. I promised to show you a better way of exporting and creating the Vagrant .box files, so in this post we will be combining the following items in one script:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Kicking off the Packer build of a specific template&lt;/li&gt;
+&lt;li&gt;Exporting the Packer generated virtual machine&lt;/li&gt;
+&lt;li&gt;Creating the necessary metadata.json &amp;amp; Vagrantfile files&lt;/li&gt;
+&lt;li&gt;Compressing the files into a TAR file with the .box extension&lt;/li&gt;
+&lt;li&gt;Copying the Vagrant .box files to /vat/www/html/box-files/ so they can accessed by HTTP&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s get started...&lt;/p&gt;
+
+&lt;h2&gt;1. Start off by connecting by SSH to CentOS virtual machine we have been using in previous posts.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;sdorsett-mbp:~ sdorsett&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ssh root@192.168.1.52
+root@192.168.1.52&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;s password:
+Last login: Sat Dec &lt;span class=&quot;m&quot;&gt;26&lt;/span&gt; 22:04:20 &lt;span class=&quot;m&quot;&gt;2015&lt;/span&gt; from 192.168.1.163
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;2. Create a new directory, in the packer-templates directory, for storing build scripts.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# mkdir ~/packer-templates/build-scripts&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos ~&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd packer-templates/build-scripts/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;3. Next we will create a generic script for performing a Packer build of a template.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cat generic-packer-build-script.sh&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt; /root/.bashrc
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;starting packer build of $PACKER_VM_NAME&amp;quot;&lt;/span&gt;
+packer build -var-file&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;packer-remote-info.json /root/packer-templates/templates/&lt;span class=&quot;nv&quot;&gt;$PACKER_VM_NAME&lt;/span&gt;.json
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;registering ${PACKER_VM_NAME} virtual machine on ${PACKER_REMOTE_HOST}&amp;quot;&lt;/span&gt;
+/usr/bin/sshpass -p &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_PASSWORD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; ssh root@&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_HOST&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;vim-cmd solo/registervm /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmx&amp;quot;&lt;/span&gt;
+
+mkdir -p /root/box_files/ovf/empty_dir/
+mkdir -p /root/box_files/vmx/empty_dir/
+
+rm -rf /root/box_files/ovf/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+rm -rf /root/box_files/vmx/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;output of /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmxf:&amp;quot;&lt;/span&gt;
+/usr/bin/sshpass -p &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_PASSWORD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; ssh root@&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_HOST&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;cat /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmxf&amp;quot;&lt;/span&gt;
+
+ovftool vi://root:&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_PASSWORD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;@&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_HOST&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; /root/box_files/ovf/
+ovftool -tt&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;vmx vi://root:&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_PASSWORD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;@&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_HOST&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; /root/box_files/vmx/
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;creating metadata.json and Vagrantfile files in ovf virtual machine directory&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;{&amp;quot;provider&amp;quot;:&amp;quot;vmware_ovf&amp;quot;}&amp;#39;&lt;/span&gt; &amp;gt;&amp;gt; /root/box_files/ovf/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/metadata.json
+touch /root/box_files/ovf/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/Vagrantfile
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /root/box_files/ovf/empty_dir/
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /root/box_files/ovf/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;compressing ovf virtual machine files to /var/www/html/box-files/${PACKER_VM_NAME}-vmware_ovf-1.0.box&amp;quot;&lt;/span&gt;
+tar cvzf /var/www/html/box-files/&lt;span class=&quot;nv&quot;&gt;$PACKER_VM_NAME&lt;/span&gt;-vmware_ovf-1.0.box ./*
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;creating metadata.json and Vagrantfile files in vmx virtual machine directory&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;{&amp;quot;provider&amp;quot;:&amp;quot;vmware_desktop&amp;quot;}&amp;#39;&lt;/span&gt; &amp;gt;&amp;gt; /root/box_files/vmx/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/metadata.json
+touch /root/box_files/vmx/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/Vagrantfile
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /root/box_files/vmx/empty_dir/
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /root/box_files/vmx/&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_VM_NAME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;/
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;compressing vmx virtual machine files to /var/www/html/box-files/${PACKER_VM_NAME}-vmware_desktop-1.0.box&amp;quot;&lt;/span&gt;
+tar cvzf /var/www/html/box-files/&lt;span class=&quot;nv&quot;&gt;$PACKER_VM_NAME&lt;/span&gt;-vmware_desktop-1.0.box ./*
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;cleaning up /root/box_files directories&amp;quot;&lt;/span&gt;
+rm -rf /root/box_files/ovf/&lt;span class=&quot;nv&quot;&gt;$PACKER_VM_NAME&lt;/span&gt;
+rm -rf /root/box_files/vmx/&lt;span class=&quot;nv&quot;&gt;$PACKER_VM_NAME&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;deleting $PACKER_VM_NAME from $PACKER_REMOTE_HOST&amp;quot;&lt;/span&gt;
+/usr/bin/sshpass -p &lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_PASSWORD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt; ssh root@&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PACKER_REMOTE_HOST&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;  &lt;span class=&quot;s2&quot;&gt;&amp;quot;vim-cmd vmsvc/getallvms | grep ${PACKER_VM_NAME} | cut -d &amp;#39; &amp;#39; -f 1 | xargs vim-cmd vmsvc/destroy&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;packer build of $PACKER_VM_NAME has been  completed&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If you look over this script you will notice it covers all of the tasks we performed manually in the last two posts. You might all notice the following environmental variables listed:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PACKER_REMOTE_HOST&lt;/li&gt;
+&lt;li&gt;PACKER_REMOTE_USERNAME&lt;/li&gt;
+&lt;li&gt;PACKER_REMOTE_PASSWORD&lt;/li&gt;
+&lt;li&gt;PACKER_REMOTE_DATASTORE&lt;/li&gt;
+&lt;li&gt;PACKER_VM_NAME&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We are again using the idea of &amp;quot;separating data from code&amp;quot; to keep environment specific information out of the scripts. This will help in keeping sensitive information from being store with our scripts in a code repository.&lt;/p&gt;
+
+&lt;h2&gt;4. We now need to added the above listed PACKER_REMOTE environmental variables into the .bashrc file, so the script will know how to connect to vCenter&lt;/h2&gt;
+
+&lt;p&gt;Add the following lines to the bottom of /root/.bashrc. Make sure to update any of them that do you match your environment:&lt;/p&gt;
+
+&lt;pre&gt;
+PACKER_REMOTE_HOST=192.168.1.51
+PACKER_REMOTE_USERNAME=root
+PACKER_REMOTE_PASSWORD=password
+PACKER_REMOTE_DATASTORE=datastore1
+&lt;/pre&gt;
+
+&lt;p&gt;After updating the ~/.bashrc file, reread the file by running the following command:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# source ~/.bashrc&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You can also validate the environmental variables exist by using the echo commmand:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# echo $PACKER_REMOTE_HOST&lt;/span&gt;
+192.168.1.51
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;5. We need to delete the existing Packer generated virtual machines from the ESXi virtual machine embedded host client, since the Packer build will halt if the virtual machine it is trying to build already exists:&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-delete-virtual-machine.png&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h2&gt;6. With the generic Packer build script and environmental variables in place we can test our script out. First off we need to ensure the execution bit is set on our generic Packer build script:&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos build-scripts&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# cd ~/packer-templates/&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# chmod +x build-scripts/generic-packer-build-script.sh&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ls -la build-scripts/generic-packer-build-script.sh&lt;/span&gt;
+-rwxr-xr-x &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root &lt;span class=&quot;m&quot;&gt;2091&lt;/span&gt; Dec &lt;span class=&quot;m&quot;&gt;26&lt;/span&gt; 22:27 build-scripts/generic-packer-build-script.sh
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now that we have set the script as executable, we can use it to build to centos67 template by passing in the PACKER&lt;em&gt;VM&lt;/em&gt;NAME environmental variable like the following:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# PACKER_VM_NAME=centos67 build-scripts/generic-packer-build-script.sh&lt;/span&gt;
+starting packer build of centos67
+centos67 output will be in this color.
+
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Downloading or copying ISO
+    centos67: Downloading or copying: file:///root/packer-templates/iso/CentOS-6.7-x86_64-minimal.iso
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Uploading ISO to remote machine...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Creating virtual machine &lt;span class=&quot;nv&quot;&gt;disk&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Building and writing VMX &lt;span class=&quot;nv&quot;&gt;file&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Starting HTTP server on port &lt;span class=&quot;nv&quot;&gt;8001&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Registering remote VM...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Starting virtual machine...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Waiting 5s &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; boot...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Connecting to VM via &lt;span class=&quot;nv&quot;&gt;VNC&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Typing the boot &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;over VNC...
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; centos67: Waiting &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; SSH to become available...
+...&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Checking the embedded host client we can see that the CentOS 6.7 operating system is being installed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/02-centos67-os-install.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Once the Packer build completes you will see the following output:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;centos67: &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; Zero out the free space to save space in the final image
+centos67: dd: writing &lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;/EMPTY&lt;span class=&quot;s1&quot;&gt;&amp;#39;: No space left on device&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: 12950+0 records in&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: 12949+0 records out&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: 13578776576 bytes (14 GB) copied, 462.514 s, 29.4 MB/s&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; centos67: Gracefully halting virtual machine...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: Waiting for VMware to clean up after itself...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; centos67: Deleting unnecessary VMware files...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: Deleting: /vmfs/volumes/datastore1/output-centos67/vmware.log&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; centos67: Cleaning VMX prior to finishing up...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: Unmounting floppy from VMX...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: Detaching ISO from CD-ROM device...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;centos67: Disabling VNC server...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; centos67: Compacting the disk image&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;==&amp;gt; centos67: Unregistering virtual machine...&lt;/span&gt;
+&lt;span class=&quot;s1&quot;&gt;Build &amp;#39;&lt;/span&gt;centos67&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt; finished.
+
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&amp;gt; Builds finished. The artifacts of successful builds are:
+--&amp;gt; centos67: VM files in directory: /vmfs/volumes/datastore1/output-centos67&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;At this point the script will re-register the vm Packer built and output the .vmxf file of the virtual machine. This is use for ensuring vmtools was properly installed, since this file contains the vmtool components and their versions that were successfully installed:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;registering centos67 virtual machine on 192.168.1.51
+18
+output of /vmfs/volumes/datastore1/output-centos67/*.vmxf:
+&amp;lt;?xml &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.0&amp;quot;&lt;/span&gt;?&amp;gt;
+&amp;lt;Foundry&amp;gt;&amp;lt;VM/&amp;gt;&amp;lt;tools-install-info&amp;gt;&amp;lt;installError&amp;gt;0&amp;lt;/installError&amp;gt;&amp;lt;updateCounter&amp;gt;1&amp;lt;/updateCounter&amp;gt;&amp;lt;/tools-install-info&amp;gt;&amp;lt;tools-manifest&amp;gt;&amp;lt;monolithic &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga33 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.3.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga4 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.4.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse42 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.0.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga42 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.10.2.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse43 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga43 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse43_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga43_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse67 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga67 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse67_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga67_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse68 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga68 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse68_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.6.4.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga68_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;10.16.7.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse70 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga70 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse70_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga70_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse71 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga71 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse71_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga71_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse73 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga73 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse73_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga73_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse73_99 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga73_99 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse73_99_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga73_99_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse74 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga74 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse74_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga74_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse75 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga75 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse75_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga75_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse76 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga76 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmouse76_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;12.7.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;svga76_64 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;11.0.99.4&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;checkvm &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmtoolsd &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;upgrader &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;hgfsclient &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;hgfsmounter &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmguestlib &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmguestlibjava &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;toolbox-cmd &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.9.4.51858&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmci &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.6.2.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmhgfs &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.4.20.1&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmmemctl &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.2.1.2&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmsync &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.1.0.1&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmxnet &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;2.1.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmxnet3 &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.3.0.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vmblock &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.1.2.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;vsock &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;9.6.1.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;TRUE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;pvscsi &lt;span class=&quot;nv&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;1.2.3.0&amp;quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;installed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;FALSE&amp;quot;&lt;/span&gt;/&amp;gt;&amp;lt;/tools-manifest&amp;gt;&amp;lt;/Foundry&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The next stage of the build script will run the ovftool commands to export .vmx and .ovf format virtual machines from ESXi.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;Opening VI &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt;: vi://root@192.168.1.51:443/centos67
+Opening OVF target: /root/box_files/ovf/
+Writing OVF package: /root/box_files/ovf/centos67/centos67.ovf
+Transfer Completed
+Completed successfully
+Opening VI &lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt;: vi://root@192.168.1.51:443/centos67
+Opening VMX target: /root/box_files/vmx/
+Writing VMX file: /root/box_files/vmx/centos67/centos67.vmx
+Transfer Completed
+Completed successfully&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The next stage of the build script will create the metadata.json and Vagrantfiles needed for the Vagrant .box files. It will then TAR up all the virtual machine files contained in the ovf &amp;amp; vmx folders. This stage will also save the TAR files to /var/www/html/box-files/ so that they will be available over http.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;creating metadata.json and Vagrantfile files in ovf virtual machine directory
+compressing ovf virtual machine files to /var/www/html/box-files/centos67-vmware_ovf-1.0.box
+./centos67-disk1.vmdk
+./centos67.mf
+./centos67.ovf
+./metadata.json
+./Vagrantfile
+creating metadata.json and Vagrantfile files in vmx virtual machine directory
+compressing vmx virtual machine files to /var/www/html/box-files/centos67-vmware_desktop-1.0.box
+./centos67-disk1.vmdk
+./centos67.vmx
+./metadata.json
+./Vagrantfile&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The final section of the build script will remove the directories that ovftool generated in /root/box_files (to keep disk space usage to a minimum) and delete the Packer virtual machine from ESXi.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;cleaning up /root/box_files directories
+deleting centos67 from 192.168.1.51
+packer build of centos67 has been  completed
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2&gt;6. We can now list the files in /var/www/html/box-files and see the two .box files generated by the script.&lt;/h2&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;# ls -lah /var/www/html/box-files/&lt;/span&gt;
+total 654M
+drwxr-xr-x &lt;span class=&quot;m&quot;&gt;2&lt;/span&gt; root root 4.0K Dec &lt;span class=&quot;m&quot;&gt;28&lt;/span&gt; 15:44 .
+drwxr-xr-x &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; root root 4.0K Dec &lt;span class=&quot;m&quot;&gt;23&lt;/span&gt; 18:09 ..
+-rw-r--r-- &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root 319M Dec &lt;span class=&quot;m&quot;&gt;28&lt;/span&gt; 15:46 centos67-vmware_desktop-1.0.box
+-rw-r--r-- &lt;span class=&quot;m&quot;&gt;1&lt;/span&gt; root root 336M Dec &lt;span class=&quot;m&quot;&gt;28&lt;/span&gt; 15:44 centos67-vmware_ovf-1.0.box
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;root@packer-centos packer-templates&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can also open a browser and see the .box files the script generated.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/01-browse-vagrant-box-files.png&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h3&gt;This brings us to the end of this post. I hope I made good on my promise of showing an automated ways of converting the Packer templates to .box files. In the next post I think we should cover how to test our Vagrant .box files are functional by deploying them using Vagrant.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
  
  <entry>
    <title>Using ovftool to convert Packer generated virtual machines into Vagrant .box files</title>
