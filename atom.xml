@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://sdorsett.github.io/atom.xml" rel="self"/>
  <link href="http://sdorsett.github.io/"/>
- <updated>2015-12-29T15:09:27+00:00</updated>
+ <updated>2015-12-29T17:48:07+00:00</updated>
  <id>http://sdorsett.github.io</id>
  <author>
    <name>Stan Dorsett</name>
@@ -247,6 +247,19 @@ drwxr-xr-x &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; root root 4.0K Dec &lt
 &lt;p&gt;We can also open a browser and see the .box files the script generated.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/01-browse-vagrant-box-files.png&quot; alt=&quot;screenshot&quot;&gt;  &lt;/p&gt;
+
+&lt;h3&gt;If you would like to not have to manually create the build script covered in this post, you can clone down &lt;a href=&quot;https://github.com/sdorsett/packer-templates/tree/adding-build-script&quot;&gt;this github repository&lt;/a&gt; by running the following command:&lt;/h3&gt;
+
+&lt;pre&gt;
+git clone -b &quot;adding-build-script&quot; https://github.com/sdorsett/packer-templates.git
+&lt;/pre&gt;  
+
+&lt;p&gt;If you cloned the packer-templates repo in the last post, you can pull down the updates by running the following command:&lt;/p&gt;
+
+&lt;pre&gt;
+git fetch --all
+git pull origin &quot;adding-build-script&quot;
+&lt;/pre&gt;  
 
 &lt;h3&gt;This brings us to the end of this post. I hope I made good on my promise of showing an automated ways of converting the Packer templates to .box files. In the next post I think we should cover how to test our Vagrant .box files are functional by deploying them using Vagrant.&lt;/h3&gt;
 
