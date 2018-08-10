@@ -70,18 +70,6 @@
         
       
     
-      
-        
-      
-    
-      
-        
-      
-    
-      
-        
-      
-    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -89,7 +77,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2015. All rights reserved.
+      &copy; 2018. All rights reserved.
     </p>
   </div>
 </div>
@@ -132,13 +120,13 @@ This repo contains Packer templates for boxes available at https://vagrantcloud.
 
 <h4>C.  Add /usr/local/packer_7.5 to your path by running the following command.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ <span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:</span><span class="nv">$PATH</span><span class="s2">&quot;</span></code></pre></figure>
 
 <h4>D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>cat ~/.bash_profile
-<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:$PATH&quot;</span>
-sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ cat ~/.bash_profile
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/packer_7.5:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
 
 <h2>2. Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.</h2>
 
@@ -146,8 +134,8 @@ sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
 
 <h4>B. Verify ovftool is succesfully added to your path by running &quot;ovftool -v&quot;. This command should output the version of ovftool we installed.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ovftool -v
-VMware ovftool 3.5.0 <span class="o">(</span>build-1274719<span class="o">)</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ ovftool -v
+VMware ovftool <span class="m">3</span>.5.0 <span class="o">(</span>build-1274719<span class="o">)</span></code></pre></figure>
 
 <h2>3. Now we can download and install the gosddc packer components we will need.</h2>
 
@@ -159,19 +147,19 @@ VMware ovftool 3.5.0 <span class="o">(</span>build-1274719<span class="o">)</spa
 
 <h4>C. Create a directory to contain the packer templates:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer
-sdorsett-mbp:~ sdorsett<span class="nv">$ </span><span class="nb">cd</span> ~/Documents/packer/</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ mkdir ~/Documents/packer
+sdorsett-mbp:~ sdorsett$ <span class="nb">cd</span> ~/Documents/packer/</code></pre></figure>
 
 <h5>D. Clone the gosddc packer-templates repository:</h5>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer sdorsett<span class="nv">$ </span>git clone https://github.com/gosddc/packer-templates.git
-sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span>packer-templates</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer sdorsett$ git clone https://github.com/gosddc/packer-templates.git
+sdorsett-mbp:packer sdorsett$ <span class="nb">cd</span> packer-templates</code></pre></figure>
 
 <h2>4. Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.</h2>
 
 <h4>A. create an &quot;iso&quot; directory for storing the ESXi iso files:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>mkdir ~/Documents/packer/packer-templates/iso</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer-templates sdorsett$ mkdir ~/Documents/packer/packer-templates/iso</code></pre></figure>
 
 <h4>B. Download and copy the &quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot; ESXi 5.5 installer to the iso directory.</h4>
 
@@ -179,7 +167,7 @@ sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span
 
 <h4>A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>cat templates/esxi.json
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer-templates sdorsett$ cat templates/esxi.json
 <span class="o">{</span>
   <span class="s2">&quot;variables&quot;</span>: <span class="o">{</span>
     <span class="s2">&quot;version&quot;</span>: <span class="s2">&quot;1.0&quot;</span>
@@ -190,8 +178,8 @@ sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span
       <span class="s2">&quot;vm_name&quot;</span>: <span class="s2">&quot;esxi55&quot;</span>,
       <span class="s2">&quot;vmdk_name&quot;</span>: <span class="s2">&quot;esxi55-disk0&quot;</span>,
       <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;vmware-iso&quot;</span>,
-      <span class="s2">&quot;headless&quot;</span>: <span class="nb">true</span>,
-      <span class="s2">&quot;disk_size&quot;</span>: 4096,
+      <span class="s2">&quot;headless&quot;</span>: true,
+      <span class="s2">&quot;disk_size&quot;</span>: <span class="m">4096</span>,
       <span class="s2">&quot;guest_os_type&quot;</span>: <span class="s2">&quot;vmkernel5&quot;</span>,
       <span class="s2">&quot;iso_url&quot;</span>: <span class="s2">&quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot;</span>,
       <span class="s2">&quot;iso_checksum&quot;</span>: <span class="s2">&quot;ef599dc7e647177027684c0eee346ccdbc8704f2&quot;</span>,
@@ -230,12 +218,12 @@ sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span
   <span class="s2">&quot;post-processors&quot;</span>: <span class="o">[</span>
    <span class="o">{</span>
      <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;vagrant-vmware-ovf&quot;</span>,
-     <span class="s2">&quot;compression_level&quot;</span>: 9,
+     <span class="s2">&quot;compression_level&quot;</span>: <span class="m">9</span>,
      <span class="s2">&quot;output&quot;</span>: <span class="s2">&quot;{{.BuildName}}-{{.Provider}}-{{user `version`}}.box&quot;</span>
 
    <span class="o">}</span>
   <span class="o">]</span>
-<span class="o">}</span></code></pre></div>
+<span class="o">}</span></code></pre></figure>
 
 <p>There are several things I would like to point out in the esxi.json file we just created.</p>
 
@@ -259,12 +247,12 @@ sdorsett-mbp:packer sdorsett<span class="nv">$ </span><span class="nb">cd </span
 
 <h4>B. Validate the packer esxi.json file is ready for building by running the following command:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer validate templates/esxi.json
-Template validated successfully.</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer-templates sdorsett$ packer validate templates/esxi.json
+Template validated successfully.</code></pre></figure>
 
 <h4>C. Start the build by running:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>packer build templates/esxi.json
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer-templates sdorsett$ packer build templates/esxi.json
 esxi55 output will be in this color.
 
 <span class="o">==</span>&gt; esxi55: Downloading or copying ISO
@@ -275,10 +263,10 @@ esxi55 output will be in this color.
 <span class="o">==</span>&gt; esxi55: Starting virtual machine...
     esxi55: The VM will be run headless, without a GUI. If you want to
     esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986
+    esxi55: <span class="m">127</span>.0.0.1:5986
 <span class="o">==</span>&gt; esxi55: Waiting 5s <span class="k">for</span> boot...
 <span class="o">==</span>&gt; esxi55: Connecting to VM via <span class="nv">VNC</span>
-<span class="o">==</span>&gt; esxi55: Typing the boot <span class="nb">command </span>over VNC...
+<span class="o">==</span>&gt; esxi55: Typing the boot <span class="nb">command</span> over VNC...
 <span class="o">==</span>&gt; esxi55: Waiting <span class="k">for</span> SSH to become available...
 <span class="o">==</span>&gt; esxi55: Connected to SSH!
 <span class="o">==</span>&gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub <span class="o">=</span>&gt; /etc/ssh/keys-root/authorized_keys
@@ -286,7 +274,7 @@ esxi55 output will be in this color.
     esxi55: Installation Result
     esxi55: Message: The update completed successfully, but the system needs to be rebooted <span class="k">for</span> the changes to be effective.
     esxi55: Reboot Required: <span class="nb">true</span>
-<span class="nb">    </span>esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
+    esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
     esxi55: VIBs Removed:
     esxi55: VIBs Skipped:
 <span class="o">==</span>&gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
@@ -325,13 +313,13 @@ esxi55 output will be in this color.
 
 <span class="s1">==&gt; Builds finished. The artifacts of successful builds are:</span>
 <span class="s1">--&gt; esxi55: &#39;</span>vmware_ovf<span class="err">&#39;</span> provider box: esxi55-vmware_ovf-1.0.box
-sdorsett-mbp:packer-templates sdorsett<span class="err">$</span></code></pre></div>
+sdorsett-mbp:packer-templates sdorsett$</code></pre></figure>
 
 <p>If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">esxi55: The VM will be run headless, without a GUI. If you want to
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>    esxi55: The VM will be run headless, without a GUI. If you want to
     esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986</code></pre></div>
+    esxi55: <span class="m">127</span>.0.0.1:5986</code></pre></figure>
 
 <p>When I connected the &quot;Chicken of the VNC&quot; client installed on my macbook to &quot;127.0.0.1:5986&quot; I could see where the build was at during the install process:</p>
 
@@ -339,8 +327,8 @@ sdorsett-mbp:packer-templates sdorsett<span class="err">$</span></code></pre></d
 
 <h4>D. Once the packer build completes you should end up with a &quot;esxi55-vmware_ovf-1.0.box&quot; file in the same directory you ran the &quot;packer build&quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett<span class="nv">$ </span>ls *.box
-esxi55-vmware_ovf-1.0.box</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:packer-templates sdorsett$ ls *.box
+esxi55-vmware_ovf-1.0.box</code></pre></figure>
 
 <h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on CentOS and build a packer virtual machine on a remote ESXi host.</h3>
 
@@ -351,6 +339,15 @@ esxi55-vmware_ovf-1.0.box</code></pre></div>
 <div class="related">
   <h2>Related Posts</h2>
   <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/">
+            Creating an openstack instance on OVH public cloud
+            <small>08 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
     
       <li>
         <h3>
@@ -366,15 +363,6 @@ esxi55-vmware_ovf-1.0.box</code></pre></div>
           <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
             Using ovftool to convert Packer generated virtual machines into Vagrant .box files
             <small>27 Dec 2015</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
-            Copying our existing CentOS 6.7 template and adding the Puppet agent
-            <small>26 Dec 2015</small>
           </a>
         </h3>
       </li>

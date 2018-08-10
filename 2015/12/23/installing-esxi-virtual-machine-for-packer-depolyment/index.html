@@ -70,18 +70,6 @@
         
       
     
-      
-        
-      
-    
-      
-        
-      
-    
-      
-        
-      
-    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -89,7 +77,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2015. All rights reserved.
+      &copy; 2018. All rights reserved.
     </p>
   </div>
 </div>
@@ -240,20 +228,20 @@
 
 <h2>8. SCP the downloaded .vib to the ESXi virtual machine</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
 The authenticity of host <span class="s1">&#39;192.168.1.51 (192.168.1.51)&#39;</span> cant be established.
-RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+RSA key fingerprint is <span class="m">82</span>:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
 Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
 Warning: Permanently added <span class="s1">&#39;192.168.1.51&#39;</span> <span class="o">(</span>RSA<span class="o">)</span> to the list of known hosts.
 Password: ********
-esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
-sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+esxui_signed.vib                                                                                                                                <span class="m">100</span>% 2805KB   <span class="m">2</span>.7MB/s   <span class="m">00</span>:00
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
 
 <h2>9. SSH to the ESXi virtual machine and install the embedded host client .vib</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ssh root@192.168.1.51
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.51
 Password: ********
-The <span class="nb">time </span>and date of this login have been sent to the system logs.
+The <span class="nb">time</span> and date of this login have been sent to the system logs.
 
 VMware offers supported, powerful system administration tools.  Please
 see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
@@ -261,7 +249,7 @@ see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
 The ESXi Shell can be disabled by an administrative user. See the
 vSphere Security documentation <span class="k">for</span> more information.
 
-<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd </span>tmp
+<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd</span> tmp
 <span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> ls
 esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
 
@@ -269,11 +257,11 @@ esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
 Installation Result
    Message: Operation finished successfully.
    Reboot Required: <span class="nb">false</span>
-<span class="nb">   </span>VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
+   VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
    VIBs Removed:
    VIBs Skipped:
 
-<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span></code></pre></div>
+<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span></code></pre></figure>
 
 <h2>10. Enable guest ip hack on the ESXi virtual machine</h2>
 
@@ -281,10 +269,10 @@ Installation Result
 
 <p><img src="/assets/28-enable-guest-ip-hack.jpg" alt="screenshot">  </p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli system settings advanced <span class="nb">set</span> -o /Net/GuestIPHack -i 1
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli system settings advanced <span class="nb">set</span> -o /Net/GuestIPHack -i <span class="m">1</span>
 <span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> <span class="nb">exit</span>
-Connection to 192.168.1.51 closed.
-sdorsett-mbp:~ sdorsett<span class="err">$</span></code></pre></div>
+Connection to <span class="m">192</span>.168.1.51 closed.
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
 
 <h2>11. Log into the embedded host client to validate that it it working properly</h2>
 
@@ -309,6 +297,15 @@ Accept any certificate warnings and log in using root as the username and the pa
     
       <li>
         <h3>
+          <a href="/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/">
+            Creating an openstack instance on OVH public cloud
+            <small>08 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
           <a href="/2015/12/28/scripted-packer-build-and-export/">
             Scripted Packer build, ovftool export and Vagrant .box file creation
             <small>28 Dec 2015</small>
@@ -321,15 +318,6 @@ Accept any certificate warnings and log in using root as the username and the pa
           <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
             Using ovftool to convert Packer generated virtual machines into Vagrant .box files
             <small>27 Dec 2015</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
-            Copying our existing CentOS 6.7 template and adding the Puppet agent
-            <small>26 Dec 2015</small>
           </a>
         </h3>
       </li>

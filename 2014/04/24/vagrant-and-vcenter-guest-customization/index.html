@@ -70,18 +70,6 @@
         
       
     
-      
-        
-      
-    
-      
-        
-      
-    
-      
-        
-      
-    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -89,7 +77,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2015. All rights reserved.
+      &copy; 2018. All rights reserved.
     </p>
   </div>
 </div>
@@ -149,7 +137,7 @@
 
 <h3>2. Modify the Vagrantfile we created in the initial &quot;<a href="http://sdorsett.github.io/2014/04/19/vagrant-install/">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</a>&quot; post.</h3>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># cat Vagrantfile</span>
 Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
   config.vm.box <span class="o">=</span> <span class="s1">&#39;dummy&#39;</span>
   config.vm.box_url <span class="o">=</span> <span class="s1">&#39;./example_box/dummy.box&#39;</span>
@@ -158,15 +146,15 @@ Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><s
     vsphere.host <span class="o">=</span> <span class="s1">&#39;192.168.1.195&#39;</span>
     vsphere.name <span class="o">=</span> <span class="s1">&#39;vagrant-test&#39;</span>
     vsphere.clone_from_vm <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vsphere.template_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos-6.5&#39;</span>
+    vsphere.template_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos-6.5&#39;</span>
     vsphere.user <span class="o">=</span> <span class="s1">&#39;root@localos&#39;</span>
     vsphere.password <span class="o">=</span> <span class="s1">&#39;S0meR@nd0mP@ssw0rd&#39;</span>
     vsphere.insecure <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vsphere.data_store_name <span class="o">=</span> <span class="s1">&#39;vsanDatastore&#39;</span>
+    vsphere.data_store_name <span class="o">=</span> <span class="s1">&#39;vsanDatastore&#39;</span>
     vsphere.linked_clone <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vsphere.customization_spec_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos&#39;</span>
+    vsphere.customization_spec_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos&#39;</span>
   end
-end</code></pre></div>
+end</code></pre></figure>
 
 <p>The following new lines have been added:</p>
 
@@ -178,7 +166,7 @@ end</code></pre></div>
 
 <h3>3. Test the configuration changes we made by running a &quot;vagrant up&quot;:</h3>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant up --provider=vsphere</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant up --provider=vsphere</span>
 Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
 <span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
 <span class="o">==</span>&gt; default:  -- Source VM: vagrant-centos-6.5
@@ -186,26 +174,26 @@ Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="
 <span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...
 <span class="o">==</span>&gt; default: New virtual machine successfully cloned and <span class="nv">started</span>
 <span class="o">==</span>&gt; default: Rsyncing folder: /root/vagrant-vms/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># </span></code></pre></figure>
 
 <p>You should find the time it took to deploy the linked clone vm was much faster than previous full clones of the vagrant template vm.</p>
 
 <h3>4. Connect to the vagrant vm to validate the hostname of the vm matched the vm name &amp; search domain:</h3>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant ssh</span>
-<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span><span class="nv">$ </span>hostname -f
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant ssh</span>
+<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span>$ hostname -f
 vagrant-test.mylab.net
-<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span><span class="nv">$ </span><span class="nb">exit</span>
+<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span>$ <span class="nb">exit</span>
 <span class="nb">logout</span>
-Connection to 192.168.1.117 closed.
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
+Connection to <span class="m">192</span>.168.1.117 closed.
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># </span></code></pre></figure>
 
 <h3>5. Clean up after ourselves and call it a day:</h3>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c"># vagrant destroy</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant destroy</span>
 <span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
 <span class="o">==</span>&gt; default: Calling vShpere Destroy
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>You might be wondering why setting the hostname &amp; domain name might be so important. We will see in future posts how to use hostnames to determine which manifests will be applied to specific vms we clone and power up with Vagrant.</p>
 
@@ -221,6 +209,15 @@ Connection to 192.168.1.117 closed.
     
       <li>
         <h3>
+          <a href="/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/">
+            Creating an openstack instance on OVH public cloud
+            <small>08 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
           <a href="/2015/12/28/scripted-packer-build-and-export/">
             Scripted Packer build, ovftool export and Vagrant .box file creation
             <small>28 Dec 2015</small>
@@ -233,15 +230,6 @@ Connection to 192.168.1.117 closed.
           <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
             Using ovftool to convert Packer generated virtual machines into Vagrant .box files
             <small>27 Dec 2015</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
-            Copying our existing CentOS 6.7 template and adding the Puppet agent
-            <small>26 Dec 2015</small>
           </a>
         </h3>
       </li>

@@ -70,18 +70,6 @@
         
       
     
-      
-        
-      
-    
-      
-        
-      
-    
-      
-        
-      
-    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -89,7 +77,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2015. All rights reserved.
+      &copy; 2018. All rights reserved.
     </p>
   </div>
 </div>
@@ -127,70 +115,70 @@
 
 <h2>1. Start off by connecting by SSH to CentOS virtual machine we have been using in previous posts.</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett<span class="nv">$ </span>ssh root@192.168.1.52
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.52
 root@192.168.1.52<span class="err">&#39;</span>s password:
-Last login: Sat Dec <span class="m">26</span> 22:04:20 <span class="m">2015</span> from 192.168.1.163
-<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+Last login: Sat Dec <span class="m">26</span> <span class="m">22</span>:04:20 <span class="m">2015</span> from <span class="m">192</span>.168.1.163
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <h2>2. Create a new directory, in the packer-templates directory, for storing build scripts.</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># mkdir ~/packer-templates/build-scripts</span>
-<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c"># cd packer-templates/build-scripts/</span>
-<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c">#</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c1"># mkdir ~/packer-templates/build-scripts</span>
+<span class="o">[</span>root@packer-centos ~<span class="o">]</span><span class="c1"># cd packer-templates/build-scripts/</span>
+<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <h2>3. Next we will create a generic script for performing a Packer build of a template.</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c"># cat generic-packer-build-script.sh</span>
-<span class="c">#!/bin/bash</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1"># cat generic-packer-build-script.sh</span>
+<span class="c1">#!/bin/bash</span>
 
 <span class="nb">source</span> /root/.bashrc
 
-<span class="nb">echo</span> <span class="s2">&quot;starting packer build of $PACKER_VM_NAME&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;starting packer build of </span><span class="nv">$PACKER_VM_NAME</span><span class="s2">&quot;</span>
 packer build -var-file<span class="o">=</span>packer-remote-info.json /root/packer-templates/templates/<span class="nv">$PACKER_VM_NAME</span>.json
 
-<span class="nb">echo</span> <span class="s2">&quot;registering ${PACKER_VM_NAME} virtual machine on ${PACKER_REMOTE_HOST}&quot;</span>
-/usr/bin/sshpass -p <span class="k">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="k">}</span> ssh root@<span class="k">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="k">}</span> <span class="s2">&quot;vim-cmd solo/registervm /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmx&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;registering </span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2"> virtual machine on </span><span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span><span class="s2">&quot;</span>
+/usr/bin/sshpass -p <span class="si">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="si">}</span> ssh root@<span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span> <span class="s2">&quot;vim-cmd solo/registervm /vmfs/volumes/</span><span class="si">${</span><span class="nv">PACKER_REMOTE_DATASTORE</span><span class="si">}</span><span class="s2">/output-</span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2">/*.vmx&quot;</span>
 
 mkdir -p /root/box_files/ovf/empty_dir/
 mkdir -p /root/box_files/vmx/empty_dir/
 
-rm -rf /root/box_files/ovf/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>
-rm -rf /root/box_files/vmx/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>
+rm -rf /root/box_files/ovf/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>
+rm -rf /root/box_files/vmx/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>
 
-<span class="nb">echo</span> <span class="s2">&quot;output of /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmxf:&quot;</span>
-/usr/bin/sshpass -p <span class="k">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="k">}</span> ssh root@<span class="k">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="k">}</span> <span class="s2">&quot;cat /vmfs/volumes/${PACKER_REMOTE_DATASTORE}/output-${PACKER_VM_NAME}/*.vmxf&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;output of /vmfs/volumes/</span><span class="si">${</span><span class="nv">PACKER_REMOTE_DATASTORE</span><span class="si">}</span><span class="s2">/output-</span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2">/*.vmxf:&quot;</span>
+/usr/bin/sshpass -p <span class="si">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="si">}</span> ssh root@<span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span> <span class="s2">&quot;cat /vmfs/volumes/</span><span class="si">${</span><span class="nv">PACKER_REMOTE_DATASTORE</span><span class="si">}</span><span class="s2">/output-</span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2">/*.vmxf&quot;</span>
 
-ovftool vi://root:<span class="k">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="k">}</span>@<span class="k">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="k">}</span>/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span> /root/box_files/ovf/
-ovftool -tt<span class="o">=</span>vmx vi://root:<span class="k">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="k">}</span>@<span class="k">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="k">}</span>/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span> /root/box_files/vmx/
+ovftool vi://root:<span class="si">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="si">}</span>@<span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span>/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span> /root/box_files/ovf/
+ovftool -tt<span class="o">=</span>vmx vi://root:<span class="si">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="si">}</span>@<span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span>/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span> /root/box_files/vmx/
 
 <span class="nb">echo</span> <span class="s2">&quot;creating metadata.json and Vagrantfile files in ovf virtual machine directory&quot;</span>
-<span class="nb">echo</span> <span class="s1">&#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39;</span> &gt;&gt; /root/box_files/ovf/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/metadata.json
-touch /root/box_files/ovf/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/Vagrantfile
+<span class="nb">echo</span> <span class="s1">&#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39;</span> &gt;&gt; /root/box_files/ovf/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/metadata.json
+touch /root/box_files/ovf/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/Vagrantfile
 <span class="nb">cd</span> /root/box_files/ovf/empty_dir/
-<span class="nb">cd</span> /root/box_files/ovf/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/
+<span class="nb">cd</span> /root/box_files/ovf/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/
 
-<span class="nb">echo</span> <span class="s2">&quot;compressing ovf virtual machine files to /var/www/html/box-files/${PACKER_VM_NAME}-vmware_ovf-1.0.box&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;compressing ovf virtual machine files to /var/www/html/box-files/</span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2">-vmware_ovf-1.0.box&quot;</span>
 tar cvzf /var/www/html/box-files/<span class="nv">$PACKER_VM_NAME</span>-vmware_ovf-1.0.box ./*
 
 <span class="nb">echo</span> <span class="s2">&quot;creating metadata.json and Vagrantfile files in vmx virtual machine directory&quot;</span>
-<span class="nb">echo</span> <span class="s1">&#39;{&quot;provider&quot;:&quot;vmware_desktop&quot;}&#39;</span> &gt;&gt; /root/box_files/vmx/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/metadata.json
-touch /root/box_files/vmx/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/Vagrantfile
+<span class="nb">echo</span> <span class="s1">&#39;{&quot;provider&quot;:&quot;vmware_desktop&quot;}&#39;</span> &gt;&gt; /root/box_files/vmx/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/metadata.json
+touch /root/box_files/vmx/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/Vagrantfile
 <span class="nb">cd</span> /root/box_files/vmx/empty_dir/
-<span class="nb">cd</span> /root/box_files/vmx/<span class="k">${</span><span class="nv">PACKER_VM_NAME</span><span class="k">}</span>/
+<span class="nb">cd</span> /root/box_files/vmx/<span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span>/
 
-<span class="nb">echo</span> <span class="s2">&quot;compressing vmx virtual machine files to /var/www/html/box-files/${PACKER_VM_NAME}-vmware_desktop-1.0.box&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;compressing vmx virtual machine files to /var/www/html/box-files/</span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2">-vmware_desktop-1.0.box&quot;</span>
 tar cvzf /var/www/html/box-files/<span class="nv">$PACKER_VM_NAME</span>-vmware_desktop-1.0.box ./*
 
 <span class="nb">echo</span> <span class="s2">&quot;cleaning up /root/box_files directories&quot;</span>
 rm -rf /root/box_files/ovf/<span class="nv">$PACKER_VM_NAME</span>
 rm -rf /root/box_files/vmx/<span class="nv">$PACKER_VM_NAME</span>
 
-<span class="nb">echo</span> <span class="s2">&quot;deleting $PACKER_VM_NAME from $PACKER_REMOTE_HOST&quot;</span>
-/usr/bin/sshpass -p <span class="k">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="k">}</span> ssh root@<span class="k">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="k">}</span>  <span class="s2">&quot;vim-cmd vmsvc/getallvms | grep ${PACKER_VM_NAME} | cut -d &#39; &#39; -f 1 | xargs vim-cmd vmsvc/destroy&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;deleting </span><span class="nv">$PACKER_VM_NAME</span><span class="s2"> from </span><span class="nv">$PACKER_REMOTE_HOST</span><span class="s2">&quot;</span>
+/usr/bin/sshpass -p <span class="si">${</span><span class="nv">PACKER_REMOTE_PASSWORD</span><span class="si">}</span> ssh root@<span class="si">${</span><span class="nv">PACKER_REMOTE_HOST</span><span class="si">}</span>  <span class="s2">&quot;vim-cmd vmsvc/getallvms | grep </span><span class="si">${</span><span class="nv">PACKER_VM_NAME</span><span class="si">}</span><span class="s2"> | cut -d &#39; &#39; -f 1 | xargs vim-cmd vmsvc/destroy&quot;</span>
 
-<span class="nb">echo</span> <span class="s2">&quot;packer build of $PACKER_VM_NAME has been  completed&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;packer build of </span><span class="nv">$PACKER_VM_NAME</span><span class="s2"> has been  completed&quot;</span>
 
-<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>If you look over this script you will notice it covers all of the tasks we performed manually in the last two posts. You might all notice the following environmental variables listed:</p>
 
@@ -217,14 +205,14 @@ PACKER_REMOTE_DATASTORE=datastore1
 
 <p>After updating the ~/.bashrc file, reread the file by running the following command:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c"># source ~/.bashrc</span>
-<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c">#</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1"># source ~/.bashrc</span>
+<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>You can also validate the environmental variables exist by using the echo commmand:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c"># echo $PACKER_REMOTE_HOST</span>
-192.168.1.51
-<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c">#</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1"># echo $PACKER_REMOTE_HOST</span>
+<span class="m">192</span>.168.1.51
+<span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <h2>5. We need to delete the existing Packer generated virtual machines from the ESXi virtual machine embedded host client, since the Packer build will halt if the virtual machine it is trying to build already exists:</h2>
 
@@ -232,15 +220,15 @@ PACKER_REMOTE_DATASTORE=datastore1
 
 <h2>6. With the generic Packer build script and environmental variables in place we can test our script out. First off we need to ensure the execution bit is set on our generic Packer build script:</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c"># cd ~/packer-templates/</span>
-<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c"># chmod +x build-scripts/generic-packer-build-script.sh</span>
-<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c"># ls -la build-scripts/generic-packer-build-script.sh</span>
--rwxr-xr-x <span class="m">1</span> root root <span class="m">2091</span> Dec <span class="m">26</span> 22:27 build-scripts/generic-packer-build-script.sh
-<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c">#</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos build-scripts<span class="o">]</span><span class="c1"># cd ~/packer-templates/</span>
+<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1"># chmod +x build-scripts/generic-packer-build-script.sh</span>
+<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1"># ls -la build-scripts/generic-packer-build-script.sh</span>
+-rwxr-xr-x <span class="m">1</span> root root <span class="m">2091</span> Dec <span class="m">26</span> <span class="m">22</span>:27 build-scripts/generic-packer-build-script.sh
+<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>Now that we have set the script as executable, we can use it to build to centos67 template by passing in the PACKER<em>VM</em>NAME environmental variable like the following:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c"># PACKER_VM_NAME=centos67 build-scripts/generic-packer-build-script.sh</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1"># PACKER_VM_NAME=centos67 build-scripts/generic-packer-build-script.sh</span>
 starting packer build of centos67
 centos67 output will be in this color.
 
@@ -254,9 +242,9 @@ centos67 output will be in this color.
 <span class="o">==</span>&gt; centos67: Starting virtual machine...
 <span class="o">==</span>&gt; centos67: Waiting 5s <span class="k">for</span> boot...
 <span class="o">==</span>&gt; centos67: Connecting to VM via <span class="nv">VNC</span>
-<span class="o">==</span>&gt; centos67: Typing the boot <span class="nb">command </span>over VNC...
+<span class="o">==</span>&gt; centos67: Typing the boot <span class="nb">command</span> over VNC...
 <span class="o">==</span>&gt; centos67: Waiting <span class="k">for</span> SSH to become available...
-...</code></pre></div>
+...</code></pre></figure>
 
 <p>Checking the embedded host client we can see that the CentOS 6.7 operating system is being installed.</p>
 
@@ -264,7 +252,7 @@ centos67 output will be in this color.
 
 <p>Once the Packer build completes you will see the following output:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">centos67: <span class="o">==</span>&gt; Zero out the free space to save space in the final image
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>centos67: <span class="o">==</span>&gt; Zero out the free space to save space in the final image
 centos67: dd: writing <span class="sb">`</span>/EMPTY<span class="s1">&#39;: No space left on device</span>
 <span class="s1">centos67: 12950+0 records in</span>
 <span class="s1">centos67: 12949+0 records out</span>
@@ -282,32 +270,32 @@ centos67: dd: writing <span class="sb">`</span>/EMPTY<span class="s1">&#39;: No 
 <span class="s1">Build &#39;</span>centos67<span class="err">&#39;</span> finished.
 
 <span class="o">==</span>&gt; Builds finished. The artifacts of successful builds are:
---&gt; centos67: VM files in directory: /vmfs/volumes/datastore1/output-centos67</code></pre></div>
+--&gt; centos67: VM files in directory: /vmfs/volumes/datastore1/output-centos67</code></pre></figure>
 
 <p>At this point the script will re-register the vm Packer built and output the .vmxf file of the virtual machine. This is use for ensuring vmtools was properly installed, since this file contains the vmtool components and their versions that were successfully installed:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">registering centos67 virtual machine on 192.168.1.51
-18
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>registering centos67 virtual machine on <span class="m">192</span>.168.1.51
+<span class="m">18</span>
 output of /vmfs/volumes/datastore1/output-centos67/*.vmxf:
 &lt;?xml <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.0&quot;</span>?&gt;
-&lt;Foundry&gt;&lt;VM/&gt;&lt;tools-install-info&gt;&lt;installError&gt;0&lt;/installError&gt;&lt;updateCounter&gt;1&lt;/updateCounter&gt;&lt;/tools-install-info&gt;&lt;tools-manifest&gt;&lt;monolithic <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4&quot;</span>/&gt;&lt;svga33 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.3.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga4 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.4.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse42 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.0.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga42 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.10.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse43 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga43 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse43_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga43_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse67 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga67 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse67_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga67_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse68 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga68 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse68_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga68_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse70 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga70 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse70_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga70_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse71 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga71 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse71_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga71_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_99 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_99 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_99_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_99_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse74 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga74 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse74_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga74_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse75 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga75 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse75_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga75_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse76 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga76 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse76_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga76_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;checkvm <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmtoolsd <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;upgrader <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;hgfsclient <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;hgfsmounter <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmguestlib <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmguestlibjava <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;toolbox-cmd <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmci <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.6.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmhgfs <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.4.20.1&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmmemctl <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.2.1.2&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmsync <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.1.0.1&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmxnet <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;2.1.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmxnet3 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.3.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmblock <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.1.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vsock <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.6.1.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;pvscsi <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.2.3.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;/tools-manifest&gt;&lt;/Foundry&gt;</code></pre></div>
+&lt;Foundry&gt;&lt;VM/&gt;&lt;tools-install-info&gt;&lt;installError&gt;0&lt;/installError&gt;&lt;updateCounter&gt;1&lt;/updateCounter&gt;&lt;/tools-install-info&gt;&lt;tools-manifest&gt;&lt;monolithic <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4&quot;</span>/&gt;&lt;svga33 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.3.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga4 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.4.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse42 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.0.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga42 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.10.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse43 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga43 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse43_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga43_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse67 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga67 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse67_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga67_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse68 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga68 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse68_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.6.4.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga68_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;10.16.7.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse70 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga70 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse70_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga70_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse71 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga71 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse71_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga71_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_99 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_99 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse73_99_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga73_99_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse74 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga74 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse74_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga74_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse75 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga75 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse75_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga75_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse76 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga76 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmmouse76_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;12.7.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;svga76_64 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;11.0.99.4&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;checkvm <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmtoolsd <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;upgrader <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;hgfsclient <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;hgfsmounter <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmguestlib <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmguestlibjava <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;toolbox-cmd <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.9.4.51858&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmci <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.6.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmhgfs <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.4.20.1&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmmemctl <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.2.1.2&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmsync <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.1.0.1&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmxnet <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;2.1.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;vmxnet3 <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.3.0.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vmblock <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.1.2.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;vsock <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;9.6.1.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;TRUE&quot;</span>/&gt;&lt;pvscsi <span class="nv">version</span><span class="o">=</span><span class="s2">&quot;1.2.3.0&quot;</span> <span class="nv">installed</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span>/&gt;&lt;/tools-manifest&gt;&lt;/Foundry&gt;</code></pre></figure>
 
 <p>The next stage of the build script will run the ovftool commands to export .vmx and .ovf format virtual machines from ESXi.</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>Opening VI source: vi://root@192.168.1.51:443/centos67
 Opening OVF target: /root/box_files/ovf/
 Writing OVF package: /root/box_files/ovf/centos67/centos67.ovf
 Transfer Completed
 Completed successfully
-Opening VI <span class="nb">source</span>: vi://root@192.168.1.51:443/centos67
+Opening VI source: vi://root@192.168.1.51:443/centos67
 Opening VMX target: /root/box_files/vmx/
 Writing VMX file: /root/box_files/vmx/centos67/centos67.vmx
 Transfer Completed
-Completed successfully</code></pre></div>
+Completed successfully</code></pre></figure>
 
 <p>The next stage of the build script will create the metadata.json and Vagrantfiles needed for the Vagrant .box files. It will then TAR up all the virtual machine files contained in the ovf &amp; vmx folders. This stage will also save the TAR files to /var/www/html/box-files/ so that they will be available over http.</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">creating metadata.json and Vagrantfile files in ovf virtual machine directory
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>creating metadata.json and Vagrantfile files in ovf virtual machine directory
 compressing ovf virtual machine files to /var/www/html/box-files/centos67-vmware_ovf-1.0.box
 ./centos67-disk1.vmdk
 ./centos67.mf
@@ -319,24 +307,24 @@ compressing vmx virtual machine files to /var/www/html/box-files/centos67-vmware
 ./centos67-disk1.vmdk
 ./centos67.vmx
 ./metadata.json
-./Vagrantfile</code></pre></div>
+./Vagrantfile</code></pre></figure>
 
 <p>The final section of the build script will remove the directories that ovftool generated in /root/box_files (to keep disk space usage to a minimum) and delete the Packer virtual machine from ESXi.</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">cleaning up /root/box_files directories
-deleting centos67 from 192.168.1.51
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>cleaning up /root/box_files directories
+deleting centos67 from <span class="m">192</span>.168.1.51
 packer build of centos67 has been  completed
-<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <h2>6. We can now list the files in /var/www/html/box-files and see the two .box files generated by the script.</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c"># ls -lah /var/www/html/box-files/</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1"># ls -lah /var/www/html/box-files/</span>
 total 654M
-drwxr-xr-x <span class="m">2</span> root root 4.0K Dec <span class="m">28</span> 15:44 .
-drwxr-xr-x <span class="m">3</span> root root 4.0K Dec <span class="m">23</span> 18:09 ..
--rw-r--r-- <span class="m">1</span> root root 319M Dec <span class="m">28</span> 15:46 centos67-vmware_desktop-1.0.box
--rw-r--r-- <span class="m">1</span> root root 336M Dec <span class="m">28</span> 15:44 centos67-vmware_ovf-1.0.box
-<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c">#</span></code></pre></div>
+drwxr-xr-x <span class="m">2</span> root root <span class="m">4</span>.0K Dec <span class="m">28</span> <span class="m">15</span>:44 .
+drwxr-xr-x <span class="m">3</span> root root <span class="m">4</span>.0K Dec <span class="m">23</span> <span class="m">18</span>:09 ..
+-rw-r--r-- <span class="m">1</span> root root 319M Dec <span class="m">28</span> <span class="m">15</span>:46 centos67-vmware_desktop-1.0.box
+-rw-r--r-- <span class="m">1</span> root root 336M Dec <span class="m">28</span> <span class="m">15</span>:44 centos67-vmware_ovf-1.0.box
+<span class="o">[</span>root@packer-centos packer-templates<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>We can also open a browser and see the .box files the script generated.</p>
 
@@ -367,6 +355,15 @@ git pull origin "adding-build-script"
     
       <li>
         <h3>
+          <a href="/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/">
+            Creating an openstack instance on OVH public cloud
+            <small>08 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
           <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
             Using ovftool to convert Packer generated virtual machines into Vagrant .box files
             <small>27 Dec 2015</small>
@@ -379,15 +376,6 @@ git pull origin "adding-build-script"
           <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
             Copying our existing CentOS 6.7 template and adding the Puppet agent
             <small>26 Dec 2015</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2015/12/25/creating-a-packer-template-for-installing-centos-67/">
-            Creating our first Packer template for installing CentOS 6.7 with vmtools
-            <small>25 Dec 2015</small>
           </a>
         </h3>
       </li>

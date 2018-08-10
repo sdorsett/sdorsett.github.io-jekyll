@@ -70,18 +70,6 @@
         
       
     
-      
-        
-      
-    
-      
-        
-      
-    
-      
-        
-      
-    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -89,7 +77,7 @@
 
   <div class="sidebar-item">
     <p>
-      &copy; 2015. All rights reserved.
+      &copy; 2018. All rights reserved.
     </p>
   </div>
 </div>
@@ -126,71 +114,71 @@ This repo contains a vagrant plugin (provider) that will deploy a vagrant-vmware
 
 <h4>A. Run the following command to install the some needed packages:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git unzip</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git unzip</span></code></pre></figure>
 
 <h4>B. Download and install ruby-build:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># git clone https://github.com/sstephenson/ruby-build.git</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># git clone https://github.com/sstephenson/ruby-build.git</span>
 Initialized empty Git repository in /root/ruby-build/.git/
-remote: Counting objects: 4212, <span class="k">done</span>.
-remote: Compressing objects: 100% <span class="o">(</span>16/16<span class="o">)</span>, <span class="k">done</span>.
-remote: Total <span class="m">4212</span> <span class="o">(</span>delta 4<span class="o">)</span>, reused <span class="m">2</span> <span class="o">(</span>delta 0<span class="o">)</span>
-Receiving objects: 100% <span class="o">(</span>4212/4212<span class="o">)</span>, 761.14 KiB <span class="p">|</span> <span class="m">730</span> KiB/s, <span class="k">done</span>.
-Resolving deltas: 100% <span class="o">(</span>2142/2142<span class="o">)</span>, <span class="k">done</span>.
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd ruby-build/</span>
-<span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ./install.sh</span></code></pre></div>
+remote: Counting objects: <span class="m">4212</span>, <span class="k">done</span>.
+remote: Compressing objects: <span class="m">100</span>% <span class="o">(</span><span class="m">16</span>/16<span class="o">)</span>, <span class="k">done</span>.
+remote: Total <span class="m">4212</span> <span class="o">(</span>delta <span class="m">4</span><span class="o">)</span>, reused <span class="m">2</span> <span class="o">(</span>delta <span class="m">0</span><span class="o">)</span>
+Receiving objects: <span class="m">100</span>% <span class="o">(</span><span class="m">4212</span>/4212<span class="o">)</span>, <span class="m">761</span>.14 KiB <span class="p">|</span> <span class="m">730</span> KiB/s, <span class="k">done</span>.
+Resolving deltas: <span class="m">100</span>% <span class="o">(</span><span class="m">2142</span>/2142<span class="o">)</span>, <span class="k">done</span>.
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd ruby-build/</span>
+<span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># ./install.sh</span></code></pre></figure>
 
 <h4>C. Running the &quot;ruby-build --definitions&quot; command will provide an output of the versions of Ruby that ruby-buid supports:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build --definitions</span>
-1.8.6-p383
-1.8.6-p420
-1.8.7-p249
-1.8.7-p302
-1.8.7-p334
-1.8.7-p352
-1.8.7-p357
-1.8.7-p358
-1.8.7-p370
-1.8.7-p371
-1.8.7-p374
-1.8.7-p375
-1.9.1-p378
-1.9.1-p430
-1.9.2-p0
-1.9.2-p180
-1.9.2-p290
-1.9.2-p318
-1.9.2-p320
-1.9.2-p326
-1.9.2-p330
-1.9.3-dev
-1.9.3-preview1
-1.9.3-rc1
-1.9.3-p0
-1.9.3-p125
-1.9.3-p194
-1.9.3-p286
-1.9.3-p327
-1.9.3-p362
-1.9.3-p374
-1.9.3-p385
-1.9.3-p392
-1.9.3-p429
-1.9.3-p448
-1.9.3-p484
-1.9.3-p545
-1.9.3-p547
-1.9.3-p550
-1.9.3-p551
-2.0.0-dev
-2.0.0-preview1
-2.0.0-preview2
-...</code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># ruby-build --definitions</span>
+<span class="m">1</span>.8.6-p383
+<span class="m">1</span>.8.6-p420
+<span class="m">1</span>.8.7-p249
+<span class="m">1</span>.8.7-p302
+<span class="m">1</span>.8.7-p334
+<span class="m">1</span>.8.7-p352
+<span class="m">1</span>.8.7-p357
+<span class="m">1</span>.8.7-p358
+<span class="m">1</span>.8.7-p370
+<span class="m">1</span>.8.7-p371
+<span class="m">1</span>.8.7-p374
+<span class="m">1</span>.8.7-p375
+<span class="m">1</span>.9.1-p378
+<span class="m">1</span>.9.1-p430
+<span class="m">1</span>.9.2-p0
+<span class="m">1</span>.9.2-p180
+<span class="m">1</span>.9.2-p290
+<span class="m">1</span>.9.2-p318
+<span class="m">1</span>.9.2-p320
+<span class="m">1</span>.9.2-p326
+<span class="m">1</span>.9.2-p330
+<span class="m">1</span>.9.3-dev
+<span class="m">1</span>.9.3-preview1
+<span class="m">1</span>.9.3-rc1
+<span class="m">1</span>.9.3-p0
+<span class="m">1</span>.9.3-p125
+<span class="m">1</span>.9.3-p194
+<span class="m">1</span>.9.3-p286
+<span class="m">1</span>.9.3-p327
+<span class="m">1</span>.9.3-p362
+<span class="m">1</span>.9.3-p374
+<span class="m">1</span>.9.3-p385
+<span class="m">1</span>.9.3-p392
+<span class="m">1</span>.9.3-p429
+<span class="m">1</span>.9.3-p448
+<span class="m">1</span>.9.3-p484
+<span class="m">1</span>.9.3-p545
+<span class="m">1</span>.9.3-p547
+<span class="m">1</span>.9.3-p550
+<span class="m">1</span>.9.3-p551
+<span class="m">2</span>.0.0-dev
+<span class="m">2</span>.0.0-preview1
+<span class="m">2</span>.0.0-preview2
+...</code></pre></figure>
 
 <h4>D. Install ruby 1.9.3 build 551 using the following command:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># ruby-build 1.9.3-p551 /usr/local/</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># ruby-build 1.9.3-p551 /usr/local/</span>
 Downloading yaml-0.1.6.tar.gz...
 -&gt; http://dqw8nmjcqpjn7.cloudfront.net/7da6971b4bd08a986dd2a61353bc422362bd0edcc67d7ebaac68c95f74182749
 Installing yaml-0.1.6...
@@ -199,73 +187,73 @@ Installed yaml-0.1.6 to /usr/local/
 Downloading ruby-1.9.3-p551.tar.gz...
 -&gt; http://dqw8nmjcqpjn7.cloudfront.net/bb5be55cd1f49c95bb05b6f587701376b53d310eb1bb7c76fbd445a1c75b51e8
 Installing ruby-1.9.3-p551...
-Installed ruby-1.9.3-p551 to /usr/local/</code></pre></div>
+Installed ruby-1.9.3-p551 to /usr/local/</code></pre></figure>
 
 <h4>E. Download and install the latest version of ruby gems. You can always find the URL to the most recent version at <a href="https://rubygems.org/pages/download">rubygems.org</a>.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz</span>
---2015-01-02 21:14:39-- http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz
-Resolving production.cf.rubygems.org... 54.230.6.155, 54.230.6.120, 54.230.7.122, ...
-Connecting to production.cf.rubygems.org<span class="p">|</span>54.230.6.155<span class="p">|</span>:80... connected.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz</span>
+--2015-01-02 <span class="m">21</span>:14:39-- http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz
+Resolving production.cf.rubygems.org... <span class="m">54</span>.230.6.155, <span class="m">54</span>.230.6.120, <span class="m">54</span>.230.7.122, ...
+Connecting to production.cf.rubygems.org<span class="p">|</span><span class="m">54</span>.230.6.155<span class="p">|</span>:80... connected.
 HTTP request sent, awaiting response... <span class="m">200</span> OK
 Length: <span class="m">446665</span> <span class="o">(</span>436K<span class="o">)</span> <span class="o">[</span>application/x-tar<span class="o">]</span>
 Saving to: <span class="s2">&quot;rubygems-2.4.5.tgz&quot;</span>
 
-100%<span class="o">[==================================================================================================</span>&gt;<span class="o">]</span> 446,665 1.78M/s in 0.2s 
+<span class="m">100</span>%<span class="o">[==================================================================================================</span>&gt;<span class="o">]</span> <span class="m">446</span>,665 <span class="m">1</span>.78M/s in <span class="m">0</span>.2s 
 
-2015-01-02 21:14:45 <span class="o">(</span>1.78 MB/s<span class="o">)</span> - <span class="s2">&quot;rubygems-2.4.5.tgz&quot;</span> saved <span class="o">[</span>446665/446665<span class="o">]</span>
+<span class="m">2015</span>-01-02 <span class="m">21</span>:14:45 <span class="o">(</span><span class="m">1</span>.78 MB/s<span class="o">)</span> - <span class="s2">&quot;rubygems-2.4.5.tgz&quot;</span> saved <span class="o">[</span><span class="m">446665</span>/446665<span class="o">]</span>
 
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># tar -zxf rubygems-2.4.5.tgz</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd rubygems-2.4.5</span>
-<span class="o">[</span>root@vagrant rubygems-2.4.5<span class="o">]</span><span class="c"># ruby setup.rb</span>
-RubyGems 2.4.5 installed
-Installing ri documentation <span class="k">for</span> rubygems-2.4.5</code></pre></div>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># tar -zxf rubygems-2.4.5.tgz</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd rubygems-2.4.5</span>
+<span class="o">[</span>root@vagrant rubygems-2.4.5<span class="o">]</span><span class="c1"># ruby setup.rb</span>
+RubyGems <span class="m">2</span>.4.5 installed
+Installing ri documentation <span class="k">for</span> rubygems-2.4.5</code></pre></figure>
 
 <h2>2. Create a directory to keep our vagrant-vmware-ovf .box template to and copy the template we previously created to it:</h2>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c"># mkdir ~/box-files/</span>
-<span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c"># cp /root/packer/packer-templates/esxi55/esxi55-vmware_ovf-1.1.box ~/box-files/</span></code></pre></div>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c1"># mkdir ~/box-files/</span>
+<span class="o">[</span>root@vagrant esxi55<span class="o">]</span><span class="c1"># cp /root/packer/packer-templates/esxi55/esxi55-vmware_ovf-1.1.box ~/box-files/</span></code></pre></figure>
 
 <h2>3. The next thing we need to do is download and install vagrant and the vagrant-vcenter provider:</h2>
 
 <h4>A. Download and install the latest version of vagrant. You can find the URL to the latest versions of the linux 64bit .rpm at <a href="https://www.vagrantup.com/downloads.html">vagrantup.com</a>.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant rubygems-2.4.5<span class="o">]</span><span class="c"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm</span>
---2015-01-03 16:02:34-- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm
-Resolving dl.bintray.com... 108.168.194.92, 108.168.194.91
-Connecting to dl.bintray.com<span class="p">|</span>108.168.194.92<span class="p">|</span>:443... connected.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant rubygems-2.4.5<span class="o">]</span><span class="c1"># cd ~/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm</span>
+--2015-01-03 <span class="m">16</span>:02:34-- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm
+Resolving dl.bintray.com... <span class="m">108</span>.168.194.92, <span class="m">108</span>.168.194.91
+Connecting to dl.bintray.com<span class="p">|</span><span class="m">108</span>.168.194.92<span class="p">|</span>:443... connected.
 HTTP request sent, awaiting response... <span class="m">302</span> 
-Resolving d29vzk4ow07wi7.cloudfront.net... 54.230.7.101, 54.230.5.129, 54.230.6.222, ...
-Connecting to d29vzk4ow07wi7.cloudfront.net<span class="p">|</span>54.230.7.101<span class="p">|</span>:443... connected.
+Resolving d29vzk4ow07wi7.cloudfront.net... <span class="m">54</span>.230.7.101, <span class="m">54</span>.230.5.129, <span class="m">54</span>.230.6.222, ...
+Connecting to d29vzk4ow07wi7.cloudfront.net<span class="p">|</span><span class="m">54</span>.230.7.101<span class="p">|</span>:443... connected.
 HTTP request sent, awaiting response... <span class="m">200</span> OK
 Length: <span class="m">65197711</span> <span class="o">(</span>62M<span class="o">)</span> <span class="o">[</span>application/unknown<span class="o">]</span>
 Saving to: <span class="s2">&quot;vagrant_1.7.1_x86_64.rpm&quot;</span>
 
-100%<span class="o">[==================================================================================================</span>&gt;<span class="o">]</span> 65,197,711 1.92M/s in 33s 
+<span class="m">100</span>%<span class="o">[==================================================================================================</span>&gt;<span class="o">]</span> <span class="m">65</span>,197,711 <span class="m">1</span>.92M/s in 33s 
 
-2015-01-03 16:03:18 <span class="o">(</span>1.87 MB/s<span class="o">)</span> - <span class="s2">&quot;vagrant_1.7.1_x86_64.rpm&quot;</span> saved <span class="o">[</span>65197711/65197711<span class="o">]</span>
+<span class="m">2015</span>-01-03 <span class="m">16</span>:03:18 <span class="o">(</span><span class="m">1</span>.87 MB/s<span class="o">)</span> - <span class="s2">&quot;vagrant_1.7.1_x86_64.rpm&quot;</span> saved <span class="o">[</span><span class="m">65197711</span>/65197711<span class="o">]</span>
 
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># rpm -i vagrant_1.7.1_x86_64.rpm</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant -v</span>
-Vagrant 1.7.1</code></pre></div>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># rpm -i vagrant_1.7.1_x86_64.rpm</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># vagrant -v</span>
+Vagrant <span class="m">1</span>.7.1</code></pre></figure>
 
 <h4>B. Install the vagrant-vcenter plugin using the following commands:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant plugin list</span>
-vagrant-share <span class="o">(</span>1.1.4, system<span class="o">)</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># vagrant plugin install vagrant-vcenter</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># vagrant plugin list</span>
+vagrant-share <span class="o">(</span><span class="m">1</span>.1.4, system<span class="o">)</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># vagrant plugin install vagrant-vcenter</span>
 Installing the <span class="s1">&#39;vagrant-vcenter&#39;</span> plugin. This can take a few minutes...
 Installed the plugin <span class="s1">&#39;vagrant-vcenter (0.3.2)&#39;</span>!
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># </span></code></pre></figure>
 
 <h4>C. Create directory and Vagrantfile for the ESXi virtual machines we will deploy with vagrant:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># mkdir -p ~/vagrant-vms/esxi-test/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c"># cd vagrant-vms/esxi-test/</span>
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vi Vagrantfile</span>
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># cat Vagrantfile</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># mkdir -p ~/vagrant-vms/esxi-test/</span>
+<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd vagrant-vms/esxi-test/</span>
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vi Vagrantfile</span>
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># cat Vagrantfile</span>
 <span class="nv">esxi_box_url</span> <span class="o">=</span> <span class="s1">&#39;/root/box-files/esxi55-vmware_ovf-1.1.box&#39;</span>
  
 <span class="nv">nodes</span> <span class="o">=</span> <span class="o">[</span>
@@ -286,10 +274,10 @@ Vagrant.configure<span class="o">(</span><span class="s1">&#39;2&#39;</span><spa
     vcenter.template_folder_name <span class="o">=</span> <span class="s1">&#39;Vagrant/Templates&#39;</span>
     vcenter.network_name <span class="o">=</span> <span class="s1">&#39;vlan2&#39;</span>
     vcenter.linked_clones <span class="o">=</span> <span class="nb">true</span>
-<span class="nb">    </span>vcenter.enable_vm_customization <span class="o">=</span> <span class="nb">false</span>
-<span class="nb">  </span>end
+    vcenter.enable_vm_customization <span class="o">=</span> <span class="nb">false</span>
+  end
  
-  <span class="c"># Go through nodes and configure each of them.j</span>
+  <span class="c1"># Go through nodes and configure each of them.j</span>
   nodes.each <span class="k">do</span> <span class="p">|</span>node<span class="p">|</span>
     config.vm.define node<span class="o">[</span>:hostname<span class="o">]</span> <span class="k">do</span> <span class="p">|</span>node_config<span class="p">|</span>
  
@@ -297,15 +285,15 @@ Vagrant.configure<span class="o">(</span><span class="s1">&#39;2&#39;</span><spa
         node_config.ssh.username <span class="o">=</span> <span class="s1">&#39;root&#39;</span>
         node_config.ssh.shell <span class="o">=</span> <span class="s1">&#39;sh&#39;</span>
         node_config.ssh.insert_key <span class="o">=</span> <span class="nb">false</span>
-<span class="nb">        </span>node_config.vm.synced_folder <span class="s1">&#39;.&#39;</span>, <span class="s1">&#39;/vagrant&#39;</span>, disabled: <span class="nb">true</span>
-<span class="nb">      </span>end
+        node_config.vm.synced_folder <span class="s1">&#39;.&#39;</span>, <span class="s1">&#39;/vagrant&#39;</span>, disabled: <span class="nb">true</span>
+      end
  
       node_config.vm.box <span class="o">=</span> node<span class="o">[</span>:box<span class="o">]</span>
       node_config.vm.hostname <span class="o">=</span> node<span class="o">[</span>:hostname<span class="o">]</span>
       node_config.vm.box_url <span class="o">=</span> node<span class="o">[</span>:box_url<span class="o">]</span>
     end
   end
-end</code></pre></div>
+end</code></pre></figure>
 
 <p>This Vagrantfile is specifying vagrant to use the vagrant-vcenter profiler to create two virtual machines (esx-01a &amp; esx-02a) from the esx55-vmware_ovf-1.1.box file. You will need update the following properties to reflect your own vCenter configuration:</p>
 
@@ -325,7 +313,7 @@ end</code></pre></div>
 
 <h4>A. Now that we have created a Vagrantfile config file and updated it with our vCenter information we can bring up our virtual machine by running &quot;vagrant up&quot; in the directory with the Vagrantfile.</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant up</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant up</span>
 Bringing machine <span class="s1">&#39;esx-01a&#39;</span> up with <span class="s1">&#39;vcenter&#39;</span> provider...
 Bringing machine <span class="s1">&#39;esx-02a&#39;</span> up with <span class="s1">&#39;vcenter&#39;</span> provider...
 <span class="o">==</span>&gt; esx-01a: Box <span class="s1">&#39;esxi55&#39;</span> could not be found. Attempting to find and install...
@@ -340,14 +328,14 @@ Bringing machine <span class="s1">&#39;esx-02a&#39;</span> up with <span class="
 <span class="o">==</span>&gt; esx-02a: Adding box <span class="s1">&#39;esxi55&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> provider: vmware_ovf, vcloud, <span class="nv">vcenter</span>
 <span class="o">==</span>&gt; esx-02a: Uploading <span class="o">[</span>esxi55<span class="o">]</span>...
 <span class="o">==</span>&gt; esx-02a: Adding <span class="o">[</span>esxi55<span class="o">]</span>
-2015-01-03 16:28:34 -0600: networks: <span class="nv">vlan2</span> <span class="o">=</span> vlan2
-2015-01-03 16:28:34 -0600: Uploading OVF to esx02.tyrell.corp...
+<span class="m">2015</span>-01-03 <span class="m">16</span>:28:34 -0600: networks: <span class="nv">vlan2</span> <span class="o">=</span> vlan2
+<span class="m">2015</span>-01-03 <span class="m">16</span>:28:34 -0600: Uploading OVF to esx02.tyrell.corp...
 <span class="o">==</span>&gt; esx-01a: Uploading <span class="o">[</span>esxi55<span class="o">]</span>...
 <span class="o">==</span>&gt; esx-01a: Adding <span class="o">[</span>esxi55<span class="o">]</span>
-2015-01-03 16:28:35 -0600: networks: <span class="nv">vlan2</span> <span class="o">=</span> vlan2
-2015-01-03 16:28:35 -0600: Uploading OVF to esx01.tyrell.corp...
-DEBUG: Timeout: 300
-Iteration 1: Trying to get host<span class="s1">&#39;s IP address ...</span>
+<span class="m">2015</span>-01-03 <span class="m">16</span>:28:35 -0600: networks: <span class="nv">vlan2</span> <span class="o">=</span> vlan2
+<span class="m">2015</span>-01-03 <span class="m">16</span>:28:35 -0600: Uploading OVF to esx01.tyrell.corp...
+DEBUG: Timeout: <span class="m">300</span>
+Iteration <span class="m">1</span>: Trying to get host<span class="s1">&#39;s IP address ...</span>
 <span class="s1"> % Total % Received % Xferd Average Speed Time Time Time Current</span>
 <span class="s1"> Dload Upload Total Spent Left Speed</span>
 <span class="s1"> 15 473M 15 75.3M 0 0 4554k 0 0:01:46 0:00:16 0:01:30 4552k2015-01-03 16:29:02 -0600: Template already exists, waiting for it to be ready</span>
@@ -357,15 +345,15 @@ Iteration 1: Trying to get host<span class="s1">&#39;s IP address ...</span>
 <span class="s1">HttpNfcLeaseComplete succeeded</span>
 <span class="s1">esxi_box_url = &#39;</span>/root/box-files/esxi55-vmware_ovf-1.1.box<span class="err">&#39;</span>
 <span class="o">==</span>&gt; esx-02a: Creating VM...
-2015-01-03 16:29:42 -0600: Template fully prepared and ready to be <span class="nv">cloned</span>
+<span class="m">2015</span>-01-03 <span class="m">16</span>:29:42 -0600: Template fully prepared and ready to be <span class="nv">cloned</span>
 <span class="o">==</span>&gt; esx-01a: Creating VM...
 <span class="o">==</span>&gt; esx-01a: Powering on VM...
-<span class="o">==</span>&gt; esx-02a: Powering on VM...</code></pre></div>
+<span class="o">==</span>&gt; esx-02a: Powering on VM...</code></pre></figure>
  
 
 <h4>B. Once the &quot;vagrant up&quot; command completes, you can check the status of the vms using &quot;vagrant status&quot;:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant status</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant status</span>
 Current machine states:
 
 esx-01a running <span class="o">(</span>vcenter<span class="o">)</span>
@@ -373,7 +361,7 @@ esx-02a running <span class="o">(</span>vcenter<span class="o">)</span>
 
 This environment represents multiple VMs. The VMs are all listed
 above with their current state. For more information about a specific
-VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.</code></pre></div>
+VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.</code></pre></figure>
 
 <h4>C. Looking in vCenter you will see the virtual machines that vagrant deployed:</h4>
 
@@ -383,9 +371,9 @@ VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.</
 
 <p>To connect to esx-01a you simply run &quot;vagrant ssh esx-01a&quot;:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant ssh esx-01a</span>
-<span class="o">==</span>&gt; esx-01a: External IP <span class="k">for</span> esx-01a: 192.168.1.177
-The <span class="nb">time </span>and date of this login have been sent to the system logs.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant ssh esx-01a</span>
+<span class="o">==</span>&gt; esx-01a: External IP <span class="k">for</span> esx-01a: <span class="m">192</span>.168.1.177
+The <span class="nb">time</span> and date of this login have been sent to the system logs.
 
 VMware offers supported, powerful system administration tools. Please
 see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
@@ -393,69 +381,69 @@ see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
 The ESXi Shell can be disabled by an administrative user. See the
 vSphere Security documentation <span class="k">for</span> more information.
 
-~ <span class="c"># esxcli network ip interface list</span>
+~ <span class="c1"># esxcli network ip interface list</span>
 vmk0
  Name: vmk0
- MAC Address: 00:50:56:6f:9d:66
+ MAC Address: <span class="m">00</span>:50:56:6f:9d:66
  Enabled: <span class="nb">true</span>
-<span class="nb"> </span>Portset: vSwitch0
+ Portset: vSwitch0
  Portgroup: Management Network
  Netstack Instance: defaultTcpipStack
  VDS Name: N/A
  VDS UUID: N/A
  VDS Port: N/A
  VDS Connection: -1
- MTU: 1500
- TSO MSS: 65535
- Port ID: 33554437
-~ <span class="c"># exit</span>
-Connection to 192.168.1.177 closed.
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c">#</span></code></pre></div>
+ MTU: <span class="m">1500</span>
+ TSO MSS: <span class="m">65535</span>
+ Port ID: <span class="m">33554437</span>
+~ <span class="c1"># exit</span>
+Connection to <span class="m">192</span>.168.1.177 closed.
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <p>The same can be done for esx-02a:</p>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant ssh esx-02a</span>
-<span class="o">==</span>&gt; esx-02a: External IP <span class="k">for</span> esx-02a: 192.168.1.178
-The <span class="nb">time </span>and date of this login have been sent to the system logs.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant ssh esx-02a</span>
+<span class="o">==</span>&gt; esx-02a: External IP <span class="k">for</span> esx-02a: <span class="m">192</span>.168.1.178
+The <span class="nb">time</span> and date of this login have been sent to the system logs.
 
 VMware offers supported, powerful system administration tools. Please
 see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
 
 The ESXi Shell can be disabled by an administrative user. See the
 vSphere Security documentation <span class="k">for</span> more information.
-~ <span class="c"># esxcli network ip interface list</span>
+~ <span class="c1"># esxcli network ip interface list</span>
 vmk0
  Name: vmk0
- MAC Address: 00:50:56:67:d5:b7
+ MAC Address: <span class="m">00</span>:50:56:67:d5:b7
  Enabled: <span class="nb">true</span>
-<span class="nb"> </span>Portset: vSwitch0
+ Portset: vSwitch0
  Portgroup: Management Network
  Netstack Instance: defaultTcpipStack
  VDS Name: N/A
  VDS UUID: N/A
  VDS Port: N/A
  VDS Connection: -1
- MTU: 1500
- TSO MSS: 65535
- Port ID: 33554437
-~ <span class="c"># exit</span>
-Connection to 192.168.1.178 closed.
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c">#</span></code></pre></div>
+ MTU: <span class="m">1500</span>
+ TSO MSS: <span class="m">65535</span>
+ Port ID: <span class="m">33554437</span>
+~ <span class="c1"># exit</span>
+Connection to <span class="m">192</span>.168.1.178 closed.
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1">#</span></code></pre></figure>
 
 <h4>E. Once we are done using our virtual machines they can be destroyed with a &quot;vagrant destroy&quot; command:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant destroy</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant destroy</span>
     esx-02a: Are you sure you want to destroy the <span class="s1">&#39;esx-02a&#39;</span> VM? <span class="o">[</span>y/N<span class="o">]</span> <span class="nv">y</span>
 <span class="o">==</span>&gt; esx-02a: Powering off VM...
 <span class="o">==</span>&gt; esx-02a: Destroying VM...
     esx-01a: Are you sure you want to destroy the <span class="s1">&#39;esx-01a&#39;</span> VM? <span class="o">[</span>y/N<span class="o">]</span> <span class="nv">y</span>
 <span class="o">==</span>&gt; esx-01a: Powering off VM...
 <span class="o">==</span>&gt; esx-01a: Destroying VM...
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># </span></code></pre></figure>
 
 <h4>F. If you are ever unsure of the state of the vagrant virtual machines you can run &quot;vagrant status&quot; to check:</h4>
 
-<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c"># vagrant status</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># vagrant status</span>
 Current machine states:
 
 esx-01a                   not created <span class="o">(</span>vcenter<span class="o">)</span>
@@ -464,7 +452,7 @@ esx-02a                   not created <span class="o">(</span>vcenter<span class
 This environment represents multiple VMs. The VMs are all listed
 above with their current state. For more information about a specific
 VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.
-<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c">#</span></code></pre></div>
+<span class="o">[</span>root@vagrant esxi-test<span class="o">]</span><span class="c1"># </span></code></pre></figure>
 
 <h3>That all for this post covering the basics of getting vagrant and the vagrant-vcenter provider installed/configured on CentOS.</h3>
 
@@ -475,6 +463,15 @@ VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.
 <div class="related">
   <h2>Related Posts</h2>
   <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/">
+            Creating an openstack instance on OVH public cloud
+            <small>08 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
     
       <li>
         <h3>
@@ -490,15 +487,6 @@ VM, run <span class="sb">`</span>vagrant status NAME<span class="sb">`</span>.
           <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
             Using ovftool to convert Packer generated virtual machines into Vagrant .box files
             <small>27 Dec 2015</small>
-          </a>
-        </h3>
-      </li>
-    
-      <li>
-        <h3>
-          <a href="/2015/12/26/copy-our-existing-template-and-add-the-puppet-agent/">
-            Copying our existing CentOS 6.7 template and adding the Puppet agent
-            <small>26 Dec 2015</small>
           </a>
         </h3>
       </li>
