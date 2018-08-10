@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://0.0.0.0:4000/atom.xml" rel="self"/>
  <link href="http://0.0.0.0:4000/"/>
- <updated>2018-08-10T03:32:28+00:00</updated>
+ <updated>2018-08-10T04:22:17+00:00</updated>
  <id>http://0.0.0.0:4000</id>
  <author>
    <name>Stan Dorsett</name>
@@ -35,7 +35,9 @@
 
 &lt;h2&gt;2. Setup two-factor authentication.&lt;/h2&gt;
 
-&lt;p&gt;The second thing you should do after creating an account is setup two-factor authentication. I found this by going to My Account | Security | Two-factor authentication | activate double authentication. I would highly recommend setting up two-factor authentication to help ensure your account is as safe as possible from someone else gaining access. Enabling two-factor authentication will require that you provide a code (token) from your two-factor authentication application on your phone or physical device, along with your username and password when you log into ovhcloud.com.&lt;/p&gt;
+&lt;p&gt;The second thing you should do after creating an account is setup two-factor authentication. Enabling two-factor authentication will require that you provide a code (token) from your two-factor authentication application on your phone or physical device, along with your username and password when you log into ovhcloud.com. I would highly recommend setting up two-factor authentication to help prevent unauthorized access to your OVH account.&lt;/p&gt;
+
+&lt;p&gt;I found the option to enable two-factor authentication by going to My Account | Security | Two-factor authentication | activate double authentication&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-02-activate-two-factor-auth.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -47,27 +49,29 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-05-activate-two-factor-auth.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;After clicking next the two-factor authenticaiton option showed as being enabled.&lt;/p&gt;
+&lt;p&gt;After clicking next you will be given emergency codes that can be used if you lose your mobile app or physical two-factor device. Copy these emergency codes and store them in a safe place since they can never be retrieved again. After clicking next the two-factor authentication option will show as being enabled.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-06-activate-two-factor-auth.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
 &lt;h2&gt;3. Adding a payment method.&lt;/h2&gt;
 
-&lt;p&gt;You will next need to add a payment method, since it will be used to purchase cloud credits in the next step.&lt;/p&gt;
+&lt;p&gt;You will now need to add a payment method, since it will be used to purchase cloud credits in the next step. I added a payment method by clicking my username at the upper right, clicking &amp;#39;My payment methods&amp;#39; and finally clicking the &amp;#39;Add a payment method&amp;#39; button. Provide your card number, experation date and security code and click the &amp;#39;Add&amp;#39; button.&lt;/p&gt;
+
+&lt;p&gt;Once your payment method shows a &amp;quot;Confirmed&amp;quot; status you are ready to proceed to the next step.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-07-add-payment-method.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
 &lt;h2&gt;4. Creating a public cloud project.&lt;/h2&gt;
 
-&lt;p&gt;The next step you need to do is create a cloud project. To do this I went to order | cloud project.&lt;/p&gt;
+&lt;p&gt;The next step you need to do is create a cloud project. To do this I went to order dropdown and clicked &amp;#39;Cloud project&amp;#39;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-08-create-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Next name the project and click &amp;#39;launch your cloud project&amp;#39;.&lt;/p&gt;
+&lt;p&gt;Name your project and click &amp;#39;launch your cloud project&amp;#39;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-09-create-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;On the next screen you will be purchasing credits that you instances will consume.&lt;/p&gt;
+&lt;p&gt;On the next screen you will be purchasing credits that your running instances will consume.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-10-create-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -80,6 +84,19 @@
 &lt;h2&gt;5. Creating a new ssh key for OVH public cloud to use.&lt;/h2&gt;
 
 &lt;p&gt;You will need to generate a ssh key to connect to the OVH openstack instances. On my mac laptop I ran the following command to generate a new ssh key for this purpose.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ssh-keygen -b 4096 -t rsa -C &amp;quot;stan.dorsett+ovhus_public_cloud@gmail.com&amp;quot; -f ~/.ssh/id_rsa-ovhus_public_cloud&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;-b&lt;/code&gt; option will specify the number of bits in the ssh key.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;-t&lt;/code&gt; option with specify the type of ssh key generated.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;-C&lt;/code&gt; option will add a comment to the end of the public key file.&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;-f&lt;/code&gt; option will specify the file that the private key will be saved to. &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When running the command you will also get asked you if you want to add a passphrase that will need to be provided when you use the ssh key. I didn&amp;#39;t choose to set a passphrase, but you can choose to if you feel the need.&lt;/p&gt;
+
+&lt;p&gt;Here is the output from my running of this command.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ ssh-keygen -b 4096 -t rsa -C &amp;quot;stan.dorsett+ovhus_public_cloud@gmail.com&amp;quot; -f ~/.ssh/id_rsa-ovhus_public_cloud
 Generating public/private rsa key pair.
@@ -141,11 +158,11 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-17-pick-an-os-image.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Select the server type (flavor) of the instance you want to create. The server type will specify the number of vcpu, memory and disk size of the openstack instance that will be created:&lt;/p&gt;
+&lt;p&gt;Select the server type (flavor) of the instance you want to create. The server type will specify the number of vcpu, memory, disk size and price per hour of the openstack instance that will be created:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-18-select-instance-type.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Select the ssh key you created in the previous step. The price per hour that will be deducted from you purchased credits while instance is created is displayed. Click the &amp;#39;Launch now&amp;#39; button to create the instance.&lt;/p&gt;
+&lt;p&gt;Select the ssh key you created in the previous step. Click the &amp;#39;Launch now&amp;#39; button to create the instance.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-19-launch-instance.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -155,14 +172,26 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2&gt;8. SSH to the new openstack instance,&lt;/h2&gt;
 
-&lt;p&gt;You can now use the login infomation provided in the last step with the private ssh key to connect to your new instance. I used the following commands to ssh from my Mac laptop and then output the IP address of the Centos 7 instance I created.&lt;/p&gt;
+&lt;p&gt;You can now use the login infomation provided in the last step along with the private ssh key you generated to connect to your new instance. I used the following commands to ssh from my Mac laptop to connect.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;-i&lt;/code&gt; option is used to specify the ssh private key you generated earlier.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here is the output from my running of this command.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67
 The authenticity of host &amp;#39;147.135.76.67 (147.135.76.67)&amp;#39; can&amp;#39;t be established.
 ECDSA key fingerprint is SHA256:aVSsv0mHKgIizglcvouJkvtBBOiZfNcQTpIc5oxhNO4.
 Are you sure you want to continue connecting (yes/no)? yes
 Warning: Permanently added &amp;#39;147.135.76.67&amp;#39; (ECDSA) to the list of known hosts.
-[centos@server-1 ~]$ ip a
+[centos@server-1 ~]$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;You can now run what commands you would like on your new openstack instance, like checking the IP address of the instance you created.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;[centos@server-1 ~]$ ip a
 1: lo: &amp;lt;LOOPBACK,UP,LOWER_UP&amp;gt; mtu 65536 qdisc noqueue state UNKNOWN qlen 1
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
@@ -175,12 +204,11 @@ Warning: Permanently added &amp;#39;147.135.76.67&amp;#39; (ECDSA) to the list o
        valid_lft 86350sec preferred_lft 86350sec
     inet6 fe80::f816:3eff:fe42:97c4/64 scope link
        valid_lft forever preferred_lft forever
-[centos@server-1 ~]$ exit
-MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+[centos@server-1 ~]$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2&gt;9. Destroy the openstack instance.&lt;/h2&gt;
 
-&lt;p&gt;Once you are finished with the openstack instance, you should delete the instance in order to stop being charged for it&amp;#39;s usage. Click the drop down on the instance and select &amp;#39;delete&amp;#39; to delete the instance.&lt;/p&gt;
+&lt;p&gt;Once you are finished with your openstack instance, you should delete the instance in order to stop being charged for it&amp;#39;s usage. Click the drop down on the instance and select &amp;#39;delete&amp;#39; to delete the instance.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-21-instance-options.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
