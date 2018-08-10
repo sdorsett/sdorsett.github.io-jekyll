@@ -70,6 +70,18 @@
         
       
     
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -163,34 +175,34 @@
 
 <p>You will need to generate a ssh key to connect to the OVH openstack instances. On my mac laptop I ran the following command to generate a new ssh key for this purpose.</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>MacBook-Pro:~ standorsett$ ssh-keygen -b <span class="m">4096</span> -t rsa -C <span class="s2">&quot;stan.dorsett+ovhus_public_cloud@gmail.com&quot;</span> -f ~/.ssh/id_rsa-ovhus_public_cloud
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ ssh-keygen -b 4096 -t rsa -C &quot;stan.dorsett+ovhus_public_cloud@gmail.com&quot; -f ~/.ssh/id_rsa-ovhus_public_cloud
 Generating public/private rsa key pair.
-Enter passphrase <span class="o">(</span>empty <span class="k">for</span> no passphrase<span class="o">)</span>:
+Enter passphrase (empty for no passphrase):
 Enter same passphrase again:
 Your identification has been saved in /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.
 Your public key has been saved in /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.pub.
 The key fingerprint is:
 SHA256:7kSErA6S8zCIq0H/2hmcxE4+JUsW6ZmoDPIE/ULM8I4 stan.dorsett+ovhus_public_cloud@gmail.com
-The key<span class="err">&#39;</span>s randomart image is:
-+---<span class="o">[</span>RSA <span class="m">4096</span><span class="o">]</span>----+
-<span class="p">|</span>.                <span class="p">|</span>
-<span class="p">|</span> *   ...         <span class="p">|</span>
-<span class="p">|</span>. *  oo .        <span class="p">|</span>
-<span class="p">|</span>o* .+.+.         <span class="p">|</span>
-<span class="p">|</span>E.<span class="o">=</span>.o@ .S        <span class="p">|</span>
-<span class="p">|</span><span class="o">=</span>Xo+O <span class="o">=</span>o         <span class="p">|</span>
-<span class="p">|</span>ooo..O  o        <span class="p">|</span>
-<span class="p">|</span>..  o +o         <span class="p">|</span>
-<span class="p">|</span>.  ..+  .        <span class="p">|</span>
-+----<span class="o">[</span>SHA256<span class="o">]</span>-----+
+The key&#39;s randomart image is:
++---[RSA 4096]----+
+|.                |
+| *   ...         |
+|. *  oo .        |
+|o* .+.+.         |
+|E.=.o@ .S        |
+|=Xo+O =o         |
+|ooo..O  o        |
+|..  o +o         |
+|.  ..+  .        |
++----[SHA256]-----+
 MacBook-Pro:~ standorsett$</code></pre></figure>
 
 <p>Output the public key so you can use it in the next step.</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>MacBook-Pro:~ standorsett$ cat /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.pub
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ cat /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.pub
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDJ8LcFN8MRO/uwgVcdDg0grv
 ...lots of more characters here...
-<span class="nv">l0nXM7jjnjD9L3UMFw</span><span class="o">==</span> stan.dorsett+ovhus_public_cloud@gmail.com
+l0nXM7jjnjD9L3UMFw== stan.dorsett+ovhus_public_cloud@gmail.com
 MacBook-Pro:~ standorsett$</code></pre></figure>
 
 <h2>6. Add the ssh pub key to the OVH public cloud.</h2>
@@ -239,25 +251,25 @@ MacBook-Pro:~ standorsett$</code></pre></figure>
 
 <p>You can now use the login infomation provided in the last step with the private ssh key to connect to your new instance. I used the following commands to ssh from my Mac laptop and then output the IP address of the Centos 7 instance I created.</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>MacBook-Pro:~ standorsett$ ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67
-The authenticity of host <span class="s1">&#39;147.135.76.67 (147.135.76.67)&#39;</span> can<span class="s1">&#39;t be established.</span>
-<span class="s1">ECDSA key fingerprint is SHA256:aVSsv0mHKgIizglcvouJkvtBBOiZfNcQTpIc5oxhNO4.</span>
-<span class="s1">Are you sure you want to continue connecting (yes/no)? yes</span>
-<span class="s1">Warning: Permanently added &#39;</span><span class="m">147</span>.135.76.67<span class="err">&#39;</span> <span class="o">(</span>ECDSA<span class="o">)</span> to the list of known hosts.
-<span class="o">[</span>centos@server-1 ~<span class="o">]</span>$ ip a
-<span class="m">1</span>: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu <span class="m">65536</span> qdisc noqueue state UNKNOWN qlen <span class="m">1</span>
-    link/loopback <span class="m">00</span>:00:00:00:00:00 brd <span class="m">00</span>:00:00:00:00:00
-    inet <span class="m">127</span>.0.0.1/8 scope host lo
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67
+The authenticity of host &#39;147.135.76.67 (147.135.76.67)&#39; can&#39;t be established.
+ECDSA key fingerprint is SHA256:aVSsv0mHKgIizglcvouJkvtBBOiZfNcQTpIc5oxhNO4.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;147.135.76.67&#39; (ECDSA) to the list of known hosts.
+[centos@server-1 ~]$ ip a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
     inet6 ::1/128 scope host
        valid_lft forever preferred_lft forever
-<span class="m">2</span>: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class="m">1500</span> qdisc pfifo_fast state UP qlen <span class="m">1000</span>
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP qlen 1000
     link/ether fa:16:3e:42:97:c4 brd ff:ff:ff:ff:ff:ff
-    inet <span class="m">147</span>.135.76.67/32 brd <span class="m">147</span>.135.76.67 scope global dynamic eth0
+    inet 147.135.76.67/32 brd 147.135.76.67 scope global dynamic eth0
        valid_lft 86350sec preferred_lft 86350sec
     inet6 fe80::f816:3eff:fe42:97c4/64 scope link
        valid_lft forever preferred_lft forever
-<span class="o">[</span>centos@server-1 ~<span class="o">]</span>$ <span class="nb">exit</span>
+[centos@server-1 ~]$ exit
 MacBook-Pro:~ standorsett$</code></pre></figure>
 
 <h2>9. Destroy the openstack instance.</h2>

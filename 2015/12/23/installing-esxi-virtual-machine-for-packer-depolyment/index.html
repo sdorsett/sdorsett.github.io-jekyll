@@ -70,6 +70,18 @@
         
       
     
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -228,40 +240,40 @@
 
 <h2>8. SCP the downloaded .vib to the ESXi virtual machine</h2>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
-The authenticity of host <span class="s1">&#39;192.168.1.51 (192.168.1.51)&#39;</span> cant be established.
-RSA key fingerprint is <span class="m">82</span>:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
-Are you sure you want to <span class="k">continue</span> connecting <span class="o">(</span>yes/no<span class="o">)</span>? yes
-Warning: Permanently added <span class="s1">&#39;192.168.1.51&#39;</span> <span class="o">(</span>RSA<span class="o">)</span> to the list of known hosts.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+The authenticity of host &#39;192.168.1.51 (192.168.1.51)&#39; cant be established.
+RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;192.168.1.51&#39; (RSA) to the list of known hosts.
 Password: ********
-esxui_signed.vib                                                                                                                                <span class="m">100</span>% 2805KB   <span class="m">2</span>.7MB/s   <span class="m">00</span>:00
+esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
 sdorsett-mbp:~ sdorsett$</code></pre></figure>
 
 <h2>9. SSH to the ESXi virtual machine and install the embedded host client .vib</h2>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.51
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.51
 Password: ********
-The <span class="nb">time</span> and date of this login have been sent to the system logs.
+The time and date of this login have been sent to the system logs.
 
 VMware offers supported, powerful system administration tools.  Please
-see www.vmware.com/go/sysadmintools <span class="k">for</span> details.
+see www.vmware.com/go/sysadmintools for details.
 
 The ESXi Shell can be disabled by an administrative user. See the
-vSphere Security documentation <span class="k">for</span> more information.
+vSphere Security documentation for more information.
 
-<span class="o">[</span>root@packer-esxi:~<span class="o">]</span> <span class="nb">cd</span> tmp
-<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> ls
+[root@packer-esxi:~] cd tmp
+[root@packer-esxi:/tmp] ls
 esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
 
-<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli software vib install -v /tmp/esxui_signed.vib
+[root@packer-esxi:/tmp] esxcli software vib install -v /tmp/esxui_signed.vib
 Installation Result
    Message: Operation finished successfully.
-   Reboot Required: <span class="nb">false</span>
+   Reboot Required: false
    VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
    VIBs Removed:
    VIBs Skipped:
 
-<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span></code></pre></figure>
+[root@packer-esxi:/tmp]</code></pre></figure>
 
 <h2>10. Enable guest ip hack on the ESXi virtual machine</h2>
 
@@ -269,9 +281,9 @@ Installation Result
 
 <p><img src="/assets/28-enable-guest-ip-hack.jpg" alt="screenshot">  </p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> esxcli system settings advanced <span class="nb">set</span> -o /Net/GuestIPHack -i <span class="m">1</span>
-<span class="o">[</span>root@packer-esxi:/tmp<span class="o">]</span> <span class="nb">exit</span>
-Connection to <span class="m">192</span>.168.1.51 closed.
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-esxi:/tmp] esxcli system settings advanced set -o /Net/GuestIPHack -i 1
+[root@packer-esxi:/tmp] exit
+Connection to 192.168.1.51 closed.
 sdorsett-mbp:~ sdorsett$</code></pre></figure>
 
 <h2>11. Log into the embedded host client to validate that it it working properly</h2>

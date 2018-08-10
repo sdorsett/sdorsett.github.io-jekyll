@@ -70,6 +70,18 @@
         
       
     
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -137,22 +149,22 @@
 
 <h3>2. Modify the Vagrantfile we created in the initial &quot;<a href="http://sdorsett.github.io/2014/04/19/vagrant-install/">Installing Vagrant and the vagrant-vsphere plugin on CentOS 6.x</a>&quot; post.</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># cat Vagrantfile</span>
-Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
-  config.vm.box <span class="o">=</span> <span class="s1">&#39;dummy&#39;</span>
-  config.vm.box_url <span class="o">=</span> <span class="s1">&#39;./example_box/dummy.box&#39;</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat Vagrantfile
+Vagrant.configure(&quot;2&quot;) do |config|
+  config.vm.box = &#39;dummy&#39;
+  config.vm.box_url = &#39;./example_box/dummy.box&#39;
 
-  config.vm.provider :vsphere <span class="k">do</span> <span class="p">|</span>vsphere<span class="p">|</span>
-    vsphere.host <span class="o">=</span> <span class="s1">&#39;192.168.1.195&#39;</span>
-    vsphere.name <span class="o">=</span> <span class="s1">&#39;vagrant-test&#39;</span>
-    vsphere.clone_from_vm <span class="o">=</span> <span class="nb">true</span>
-    vsphere.template_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos-6.5&#39;</span>
-    vsphere.user <span class="o">=</span> <span class="s1">&#39;root@localos&#39;</span>
-    vsphere.password <span class="o">=</span> <span class="s1">&#39;S0meR@nd0mP@ssw0rd&#39;</span>
-    vsphere.insecure <span class="o">=</span> <span class="nb">true</span>
-    vsphere.data_store_name <span class="o">=</span> <span class="s1">&#39;vsanDatastore&#39;</span>
-    vsphere.linked_clone <span class="o">=</span> <span class="nb">true</span>
-    vsphere.customization_spec_name <span class="o">=</span> <span class="s1">&#39;vagrant-centos&#39;</span>
+  config.vm.provider :vsphere do |vsphere|
+    vsphere.host = &#39;192.168.1.195&#39;
+    vsphere.name = &#39;vagrant-test&#39;
+    vsphere.clone_from_vm = true
+    vsphere.template_name = &#39;vagrant-centos-6.5&#39;
+    vsphere.user = &#39;root@localos&#39;
+    vsphere.password = &#39;S0meR@nd0mP@ssw0rd&#39;
+    vsphere.insecure = true
+    vsphere.data_store_name = &#39;vsanDatastore&#39;
+    vsphere.linked_clone = true
+    vsphere.customization_spec_name = &#39;vagrant-centos&#39;
   end
 end</code></pre></figure>
 
@@ -166,34 +178,34 @@ end</code></pre></figure>
 
 <h3>3. Test the configuration changes we made by running a &quot;vagrant up&quot;:</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant up --provider=vsphere</span>
-Bringing machine <span class="s1">&#39;default&#39;</span> up with <span class="s1">&#39;vsphere&#39;</span> provider...
-<span class="o">==</span>&gt; default: Calling vSphere CloneVM with the following settings:
-<span class="o">==</span>&gt; default:  -- Source VM: vagrant-centos-6.5
-<span class="o">==</span>&gt; default:  -- Name: vagrant-test
-<span class="o">==</span>&gt; default: Waiting <span class="k">for</span> SSH to become available...
-<span class="o">==</span>&gt; default: New virtual machine successfully cloned and <span class="nv">started</span>
-<span class="o">==</span>&gt; default: Rsyncing folder: /root/vagrant-vms/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># </span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant up --provider=vsphere
+Bringing machine &#39;default&#39; up with &#39;vsphere&#39; provider...
+==&gt; default: Calling vSphere CloneVM with the following settings:
+==&gt; default:  -- Source VM: vagrant-centos-6.5
+==&gt; default:  -- Name: vagrant-test
+==&gt; default: Waiting for SSH to become available...
+==&gt; default: New virtual machine successfully cloned and started
+==&gt; default: Rsyncing folder: /root/vagrant-vms/ =&gt; /vagrant
+[root@vagrant vagrant-vms]#</code></pre></figure>
 
 <p>You should find the time it took to deploy the linked clone vm was much faster than previous full clones of the vagrant template vm.</p>
 
 <h3>4. Connect to the vagrant vm to validate the hostname of the vm matched the vm name &amp; search domain:</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant ssh</span>
-<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span>$ hostname -f
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant ssh
+[vagrant@vagrant-test ~]$ hostname -f
 vagrant-test.mylab.net
-<span class="o">[</span>vagrant@vagrant-test ~<span class="o">]</span>$ <span class="nb">exit</span>
-<span class="nb">logout</span>
-Connection to <span class="m">192</span>.168.1.117 closed.
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># </span></code></pre></figure>
+[vagrant@vagrant-test ~]$ exit
+logout
+Connection to 192.168.1.117 closed.
+[root@vagrant vagrant-vms]#</code></pre></figure>
 
 <h3>5. Clean up after ourselves and call it a day:</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1"># vagrant destroy</span>
-<span class="o">==</span>&gt; default: Calling vSphere <span class="nv">PowerOff</span>
-<span class="o">==</span>&gt; default: Calling vShpere Destroy
-<span class="o">[</span>root@vagrant vagrant-vms<span class="o">]</span><span class="c1">#</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant destroy
+==&gt; default: Calling vSphere PowerOff
+==&gt; default: Calling vShpere Destroy
+[root@vagrant vagrant-vms]#</code></pre></figure>
 
 <p>You might be wondering why setting the hostname &amp; domain name might be so important. We will see in future posts how to use hostnames to determine which manifests will be applied to specific vms we clone and power up with Vagrant.</p>
 

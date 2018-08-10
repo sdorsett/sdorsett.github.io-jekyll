@@ -70,6 +70,18 @@
         
       
     
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
     <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
     <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
     <span class="sidebar-nav-item">Currently v1.0.0</span>
@@ -133,9 +145,9 @@
 
 <h3>2. Modify /etc/resolv.conf</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cat /etc/resolv.conf</span>
-nameserver <span class="m">8</span>.8.8.8 
-nameserver <span class="m">8</span>.8.4.4</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# cat /etc/resolv.conf
+nameserver 8.8.8.8 
+nameserver 8.8.4.4</code></pre></figure>
 
 <p>At this point you should have network connectivity to your new vagrant vapp. While I won&#39;t cover it in the post, you can now either setup a DNAT rule to forward SSH to the vagrant vapp or continue the configuration using the vapp console.</p>
 
@@ -143,23 +155,23 @@ nameserver <span class="m">8</span>.8.4.4</code></pre></figure>
 
 <h4>A. Use yum to install the packages we&#39;ll need to get ruby, rubygems and vagrant installed:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git</code></pre></figure>
 
 <h4>B. Pull down the latest version of ruby-build using git:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># git clone https://github.com/sstephenson/ruby-build.git</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# git clone https://github.com/sstephenson/ruby-build.git</code></pre></figure>
 
 <h4>C. Change to the directory the previous command created:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd ruby-build/</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# cd ruby-build/</code></pre></figure>
 
 <h4>D. Run the &#39;install.sh&#39; script to install ruby-build:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># ./install.sh</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# ./install.sh</code></pre></figure>
 
 <h4>E. I would recommend installing Ruby version 1.9.3-p545 with the following command:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# ruby-build --definitionsruby-build 1.9.3-p545 /usr/local/
 Downloading yaml-0.1.6.tar.gz...
 -&gt; http://dqw8nmjcqpjn7.cloudfront.net/5fe00cda18ca5daeb43762b80c38e06e
 Installing yaml-0.1.6...
@@ -175,75 +187,75 @@ Installed ruby-1.9.3-p545 to /usr/local/</code></pre></figure>
 
 <h4>A. Use wget to download the latest version listed on the rubygems download page:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ruby-build<span class="o">]</span><span class="c1"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# cd ~/
+[root@vagrant ~]# wget http://production.cf.rubygems.org/rubygems/rubygems-2.2.2.tgz</code></pre></figure>
 
 <h4>B. Use tar to unzip the tar-gzipped file we downloaded:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># tar xvzf rubygems-2.2.2.tgz</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd rubygems-2.2.2</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# tar xvzf rubygems-2.2.2.tgz
+[root@vagrant ~]# cd rubygems-2.2.2</code></pre></figure>
 
 <h4>C. Install rubygems by running the &#39;setup.rb&#39; script:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c1"># ruby setup.rb</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant rubygems-2.2.2]# ruby setup.rb</code></pre></figure>
 
 <h3>5. Install Vagrant</h3>
 
 <h4>A. Use wget to download the latest version listed on the <a href="https://www.vagrantup.com/downloads.html">Vagrant download</a> page:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant rubygems-2.2.2<span class="o">]</span><span class="c1"># cd ~/</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant rubygems-2.2.2]# cd ~/
+[root@vagrant ~]# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.2_x86_64.rpm</code></pre></figure>
 
 <h4>B. Use the &#39;rpm&#39; command to install the RPM package we downloaded in the previous step:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># rpm -i vagrant_1.6.2_x86_64.rpm</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# rpm -i vagrant_1.6.2_x86_64.rpm</code></pre></figure>
 
 <h4>C. Export the directory that the vagrant executable was install to, in order to make it easier to run:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># export PATH=$PATH:/opt/vagrant/bin/</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# export PATH=$PATH:/opt/vagrant/bin/</code></pre></figure>
 
 <h3>6. Installing the vagrant-vcloud plugin</h3>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant blog<span class="o">]</span><span class="c1"># vagrant plugin install vagrant-vcloud</span>
-Installing the <span class="s1">&#39;vagrant-vcloud&#39;</span> plugin. This can take a few minutes...
-Installed the plugin <span class="s1">&#39;vagrant-vcloud (0.3.3)&#39;</span>!</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant blog]# vagrant plugin install vagrant-vcloud
+Installing the &#39;vagrant-vcloud&#39; plugin. This can take a few minutes...
+Installed the plugin &#39;vagrant-vcloud (0.3.3)&#39;!</code></pre></figure>
 
 <h3>7. Creating a Vagrantfile for testing vagrant-vcloud install</h3>
 
 <h4>A.  We need to create a directory structure and Vagrantfile to test that the vagrant-vcloud provider is properly working. For the .box file we will use a sample precise32 (Ubuntu 12.04 32bit) vagrant .box file created for the vcloud provider by <a href="http://blog.tsugliani.fr/">Timo Sugliani</a>:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># mkdir -p ~/vagrant-vms/precise32-test</span>
-<span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cat ~/vagrant-vms/precise32-test/Vagrantfile </span>
-<span class="nv">precise32_vm_box_url</span> <span class="o">=</span> <span class="s2">&quot;http://vagrant.tsugliani.fr/precise32.box&quot;</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# mkdir -p ~/vagrant-vms/precise32-test
+[root@vagrant ~]# cat ~/vagrant-vms/precise32-test/Vagrantfile 
+precise32_vm_box_url = &quot;http://vagrant.tsugliani.fr/precise32.box&quot;
 
-<span class="nv">nodes</span> <span class="o">=</span> <span class="o">[</span>
-  <span class="o">{</span> :hostname <span class="o">=</span>&gt; <span class="s2">&quot;test-vm&quot;</span>,  
-    :box <span class="o">=</span>&gt; <span class="s2">&quot;precise32&quot;</span>, 
-    :box_url <span class="o">=</span>&gt; precise32_vm_box_url <span class="o">}</span>
-<span class="o">]</span>
+nodes = [
+  { :hostname =&gt; &quot;test-vm&quot;,  
+    :box =&gt; &quot;precise32&quot;, 
+    :box_url =&gt; precise32_vm_box_url }
+]
 
-Vagrant.configure<span class="o">(</span><span class="s2">&quot;2&quot;</span><span class="o">)</span> <span class="k">do</span> <span class="p">|</span>config<span class="p">|</span>
+Vagrant.configure(&quot;2&quot;) do |config|
 
-  <span class="c1"># vCloud Director provider settings</span>
-  config.vm.provider :vcloud <span class="k">do</span> <span class="p">|</span>vcloud<span class="p">|</span>
+  # vCloud Director provider settings
+  config.vm.provider :vcloud do |vcloud|
 
-    vcloud.hostname <span class="o">=</span> <span class="s1">&#39;https://[Your_vCD_URL]:443&#39;</span>
-    vcloud.username <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_username@somedomain.com]&#39;</span>
-    vcloud.password <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_password]&#39;</span>
+    vcloud.hostname = &#39;https://[Your_vCD_URL]:443&#39;
+    vcloud.username = &#39;[Your_vCHS_username@somedomain.com]&#39;
+    vcloud.password = &#39;[Your_vCHS_password]&#39;
 
-    vcloud.org_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_name]&#39;</span>
-    vcloud.vdc_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]&#39;</span>
-    vcloud.catalog_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_org_catalog]&#39;</span>
-    vcloud.network_bridge <span class="o">=</span> <span class="nb">true</span>
-    vcloud.vdc_network_name <span class="o">=</span> <span class="s1">&#39;[Your_vCHS_vdc_name]-default-routed&#39;</span>
+    vcloud.org_name = &#39;[Your_vCHS_org_name]&#39;
+    vcloud.vdc_name = &#39;[Your_vCHS_vdc_name]&#39;
+    vcloud.catalog_name = &#39;[Your_vCHS_org_catalog]&#39;
+    vcloud.network_bridge = true
+    vcloud.vdc_network_name = &#39;[Your_vCHS_vdc_name]-default-routed&#39;
 
   end
 
-  nodes.each <span class="k">do</span> <span class="p">|</span>node<span class="p">|</span>
-    config.vm.define node<span class="o">[</span>:hostname<span class="o">]</span> <span class="k">do</span> <span class="p">|</span>node_config<span class="p">|</span>
-      node_config.vm.box <span class="o">=</span> node<span class="o">[</span>:box<span class="o">]</span>
-      node_config.vm.hostname <span class="o">=</span> node<span class="o">[</span>:hostname<span class="o">]</span>
-      node_config.vm.box_url <span class="o">=</span> node<span class="o">[</span>:box_url<span class="o">]</span>
+  nodes.each do |node|
+    config.vm.define node[:hostname] do |node_config|
+      node_config.vm.box = node[:box]
+      node_config.vm.hostname = node[:hostname]
+      node_config.vm.box_url = node[:box_url]
     end
   end
 end</code></pre></figure>
@@ -262,22 +274,22 @@ end</code></pre></figure>
 
 <h4>B.  Now we can change directory to that directory and test everything with a &quot;vagrant up --provider=vcloud&quot;:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant ~<span class="o">]</span><span class="c1"># cd ~/vagrant-vms/precise32-test</span>
-oot@vagrant precise32-test<span class="o">]</span><span class="c1"># vagrant up --provider=vcloud</span>
-Bringing machine <span class="s1">&#39;test-vm&#39;</span> up with <span class="s1">&#39;vcloud&#39;</span> provider...
-<span class="o">==</span>&gt; test-vm: Box <span class="s1">&#39;precise32&#39;</span> could not be found. Attempting to find and install...
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# cd ~/vagrant-vms/precise32-test
+oot@vagrant precise32-test]# vagrant up --provider=vcloud
+Bringing machine &#39;test-vm&#39; up with &#39;vcloud&#39; provider...
+==&gt; test-vm: Box &#39;precise32&#39; could not be found. Attempting to find and install...
     test-vm: Box Provider: vcloud
-    test-vm: Box Version: &gt;<span class="o">=</span> <span class="nv">0</span>
-<span class="o">==</span>&gt; test-vm: Adding box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> provider: vcloud
+    test-vm: Box Version: &gt;= 0
+==&gt; test-vm: Adding box &#39;precise32&#39; (v0) for provider: vcloud
     test-vm: Downloading: http://vagrant.tsugliani.fr/precise32.box
-<span class="o">==</span>&gt; test-vm: Successfully added box <span class="s1">&#39;precise32&#39;</span> <span class="o">(</span>v0<span class="o">)</span> <span class="k">for</span> <span class="s1">&#39;vcloud&#39;</span>!
-<span class="o">==</span>&gt; test-vm: Catalog item <span class="o">[</span>precise32<span class="o">]</span> in Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span> does not exist!
-    test-vm: Would you like to upload the <span class="o">[</span>precise32<span class="o">]</span> box to <span class="o">[</span>Org Private Catalog<span class="o">]</span> Catalog?
-    test-vm: Choice <span class="o">(</span>yes/no<span class="o">)</span>: <span class="nv">yes</span>
-<span class="o">==</span>&gt; test-vm: Uploading <span class="o">[</span>precise32<span class="o">]</span>...
+==&gt; test-vm: Successfully added box &#39;precise32&#39; (v0) for &#39;vcloud&#39;!
+==&gt; test-vm: Catalog item [precise32] in Catalog [Org Private Catalog] does not exist!
+    test-vm: Would you like to upload the [precise32] box to [Org Private Catalog] Catalog?
+    test-vm: Choice (yes/no): yes
+==&gt; test-vm: Uploading [precise32]...
 Uploading Box...
 Uploading Box...
-Uploading Box... Progress: <span class="m">22</span>%  ETA: <span class="m">00</span>:02:16                                          </code></pre></figure>
+Uploading Box... Progress: 22%  ETA: 00:02:16</code></pre></figure>
 
 <p>Once the .box files has started uploading, you can check the progress in the org catalog of your vCloud Director instance:</p>
 
@@ -285,69 +297,69 @@ Uploading Box... Progress: <span class="m">22</span>%  ETA: <span class="m">00</
 
 <h4>C. The uploading progress will get to 100% and you will see the vApp getting created, powered on and SSH access achieved:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>Uploading Box...
-Uploading Box... Progress: <span class="m">100</span>% Time: <span class="m">00</span>:02:32                                                                                                   
-<span class="o">==</span>&gt; test-vm: Adding <span class="o">[</span>precise32<span class="o">]</span> to Catalog <span class="o">[</span>Org Private Catalog<span class="o">]</span>
-<span class="o">==</span>&gt; test-vm: Building vApp...
-<span class="o">==</span>&gt; test-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
-<span class="o">==</span>&gt; test-vm: Powering on VM...
-<span class="o">==</span>&gt; test-vm: Waiting <span class="k">for</span> SSH Access on <span class="m">192</span>.168.109.4:22 ... 
-<span class="o">==</span>&gt; test-vm: Waiting <span class="k">for</span> SSH Access on <span class="m">192</span>.168.109.4:22 ... 
-<span class="o">==</span>&gt; test-vm: Waiting <span class="k">for</span> SSH Access on <span class="m">192</span>.168.109.4:22 ... 
-<span class="o">==</span>&gt; test-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ <span class="o">=</span>&gt; /vagrant
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># root@vagrant precise32-test]#</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">Uploading Box...
+Uploading Box... Progress: 100% Time: 00:02:32                                                                                                   
+==&gt; test-vm: Adding [precise32] to Catalog [Org Private Catalog]
+==&gt; test-vm: Building vApp...
+==&gt; test-vm: vApp Vagrant-root-vagrant-8b9115d1 successfully created.
+==&gt; test-vm: Powering on VM...
+==&gt; test-vm: Waiting for SSH Access on 192.168.109.4:22 ... 
+==&gt; test-vm: Waiting for SSH Access on 192.168.109.4:22 ... 
+==&gt; test-vm: Waiting for SSH Access on 192.168.109.4:22 ... 
+==&gt; test-vm: Rsyncing folder: /root/vagrant-vms/precise32-test/ =&gt; /vagrant
+[root@vagrant precise32-test]# root@vagrant precise32-test]#</code></pre></figure>
 
 <h4>D. Test network connectivity by running &quot;vagrant ssh&quot;:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># vagrant ssh</span>
-<span class="o">==</span>&gt; test-vm: External IP <span class="k">for</span> test-vm: <span class="m">192</span>.168.109.4
-Welcome to Ubuntu <span class="m">12</span>.04 LTS <span class="o">(</span>GNU/Linux <span class="m">3</span>.2.0-23-generic-pae i686<span class="o">)</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test]# vagrant ssh
+==&gt; test-vm: External IP for test-vm: 192.168.109.4
+Welcome to Ubuntu 12.04 LTS (GNU/Linux 3.2.0-23-generic-pae i686)
 
  * Documentation:  https://help.ubuntu.com/
 Welcome to your Vagrant-built virtual machine.
-Last login: Thu Jul <span class="m">18</span> <span class="m">11</span>:20:25 <span class="m">2013</span>
+Last login: Thu Jul 18 11:20:25 2013
 vagrant@test-vm:~$ hostname -f
 test-vm</code></pre></figure>
 
 <h4>E. Run &quot;vagrant vcloud --status&quot; to validate the vCloud Director status of your vagrant vapp:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># vagrant vcloud --status</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant precise32-test]# vagrant vcloud --status
 Initializing vCloud Director provider...
 Fetching vCloud Director status...
 +-------------------------------+-----------------------------------------+
-<span class="p">|</span>  Vagrant vCloud Director Status : https://<span class="o">[</span>Your_vCD_URL<span class="o">]</span>:443            <span class="p">|</span>
+|  Vagrant vCloud Director Status : https://[Your_vCD_URL]:443            |
 +-------------------------------+-----------------------------------------+
-<span class="p">|</span> Organization Name             <span class="p">|</span> <span class="o">[</span>Your_vCHS_org_name<span class="o">]</span>                    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Name         <span class="p">|</span> vCHS-vagrant-demo                       <span class="p">|</span>
-<span class="p">|</span> Organization vDC ID           <span class="p">|</span> b9494d6a-ebda-4368-8f76-0e93b7edcb17    <span class="p">|</span>
-<span class="p">|</span> Organization vDC Network Name <span class="p">|</span> <span class="o">[</span>Your_vCHS_vdc_name<span class="o">]</span>-default-routed     <span class="p">|</span>
+| Organization Name             | [Your_vCHS_org_name]                    |
+| Organization vDC Name         | vCHS-vagrant-demo                       |
+| Organization vDC ID           | b9494d6a-ebda-4368-8f76-0e93b7edcb17    |
+| Organization vDC Network Name | [Your_vCHS_vdc_name]-default-routed     |
 +-------------------------------+-----------------------------------------+
-<span class="p">|</span> vApp Name                     <span class="p">|</span> Vagrant-root-vagrant-8b9115d1           <span class="p">|</span>
-<span class="p">|</span> vAppID                        <span class="p">|</span> ec918e84-6026-42b2-8639-5390d8c88b0c    <span class="p">|</span>
-<span class="p">|</span> -&gt; test-vm                    <span class="p">|</span> 4fc82b9b-c79d-483b-9a71-a87d22289102    <span class="p">|</span>
+| vApp Name                     | Vagrant-root-vagrant-8b9115d1           |
+| vAppID                        | ec918e84-6026-42b2-8639-5390d8c88b0c    |
+| -&gt; test-vm                    | 4fc82b9b-c79d-483b-9a71-a87d22289102    |
 +-------------------------------+-----------------------------------------+</code></pre></figure>
 
 <h4>F. Run &quot;vagrant vcloud --network&quot; to validate the vCloud Director network mapping of your vagrant vapp:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># vagrant vcloud --network</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant precise32-test]# vagrant vcloud --network
 Initializing vCloud Director provider...
 Fetching vCloud Director network settings ...
 +---------+---------------+------------+
-<span class="p">|</span>             Network Map              <span class="p">|</span>
+|             Network Map              |
 +---------+---------------+------------+
-<span class="p">|</span> VM Name <span class="p">|</span> IP Address    <span class="p">|</span> Connection <span class="p">|</span>
+| VM Name | IP Address    | Connection |
 +---------+---------------+------------+
-<span class="p">|</span> test-vm <span class="p">|</span> <span class="m">192</span>.168.109.4 <span class="p">|</span> Direct     <span class="p">|</span>
+| test-vm | 192.168.109.4 | Direct     |
 +---------+---------------+------------+</code></pre></figure>
 
 <h4>g. Destroy the cloned vm by running &quot;vagrant destroy&quot; command:</h4>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span></span><span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># vagrant destroy</span>
-    test-vm: Are you sure you want to destroy the <span class="s1">&#39;test-vm&#39;</span> VM? <span class="o">[</span>y/N<span class="o">]</span> <span class="nv">y</span>
-<span class="o">==</span>&gt; test-vm: Powering off VM...
-<span class="o">==</span>&gt; test-vm: Single VM left in the vApp, Powering off vApp...
-<span class="o">==</span>&gt; test-vm: Destroying vApp...
-<span class="o">[</span>root@vagrant precise32-test<span class="o">]</span><span class="c1"># </span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant precise32-test]# vagrant destroy
+    test-vm: Are you sure you want to destroy the &#39;test-vm&#39; VM? [y/N] y
+==&gt; test-vm: Powering off VM...
+==&gt; test-vm: Single VM left in the vApp, Powering off vApp...
+==&gt; test-vm: Destroying vApp...
+[root@vagrant precise32-test]#</code></pre></figure>
 
 <p>You should see &quot;Power Off vapp&quot; and &quot;Delete vapp&quot; tasks being run and then completing on your organizations vapps.</p>
 
