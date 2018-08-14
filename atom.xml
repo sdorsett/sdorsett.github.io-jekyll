@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://0.0.0.0:4000/atom.xml" rel="self"/>
  <link href="http://0.0.0.0:4000/"/>
- <updated>2018-08-14T03:54:30+00:00</updated>
+ <updated>2018-08-14T13:29:18+00:00</updated>
  <id>http://0.0.0.0:4000</id>
  <author>
    <name>Stan Dorsett</name>
@@ -39,15 +39,15 @@
 
 &lt;p&gt;The Openstack API will not use the credentials you used to log into the ovhcloud.com site, but will instead use an Openstack user to create, modify or view objects in an OVH cloud project.&lt;/p&gt;
 
-&lt;p&gt;In order to use the Openstack API you will need to create an Openstack user account within the cloud project you want to work with. You can display all the Openstack user accounts then have been created in a cloud project by clicking the &amp;#39;Openstack&amp;#39; tab within any cloud project. &lt;/p&gt;
+&lt;p&gt;If have not created one already, you will need to create an Openstack user account within the cloud project you want to work with. You can display all the Openstack user accounts that have been created in a cloud project by clicking the &amp;#39;Openstack&amp;#39; tab within any cloud project. &lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-03-openstack-users.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Create a new user click the &amp;quot;Add user&amp;quot; button.&lt;/p&gt;
+&lt;p&gt;Create a new user by clicking the &amp;quot;Add user&amp;quot; button.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-04-openstack-add-user.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Once you have specified the username and clicked &amp;quot;Confirm&amp;quot; you will be taken back to the Openstack tab and see the user you just created. You will also be able to see the password for a short period of time. Make sure you record this password safely since it will not be visible perminantly. &lt;/p&gt;
+&lt;p&gt;Once you have specified the username and clicked &amp;quot;Confirm&amp;quot; you will be taken back to the Openstack tab. You will see the user you created and will also be able to see the password generated for this user for a short period of time. Make sure you record this password to a safe place since it will not be visible for very long. &lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-05-openstack-users-password-shown.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -57,7 +57,7 @@
 
 &lt;h2&gt;3. Download an Openstack configuration file.&lt;/h2&gt;
 
-&lt;p&gt;Now that you have an Openstack user created you can download an openrc.sh file that will contain all the details needed to connect as this user. Click the &amp;#39;...&amp;#39; icon and the end of the line for the user you want to use and select &amp;#39;Downloading an Openstack configuration file&amp;#39;.&lt;/p&gt;
+&lt;p&gt;Now that you have an Openstack user created you can download an openrc.sh file that will contain all the details need by the Openstack cli to connect as this user. Click the &amp;#39;...&amp;#39; icon and the end of the line for the user you want to download a configuration file for and select &amp;#39;Downloading an Openstack configuration file&amp;#39;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-06-download-openrc.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -65,7 +65,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-07-download-openrc-region.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;If you look at the downloaded file you will see that it sets environment variables containing the details needed to connect to your Openstack cloud project.&lt;/p&gt;
+&lt;p&gt;If you look at the downloaded file you will see that it sets environment variables containing the Openstack details needed to connect to your cloud project.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:Desktop standorsett$ cat ~/Downloads/openrc.sh
 #!/bin/bash
@@ -99,7 +99,7 @@ export OS_PASSWORD=$OS_PASSWORD_INPUT
 # If your configuration has multiple regions, we set that information here.
 # OS_REGION_NAME is optional and only valid in certain environments.
 export OS_REGION_NAME=&amp;quot;US-EAST-VA-1&amp;quot;
-# Don&amp;#39;t leave a blank variable, unset it if it was empty
+# Do not leave a blank variable, unset it if it was empty
 if [ -z &amp;quot;$OS_REGION_NAME&amp;quot; ]; then unset OS_REGION_NAME; fi
 MacBook-Pro:Desktop standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
@@ -107,13 +107,13 @@ MacBook-Pro:Desktop standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2&gt;4. Log into the Openstack Horizon UI.&lt;/h2&gt;
 
-&lt;p&gt;Just like you needed to create an Openstack user for interacting with the Openstack API, you will need to create a ssh keypair for connecting to Openstack servers. This can be done within the Openstack Horizon UI. &lt;/p&gt;
+&lt;p&gt;Just like you needed to create an Openstack user for interacting with the Openstack API, you will need to create a ssh keypair used for connecting to Openstack servers. This can be done within the Openstack Horizon UI. &lt;/p&gt;
 
-&lt;p&gt;Click the &amp;#39;...&amp;#39; icon and the end of the line for the user you want to use for interacting with the Openstack API and select &amp;#39;Launch Openstack Horizon&amp;#39;.&lt;/p&gt;
+&lt;p&gt;Click the &lt;code&gt;...&lt;/code&gt; icon and the end of the line for the user you want to use for interacting with the Openstack API and select &lt;code&gt;Launch Openstack Horizon&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-08-launch-openstack-horizon.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;This will open another browser tab for the Openstack Horizon UI with your username already filled in. Provide the password for this user and click &amp;#39;connect&amp;#39;.&lt;/p&gt;
+&lt;p&gt;This will open another browser tab for the Openstack Horizon UI with your username already filled in. Provide the password for this user and click &lt;code&gt;connect&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-09-login-openstack-horizon.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -121,11 +121,11 @@ MacBook-Pro:Desktop standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;We need to add a new ssh keypair that the Openstack API can add to servers that are created through the API. To keep things simple I added the same public ssh key that I generated in the first blog post.&lt;/p&gt;
 
-&lt;p&gt;To add a new ssh key pair go to &amp;#39;Project | Compute | Key pairs | Create Key Pair&amp;#39;&lt;/p&gt;
+&lt;p&gt;To add a new ssh key pair go to &lt;code&gt;Project | Compute | Key pairs | Create Key Pair&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-10-openstack-horizon-key-pairs.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Give the key pair a friendly name you can remember and paste the contents of the public key file. Click &amp;#39;Import Key Pair&amp;#39; to add this key pair.  &lt;/p&gt;
+&lt;p&gt;Give the key pair a friendly name you can remember and paste the contents of the public key file. Click &lt;code&gt;Import Key Pair&lt;/code&gt; to add this key pair.  &lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-12-openstack-horizon-import-key-pair.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -143,13 +143,13 @@ pip2 install --upgrade python-openstackclient&lt;/code&gt;&lt;/pre&gt;&lt;/figur
 
 &lt;h2&gt;7. Sourcing the openrc.sh file&lt;/h2&gt;
 
-&lt;p&gt;In order to use the Openstack cli you just installed you first need to source the openrc.sh file you downloaded in step 3.&lt;/p&gt;
+&lt;p&gt;The first step to using the Openstack cli you just installed is to source the openrc.sh file you downloaded in step 3. This will set environment variables that the Openstack cli will use to connect to the OVH public cloud. When you source the openrc.sh file you will be prompted for the password of the Openstack user listed in this file.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ source ~/Downloads/openrc.sh
 Please enter your OpenStack Password:
 MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;If you take a look at your exports environmental variables after sourcing the openrc.sh file, you will see the values from the opensh.rc file set along with your password.&lt;/p&gt;
+&lt;p&gt;If you take a look at your exported environmental variables after sourcing the openrc.sh file, you will see the values from the opensh.rc file set along with your password.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ export | grep OS_
 declare -x OS_AUTH_URL=&amp;quot;https://auth.cloud.ovh.us/v3/&amp;quot;
@@ -165,33 +165,37 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2&gt;8. Using the Openstack cli to create an Openstack server&lt;/h2&gt;
 
-&lt;p&gt;Now that you have sourced the openrc.sh file you can start using the Openstack cli.&lt;/p&gt;
+&lt;p&gt;Now that you have sourced the openrc.sh file you can create an Openstack server using the Openstack cli.&lt;/p&gt;
 
-&lt;p&gt;First list the ssh key pair you created in step 5.&lt;/p&gt;
+&lt;p&gt;The four pieces of information you will need to create a new server are:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The ssh key pair name that will be allowed to connect.&lt;/li&gt;
+&lt;li&gt;The operating system (image) you want to use.&lt;/li&gt;
+&lt;li&gt;The size of the server (flavor) you want to use.&lt;/li&gt;
+&lt;li&gt;The security group you want to have applied to the server.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;First list the ssh key pairs so you can see the key pair you created in step 5 by running &lt;code&gt;openstack keypair list&lt;/code&gt;. You will need the name of this keypair shortly.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-16-openstack-cli-keypair-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;We will need the name of this keypair shortly.&lt;/p&gt;
+&lt;p&gt;Next list the available operating system images by running &lt;code&gt;openstack image list&lt;/code&gt;. You will need the ID of the image you want to use&lt;/p&gt;
 
-&lt;p&gt;Next list the available operating system images.&lt;/p&gt;
+&lt;p&gt;I noted &lt;code&gt;e0a89ff2-e98f-4a34-afae-68f9f6c9b5ad&lt;/code&gt; for the ID of the Centos 7 image I wanted to use in my test.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-17-openstack-cli-image-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;We will need the ID of the image you want to use, so I noted &lt;code&gt;e0a89ff2-e98f-4a34-afae-68f9f6c9b5ad&lt;/code&gt; for the ID of Centos 7 I wanted to test.&lt;/p&gt;
-
-&lt;p&gt;Next list the available server sizes or flavors.&lt;/p&gt;
+&lt;p&gt;Next list the available server sizes or flavors by running &lt;code&gt;openstack flavor list&lt;/code&gt;. You will need the ID of the flavor of the server you want to create. I wanted to use a &lt;code&gt;s1-2&lt;/code&gt; flavor image since it was the smallest sandbox server with the lowest hourly rate, so I noted it&amp;#39;s ID was &lt;code&gt;a64381e7-c4e7-4b01-9fbe-da405c544d2e&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08102018-18-openstack-cli-flavor-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;We will need the ID of the flavor of the server you want to create. I chose a &lt;code&gt;s1-2&lt;/code&gt; flavor since it was the smallest sandbox server with the lowest hourly rate, so I noted it&amp;#39;s ID was &lt;code&gt;a64381e7-c4e7-4b01-9fbe-da405c544d2e&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Finally list the security groups by running &lt;code&gt;openstack security group list&lt;/code&gt;. The default security group which allows all inbound and outbound traffic is named &lt;code&gt;default&lt;/code&gt;. I decided to use this default security group for my test rather than create a new one that was more restrictive.&lt;/p&gt;
 
-&lt;p&gt;Finally list the security groups.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-19-openstack-cli-security-group-list.png&quot; alt=&quot;screenshot&quot;&gt;
+The default security group is named &lt;code&gt;default&lt;/code&gt; so you will need to specify it when creating a server..&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/08102018-19-openstack-cli-security-group-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
-
-&lt;p&gt;The default security group is named &lt;code&gt;default&lt;/code&gt; so you will need to specify it when creating a server..&lt;/p&gt;
-
-&lt;p&gt;With a flavor id, image id keypair name and security group name you are ready to create a new openstack server using a command like the following&lt;/p&gt;
+&lt;p&gt;Now knowing the flavor id, image id, keypair name and security group name you are ready to create a new openstack server using a command like the following&lt;/p&gt;
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;openstack server create --flavor a64381e7-c4e7-4b01-9fbe-da405c544d2e --image e0a89ff2-e98f-4a34-afae-68f9f6c9b5ad --key-name ovhus_public_cloud --security-group default openstack_cli_test
 &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 &lt;p&gt;Below is a screenshot of me running that command.&lt;/p&gt;
