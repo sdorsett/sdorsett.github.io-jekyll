@@ -112,6 +112,376 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2015/01/04/installing-vagrant-on-centos/">
+        Installing vagrant and the vagrant-vcenter provider on CentOS 6.5
+      </a>
+    </h1>
+
+    <span class="post-date">04 Jan 2015</span>
+
+    <p>If you followed the steps in one of the two previous posts, you have a ESXi .box template in the vagrant-vmware-ovf format. This format allows for deploying the exact same template to vCenter, vCloud Director or vCloud Air, by simply specifying a different provider in vagrant. This post will cover deploying to vCenter, since that is the most readily available of the three. </p>
+
+<p>In this post we will again talk about the following helpful gosddc project:</p>
+
+<ul>
+<li><a href="https://github.com/gosddc/vagrant-vcenter">gosddc/vagrant-vcenter</a>.
+This repo contains a vagrant plugin (provider) that will deploy a vagrant-vmware-ovf generated .box template to a vcenter instance. This provider allows vagrant to seamlessly deploy to vCenter.</li>
+</ul>
+
+<p>We will need a virtual machine with a minimal install of CentOS 6.5 to install vagrant or you can use the same CentOS virtual machine we used <a href="https://sdorsett.github.io/2015/01/03/using-packer-on-centos/">in the last post</a>. For convenience I will be using the same virtual machine.</p>
+
+<h2>1. Let&#39;s get started by installing the necessary dependancies.</h2>
+
+<h4>A. Run the following command to install the some needed packages:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# yum install -y gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel iconv-devel libxml2 libxml2-devel libxslt libxslt-devel wget git unzip</code></pre></figure>
+
+<h4>B. Download and install ruby-build:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# git clone https://github.com/sstephenson/ruby-build.git
+Initialized empty Git repository in /root/ruby-build/.git/
+remote: Counting objects: 4212, done.
+remote: Compressing objects: 100% (16/16), done.
+remote: Total 4212 (delta 4), reused 2 (delta 0)
+Receiving objects: 100% (4212/4212), 761.14 KiB | 730 KiB/s, done.
+Resolving deltas: 100% (2142/2142), done.
+[root@vagrant ~]# cd ruby-build/
+[root@vagrant ruby-build]# ./install.sh</code></pre></figure>
+
+<h4>C. Running the &quot;ruby-build --definitions&quot; command will provide an output of the versions of Ruby that ruby-buid supports:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# ruby-build --definitions
+1.8.6-p383
+1.8.6-p420
+1.8.7-p249
+1.8.7-p302
+1.8.7-p334
+1.8.7-p352
+1.8.7-p357
+1.8.7-p358
+1.8.7-p370
+1.8.7-p371
+1.8.7-p374
+1.8.7-p375
+1.9.1-p378
+1.9.1-p430
+1.9.2-p0
+1.9.2-p180
+1.9.2-p290
+1.9.2-p318
+1.9.2-p320
+1.9.2-p326
+1.9.2-p330
+1.9.3-dev
+1.9.3-preview1
+1.9.3-rc1
+1.9.3-p0
+1.9.3-p125
+1.9.3-p194
+1.9.3-p286
+1.9.3-p327
+1.9.3-p362
+1.9.3-p374
+1.9.3-p385
+1.9.3-p392
+1.9.3-p429
+1.9.3-p448
+1.9.3-p484
+1.9.3-p545
+1.9.3-p547
+1.9.3-p550
+1.9.3-p551
+2.0.0-dev
+2.0.0-preview1
+2.0.0-preview2
+...</code></pre></figure>
+
+<h4>D. Install ruby 1.9.3 build 551 using the following command:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# ruby-build 1.9.3-p551 /usr/local/
+Downloading yaml-0.1.6.tar.gz...
+-&gt; http://dqw8nmjcqpjn7.cloudfront.net/7da6971b4bd08a986dd2a61353bc422362bd0edcc67d7ebaac68c95f74182749
+Installing yaml-0.1.6...
+Installed yaml-0.1.6 to /usr/local/
+
+Downloading ruby-1.9.3-p551.tar.gz...
+-&gt; http://dqw8nmjcqpjn7.cloudfront.net/bb5be55cd1f49c95bb05b6f587701376b53d310eb1bb7c76fbd445a1c75b51e8
+Installing ruby-1.9.3-p551...
+Installed ruby-1.9.3-p551 to /usr/local/</code></pre></figure>
+
+<h4>E. Download and install the latest version of ruby gems. You can always find the URL to the most recent version at <a href="https://rubygems.org/pages/download">rubygems.org</a>.</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ruby-build]# cd ~/
+[root@vagrant ~]# wget http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz
+--2015-01-02 21:14:39-- http://production.cf.rubygems.org/rubygems/rubygems-2.4.5.tgz
+Resolving production.cf.rubygems.org... 54.230.6.155, 54.230.6.120, 54.230.7.122, ...
+Connecting to production.cf.rubygems.org|54.230.6.155|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 446665 (436K) [application/x-tar]
+Saving to: &quot;rubygems-2.4.5.tgz&quot;
+
+100%[==================================================================================================&gt;] 446,665 1.78M/s in 0.2s 
+
+2015-01-02 21:14:45 (1.78 MB/s) - &quot;rubygems-2.4.5.tgz&quot; saved [446665/446665]
+
+[root@vagrant ~]# tar -zxf rubygems-2.4.5.tgz
+[root@vagrant ~]# cd rubygems-2.4.5
+[root@vagrant rubygems-2.4.5]# ruby setup.rb
+RubyGems 2.4.5 installed
+Installing ri documentation for rubygems-2.4.5</code></pre></figure>
+
+<h2>2. Create a directory to keep our vagrant-vmware-ovf .box template to and copy the template we previously created to it:</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi55]# mkdir ~/box-files/
+[root@vagrant esxi55]# cp /root/packer/packer-templates/esxi55/esxi55-vmware_ovf-1.1.box ~/box-files/</code></pre></figure>
+
+<h2>3. The next thing we need to do is download and install vagrant and the vagrant-vcenter provider:</h2>
+
+<h4>A. Download and install the latest version of vagrant. You can find the URL to the latest versions of the linux 64bit .rpm at <a href="https://www.vagrantup.com/downloads.html">vagrantup.com</a>.</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant rubygems-2.4.5]# cd ~/
+[root@vagrant ~]# wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm
+--2015-01-03 16:02:34-- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.1_x86_64.rpm
+Resolving dl.bintray.com... 108.168.194.92, 108.168.194.91
+Connecting to dl.bintray.com|108.168.194.92|:443... connected.
+HTTP request sent, awaiting response... 302 
+Resolving d29vzk4ow07wi7.cloudfront.net... 54.230.7.101, 54.230.5.129, 54.230.6.222, ...
+Connecting to d29vzk4ow07wi7.cloudfront.net|54.230.7.101|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 65197711 (62M) [application/unknown]
+Saving to: &quot;vagrant_1.7.1_x86_64.rpm&quot;
+
+100%[==================================================================================================&gt;] 65,197,711 1.92M/s in 33s 
+
+2015-01-03 16:03:18 (1.87 MB/s) - &quot;vagrant_1.7.1_x86_64.rpm&quot; saved [65197711/65197711]
+
+[root@vagrant ~]# rpm -i vagrant_1.7.1_x86_64.rpm
+[root@vagrant ~]# vagrant -v
+Vagrant 1.7.1</code></pre></figure>
+
+<h4>B. Install the vagrant-vcenter plugin using the following commands:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# vagrant plugin list
+vagrant-share (1.1.4, system)
+[root@vagrant ~]# vagrant plugin install vagrant-vcenter
+Installing the &#39;vagrant-vcenter&#39; plugin. This can take a few minutes...
+Installed the plugin &#39;vagrant-vcenter (0.3.2)&#39;!
+[root@vagrant ~]#</code></pre></figure>
+
+<h4>C. Create directory and Vagrantfile for the ESXi virtual machines we will deploy with vagrant:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# mkdir -p ~/vagrant-vms/esxi-test/
+[root@vagrant ~]# cd vagrant-vms/esxi-test/
+[root@vagrant esxi-test]# vi Vagrantfile
+[root@vagrant esxi-test]# cat Vagrantfile
+esxi_box_url = &#39;/root/box-files/esxi55-vmware_ovf-1.1.box&#39;
+ 
+nodes = [
+  { :hostname =&gt; &#39;esx-01a&#39;, :box =&gt; &#39;esxi55&#39;, :box_url =&gt; esxi_box_url},
+  { :hostname =&gt; &#39;esx-02a&#39;, :box =&gt; &#39;esxi55&#39;, :box_url =&gt; esxi_box_url},
+]
+ 
+Vagrant.configure(&#39;2&#39;) do |config|
+ 
+  config.vm.provider :vcenter do |vcenter|
+    vcenter.hostname = &#39;192.168.1.195&#39;
+    vcenter.username = &#39;root&#39;
+    vcenter.password = &#39;mySecretP@ssw0rd&#39;
+    vcenter.folder_name = &#39;Vagrant/Deployed&#39;
+    vcenter.datacenter_name = &#39;datacenter-01&#39;
+    vcenter.computer_name = &#39;cluster-01&#39;
+    vcenter.datastore_name = &#39;vsanDatastore&#39;
+    vcenter.template_folder_name = &#39;Vagrant/Templates&#39;
+    vcenter.network_name = &#39;vlan2&#39;
+    vcenter.linked_clones = true
+    vcenter.enable_vm_customization = false
+  end
+ 
+  # Go through nodes and configure each of them.j
+  nodes.each do |node|
+    config.vm.define node[:hostname] do |node_config|
+ 
+      if node[:hostname].include? &#39;esx-&#39;
+        node_config.ssh.username = &#39;root&#39;
+        node_config.ssh.shell = &#39;sh&#39;
+        node_config.ssh.insert_key = false
+        node_config.vm.synced_folder &#39;.&#39;, &#39;/vagrant&#39;, disabled: true
+      end
+ 
+      node_config.vm.box = node[:box]
+      node_config.vm.hostname = node[:hostname]
+      node_config.vm.box_url = node[:box_url]
+    end
+  end
+end</code></pre></figure>
+
+<p>This Vagrantfile is specifying vagrant to use the vagrant-vcenter profiler to create two virtual machines (esx-01a &amp; esx-02a) from the esx55-vmware_ovf-1.1.box file. You will need update the following properties to reflect your own vCenter configuration:</p>
+
+<ul>
+<li>vcenter.hostname = the IP address of your vCenter server</li>
+<li>vcenter.username = the username used to connect to your vCenter server</li>
+<li>vcenter.password = the password used to connect to your vCenter server</li>
+<li>vcenter.datacenter_name = the vCenter virtual datacenter to use for virtual machine deployment</li>
+<li>vcenter.computer_name = the vCenter host or cluster to use for virtual machine deployment. I&#39;ve used the cluster in my example.</li>
+<li>vcenter.datastore_name = the vCenter datastore to use for virtual machine deployment</li>
+<li>vcenter.folder_name = the vm folder that the virtual machines will be deployed to</li>
+<li>vcenter.template_folder_name = the vm folder that the ESXi template will be created in</li>
+<li>vcenter.network_name = the vCenter portgroup to connect the ESXi templates to. There should be a DHCP server on this portgroup to provide IP addresses to the deployed ESXi templates.</li>
+</ul>
+
+<h2>4. &quot;vagrant up&quot;</h2>
+
+<h4>A. Now that we have created a Vagrantfile config file and updated it with our vCenter information we can bring up our virtual machine by running &quot;vagrant up&quot; in the directory with the Vagrantfile.</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant up
+Bringing machine &#39;esx-01a&#39; up with &#39;vcenter&#39; provider...
+Bringing machine &#39;esx-02a&#39; up with &#39;vcenter&#39; provider...
+==&gt; esx-01a: Box &#39;esxi55&#39; could not be found. Attempting to find and install...
+ esx-01a: Box Provider: vmware_ovf, vcloud, vcenter
+ esx-01a: Box Version: &gt;= 0
+==&gt; esx-01a: Adding box &#39;esxi55&#39; (v0) for provider: vmware_ovf, vcloud, vcenter
+ esx-01a: Downloading: file:///root/box-files/esxi55-vmware_ovf-1.1.box
+==&gt; esx-01a: Successfully added box &#39;esxi55&#39; (v0) for &#39;vmware_ovf&#39;!
+==&gt; esx-02a: Box &#39;esxi55&#39; could not be found. Attempting to find and install...
+ esx-02a: Box Provider: vmware_ovf, vcloud, vcenter
+ esx-02a: Box Version: &gt;= 0
+==&gt; esx-02a: Adding box &#39;esxi55&#39; (v0) for provider: vmware_ovf, vcloud, vcenter
+==&gt; esx-02a: Uploading [esxi55]...
+==&gt; esx-02a: Adding [esxi55]
+2015-01-03 16:28:34 -0600: networks: vlan2 = vlan2
+2015-01-03 16:28:34 -0600: Uploading OVF to esx02.tyrell.corp...
+==&gt; esx-01a: Uploading [esxi55]...
+==&gt; esx-01a: Adding [esxi55]
+2015-01-03 16:28:35 -0600: networks: vlan2 = vlan2
+2015-01-03 16:28:35 -0600: Uploading OVF to esx01.tyrell.corp...
+DEBUG: Timeout: 300
+Iteration 1: Trying to get host&#39;s IP address ...
+ % Total % Received % Xferd Average Speed Time Time Time Current
+ Dload Upload Total Spent Left Speed
+ 15 473M 15 75.3M 0 0 4554k 0 0:01:46 0:00:16 0:01:30 4552k2015-01-03 16:29:02 -0600: Template already exists, waiting for it to be ready
+ 20 473M 20 98.8M 0 0 5122k 0 0:01:34 0:00:19 0:01:15 7489k2015-01-03 16:29:05 -0600: Template VM found
+100 473M 100 473M 0 0 9245k 0 0:00:52 0:00:52 --:--:-- 9.9M
+Iteration 1: Trying to access nfcLease.info.entity ...
+HttpNfcLeaseComplete succeeded
+esxi_box_url = &#39;/root/box-files/esxi55-vmware_ovf-1.1.box&#39;
+==&gt; esx-02a: Creating VM...
+2015-01-03 16:29:42 -0600: Template fully prepared and ready to be cloned
+==&gt; esx-01a: Creating VM...
+==&gt; esx-01a: Powering on VM...
+==&gt; esx-02a: Powering on VM...</code></pre></figure>
+ 
+
+<h4>B. Once the &quot;vagrant up&quot; command completes, you can check the status of the vms using &quot;vagrant status&quot;:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant status
+Current machine states:
+
+esx-01a running (vcenter)
+esx-02a running (vcenter)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.</code></pre></figure>
+
+<h4>C. Looking in vCenter you will see the virtual machines that vagrant deployed:</h4>
+
+<p><img src="/assets/01-esx-01a.png" alt="screenshot"></p>
+
+<h4>D. You can now ssh into either of the ESXi virtual machines using &quot;vagrant ssh [vm_name]&quot;:</h4>
+
+<p>To connect to esx-01a you simply run &quot;vagrant ssh esx-01a&quot;:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant ssh esx-01a
+==&gt; esx-01a: External IP for esx-01a: 192.168.1.177
+The time and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools. Please
+see www.vmware.com/go/sysadmintools for details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation for more information.
+
+~ # esxcli network ip interface list
+vmk0
+ Name: vmk0
+ MAC Address: 00:50:56:6f:9d:66
+ Enabled: true
+ Portset: vSwitch0
+ Portgroup: Management Network
+ Netstack Instance: defaultTcpipStack
+ VDS Name: N/A
+ VDS UUID: N/A
+ VDS Port: N/A
+ VDS Connection: -1
+ MTU: 1500
+ TSO MSS: 65535
+ Port ID: 33554437
+~ # exit
+Connection to 192.168.1.177 closed.
+[root@vagrant esxi-test]#</code></pre></figure>
+
+<p>The same can be done for esx-02a:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant ssh esx-02a
+==&gt; esx-02a: External IP for esx-02a: 192.168.1.178
+The time and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools. Please
+see www.vmware.com/go/sysadmintools for details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation for more information.
+~ # esxcli network ip interface list
+vmk0
+ Name: vmk0
+ MAC Address: 00:50:56:67:d5:b7
+ Enabled: true
+ Portset: vSwitch0
+ Portgroup: Management Network
+ Netstack Instance: defaultTcpipStack
+ VDS Name: N/A
+ VDS UUID: N/A
+ VDS Port: N/A
+ VDS Connection: -1
+ MTU: 1500
+ TSO MSS: 65535
+ Port ID: 33554437
+~ # exit
+Connection to 192.168.1.178 closed.
+[root@vagrant esxi-test]#</code></pre></figure>
+
+<h4>E. Once we are done using our virtual machines they can be destroyed with a &quot;vagrant destroy&quot; command:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant destroy
+    esx-02a: Are you sure you want to destroy the &#39;esx-02a&#39; VM? [y/N] y
+==&gt; esx-02a: Powering off VM...
+==&gt; esx-02a: Destroying VM...
+    esx-01a: Are you sure you want to destroy the &#39;esx-01a&#39; VM? [y/N] y
+==&gt; esx-01a: Powering off VM...
+==&gt; esx-01a: Destroying VM...
+[root@vagrant esxi-test]#</code></pre></figure>
+
+<h4>F. If you are ever unsure of the state of the vagrant virtual machines you can run &quot;vagrant status&quot; to check:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi-test]# vagrant status
+Current machine states:
+
+esx-01a                   not created (vcenter)
+esx-02a                   not created (vcenter)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+[root@vagrant esxi-test]#</code></pre></figure>
+
+<h3>That all for this post covering the basics of getting vagrant and the vagrant-vcenter provider installed/configured on CentOS.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2015/01/03/using-packer-on-centos/">
         Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment
       </a>
@@ -1096,381 +1466,6 @@ Fetching vCloud Director network settings ...
 </ul>
 
 <p>These posts will hopefully explain the steps necessary to get vagrant-vcloud installed and working with a vCloud Director or vCHS environment.</p>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2014/05/06/vagrant-and-puppet/">
-        Creating a Puppet manifest and integrating it with Vagrant
-      </a>
-    </h1>
-
-    <span class="post-date">06 May 2014</span>
-
-    <p>This post will cover configuring Vagrant to automatically run a Puppet manifest on the vm created by &quot;vagrant up.&quot; This capability allows you to test your Puppet manifests, make changes and test again, all quickly and easily. Let&#39;s get started:</p>
-
-<h3>1. Create the Puppet manifest &amp; modules we will be using for our Vagrant tests.</h3>
-
-<p>For testing purposes we will be creating a Puppet manifest that ensures NTP is installed and is configured to use the following NTP servers:</p>
-
-<ul>
-<li>0.pool.ntp.org</li>
-<li>1.pool.ntp.org</li>
-<li>2.pool.ntp.org</li>
-</ul>
-
-<h4>A. First we should install tree, since it will help us visualize the directory structure of the puppet manifest directories we will be creating:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# yum install -y tree
-Loaded plugins: fastestmirror
-Loading mirror speeds from cached hostfile
- * base: mirrors.centarra.com
- * epel: mirror.unl.edu
- * extras: mirrors.finalasp.com
- * updates: mirrors.centarra.com
-Setting up Install Process
-Resolving Dependencies
---&gt; Running transaction check
----&gt; Package tree.x86_64 0:1.5.3-2.el6 will be installed
---&gt; Finished Dependency Resolution
-
-Dependencies Resolved
-
-====================================================================
- Package      Arch           Version             Repository    Size
-====================================================================
-Installing:
- tree         x86_64         1.5.3-2.el6         base          36 k
-
-Transaction Summary
-====================================================================
-Install       1 Package(s)
-
-Total download size: 36 k
-Installed size: 65 k
-Downloading Packages:
-tree-1.5.3-2.el6.x86_64.rpm                    |  36 kB     00:00     
-Running rpm_check_debug
-Running Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing : tree-1.5.3-2.el6.x86_64                          1/1 
-  Verifying  : tree-1.5.3-2.el6.x86_64                          1/1 
-
-Installed:
-  tree.x86_64 0:1.5.3-2.el6                                           
-
-Complete!
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h4>B. Change to the directory that contains the Vagrantfile &amp; example_box directory we&#39;ve been working in over the last few blog posts:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# cd ~/vagrant-vms/
-[root@vagrant vagrant-vms]# tree
-.
-├── example_box
-│   └── dummy.box
-└── Vagrantfile
-
-1 directory, 2 files
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h4>C. Create the following modules &amp; manifests directory structure for our Puppet manifest files:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# mkdir -p {manifests,modules/ntp/manifests,modules/ntp/templates,modules/common/manifests}
-[root@vagrant vagrant-vms]# tree
-.
-├── example_box
-│   └── dummy.box
-├── manifests
-├── modules
-│   ├── common
-│   │   └── manifests
-│   └── ntp
-│       ├── manifests
-│       └── templates
-└── Vagrantfile
-
-8 directories, 2 files
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h4>D. Create manifests/site.pp with the following contents:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vi manifests/site.pp
-node default {
-  include common
-    class {&#39;ntp&#39;:}
-}
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>This is the Puppet manifest that we will configure Vagrent to run automatically. The &quot;node default&quot; section will be applied by any hostname that runs this manifest. The &quot;node default&quot; section calls the common &amp; ntp modules which we will create next.</p>
-
-<h4>E. Create modules/common/manifests/init.pp with the following contents:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat modules/common/manifests/init.pp
-class common {
-  include common::data
-}
-
-class common::data {
-  $ntpServerList = [ &#39;0.pool.ntp.org&#39;,&#39;1.pool.ntp.org&#39;,&#39;2.pool.ntp.org&#39; ]
-}
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>This manifest is what gets run when Puppets runs &quot;include common&quot; in the manifests/site.pp manifest. When this manifest is run it creates an array named &quot;common::data::ntpServerList&quot; containing the ntp servers we&#39;re needing to have defined.</p>
-
-<h4>F. Create modules/ntp/manifests/init.pp with the following contents:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat modules/ntp/manifests/init.pp
-class ntp( $ntpServerList = $common::data::ntpServerList) {
-  package { &#39;ntp&#39;:
-  ensure =&gt; &#39;present&#39;,
-  } #package
-
-  file { &#39;/etc/ntp.conf&#39;:
-    mode    =&gt; &quot;644&quot;,
-    content =&gt; template(&quot;ntp/client-ntp.conf.erb&quot;),
-    notify  =&gt; Service[&quot;ntpd&quot;],
-    require =&gt; Package[&quot;ntp&quot;],
-  } # file
-
-  service { &#39;ntpd&#39;:
-    ensure  =&gt; running,
-    enable  =&gt; true,
-    require =&gt; Package[&quot;ntp&quot;],
-  } # service
-}
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>This manifest is what gets run when Puppet calls &quot;class {&#39;ntp&#39;:}&quot; in the manifests/site.pp manifest. When this manifest is run it will ensure the ntp package is installed, the file &quot;/etc/ntp.conf&quot; is created containing our list of ntp servers and the ntpd service is started.    </p>
-
-<h4>G. Create modules/ntp/templates/client-ntp.conf.erb with the following contents:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"># This file is being maintained by Puppet.
-# DO NOT EDIT
-
-# Permit time synchronization with our time source, but do not
-# permit the source to query or modify the service on this system.
-restrict default kod nomodify notrap nopeer noquery
-restrict -6 default kod nomodify notrap nopeer noquery
-
-# Permit all access over the loopback interface.  This could
-# be tightened as well, but to do so would effect some of
-# the administrative functions.
-restrict 127.0.0.1
-restrict -6 ::1
-
-&lt;% ntpServerList.each do |ntpServer| -%&gt;
-server &lt;%= ntpServer %&gt;
-&lt;% end -%&gt;
-
-# Drift file.  Put this in a directory which the daemon can write to.
-# No symbolic links allowed, either, since the daemon updates the file
-# by creating a temporary in the same directory and then rename()&#39;ing
-# it to the file.
-driftfile /var/lib/ntp/drift
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>This .erb file is a ruby template describing what the file /etc/ntp.conf should contain. The magic of this is the section:</p>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">&lt;% ntpServerList.each do |ntpServer| -%&gt;
-server &lt;%= ntpServer %&gt;
-&lt;% end -%&gt;</code></pre></figure>
-
-<p>This section is actually ruby code that runs a foreach loop on the array &quot;ntpServerList&quot; and adds a line for each ntp server contained in that array. </p>
-
-<h4>H. Run the tree command and you should see the following file/directory structure:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# tree
-.
-├── example_box
-│   └── dummy.box
-├── manifests
-│   └── site.pp
-├── modules
-│   ├── common
-│   │   └── manifests
-│   │       └── init.pp
-│   └── ntp
-│       ├── manifests
-│       │   └── init.pp
-│       └── templates
-│           └── client-ntp.conf.erb
-└── Vagrantfile
-
-8 directories, 6 files
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h3>2. Modify the Vagrantfile we created in the last post to include the following:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat Vagrantfile
-Vagrant.configure(&quot;2&quot;) do |config|
-  config.vm.box = &#39;dummy&#39;
-  config.vm.box_url = &#39;./example_box/dummy.box&#39;
-
-  config.vm.provider :vsphere do |vsphere|
-    vsphere.host = &#39;192.168.1.195&#39;
-    vsphere.name = &#39;vagrant-test&#39;
-    vsphere.clone_from_vm = true
-    vsphere.template_name = &#39;vagrant-centos-6.5&#39;
-    vsphere.user = &#39;root@localos&#39;
-    vsphere.password = &#39;S0meR@nd0mP@ssw0rd&#39;
-    vsphere.insecure = true
-    vsphere.data_store_name = &#39;vsanDatastore&#39;
-    vsphere.linked_clone = true
-    vsphere.customization_spec_name = &#39;vagrant-centos&#39;
-  end
-  config.vm.provision &quot;puppet&quot; do |puppet|
-    puppet.manifests_path = &quot;manifests&quot;
-    puppet.manifest_file = &quot;site.pp&quot;
-    puppet.module_path = &quot;modules&quot;
-  end
-end
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>The following new lines have been added:</p>
-
-<ul>
-<li>&quot;puppet.manifests_path&quot; specifies the sub-directory, from the directory containing the Vagrantfile, that contains the puppet manifests.</li>
-<li>&quot;puppet.manifest_file&quot; specifies the puppet manifest that will be initially run.</li>
-<li>&quot;puppet.module_path&quot; specifies the sub-directory, from the directory containing the Vagrantfile, that contains the puppet modules.</li>
-</ul>
-
-<h3>3. Test the configuration changes we made by running a &quot;vagrant up&quot;:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant up --provider=vsphere
-Bringing machine &#39;default&#39; up with &#39;vsphere&#39; provider...
-==&gt; default: Calling vSphere CloneVM with the following settings:
-==&gt; default:  -- Source VM: vagrant-centos-6.5
-==&gt; default:  -- Name: vagrant-test
-==&gt; default: Waiting for SSH to become available...
-==&gt; default: New virtual machine successfully cloned and started
-==&gt; default: Rsyncing folder: /root/vagrant-vms/ =&gt; /vagrant
-==&gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ =&gt; /tmp/vagrant-puppet-1/manifests
-==&gt; default: Rsyncing folder: /root/vagrant-vms/modules/ =&gt; /tmp/vagrant-puppet-1/modules-0
-==&gt; default: Running provisioner: puppet...
-Running Puppet with site.pp...
-notice: /File[/etc/ntp.conf]/content: content changed &#39;{md5}d7e1e16f9c0cd6382f6b68b486163db1&#39; to &#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&#39;
-notice: /Stage[main]/Ntp/Service[ntpd]: Triggered &#39;refresh&#39; from 1 events
-notice: Finished catalog run in 0.72 seconds
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>You might notice a few new lines since the &quot;vagrant up&quot; we ran in the last post. </p>
-
-<ul>
-<li>The manifests &amp; modules folders we specified in Vagrantfile have been copied over using rsync. </li>
-<li>The Puppet agent is running a &quot;puppet apply&quot; using the site.pp file we specified. </li>
-<li>/etc/ntp.conf was modified by Puppet</li>
-<li>The NTP service was notified that it needed to refresh it&#39;s configuration since /etc/ntp.conf had been modified.</li>
-</ul>
-
-<h3>4. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we specified:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant ssh
-[vagrant@vagrant-test ~]$ cat /etc/ntp.conf
-# This file is being maintained by Puppet.
-# DO NOT EDIT
-
-# Permit time synchronization with our time source, but do not
-# permit the source to query or modify the service on this system.
-restrict default kod nomodify notrap nopeer noquery
-restrict -6 default kod nomodify notrap nopeer noquery
-
-# Permit all access over the loopback interface.  This could
-# be tightened as well, but to do so would effect some of
-# the administrative functions.
-restrict 127.0.0.1
-restrict -6 ::1
-
-server 0.pool.ntp.org iburst
-server 1.pool.ntp.org iburst
-server 2.pool.ntp.org iburst
-
-# Drift file.  Put this in a directory which the daemon can write to.
-# No symbolic links allowed, either, since the daemon updates the file
-# by creating a temporary in the same directory and then rename()&#39;ing
-# it to the file.
-driftfile /var/lib/ntp/drift
-[vagrant@vagrant-test ~]$ exit
-logout
-Connection to 192.168.1.123 closed.
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h3>5. Modify the site.pp file to add a node definition for our vagrant vm:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat site.pp
-node default {
-  include common
-    class {&#39;ntp&#39;:}
-}
-node &#39;vagrant-test.mylab.net&#39; {
-  include common
-    class {&#39;ntp&#39;:
-      ntpServerList =&gt; [&#39;3.pool.ntp.org&#39;,&#39;4.pool.ntp.org&#39;,&#39;5.pool.ntp.org&#39;]
-    }
-}</code></pre></figure>
-
-<p>The new &quot;node &#39;vagrant-test.mylab.net&#39;&quot; definition will only be run by hosts with a matching hostname. Any host that doesn&#39;t have a matching host definition will continue to run the &quot;node default&quot; section. Node definitions allow you to change variables or even modules that will be run by specific hosts and provide flexibility in the changes made to a given host. Our new node section will configure &quot;vagrant-test.mylab.net&quot; to use a different set of ntp servers than any other host that runs this Puppet manifest  </p>
-
-<h3>6. Run &#39;vagrant provision&#39; to apply the updated Puppet manifest to our Vagrant vm:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant provision
-==&gt; default: Rsyncing folder: /root/vagrant-vms/ =&gt; /vagrant
-==&gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ =&gt; /tmp/vagrant-puppet-1/manifests
-==&gt; default: Rsyncing folder: /root/vagrant-vms/modules/ =&gt; /tmp/vagrant-puppet-1/modules-0
-==&gt; default: Running provisioner: puppet...
-Running Puppet with site.pp...
-notice: /File[/etc/ntp.conf]/content: content changed &#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&#39; to &#39;{md5}414e811fdbfa3f8cfa38e1e4e6d0586f&#39;
-notice: /Stage[main]/Ntp/Service[ntpd]: Triggered &#39;refresh&#39; from 1 events
-notice: Finished catalog run in 0.34 seconds
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<p>While we could have destroyed and recreated our Vagrant vm to test the change to the Puppet manifest, &#39;vagrant provision&#39; quickly resyncs the folders defined in our Vagrantfile and re-runs our Puppet manifest.</p>
-
-<h3>7. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we defined fof this specific node:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant vagrant-vms]# vagrant ssh
-Last login: Tue May  6 15:09:50 2014 from 192.168.1.40
-[vagrant@vagrant-test ~]$ cat /etc/ntp.conf
-# This file is being maintained by Puppet.
-# DO NOT EDIT
-
-# Permit time synchronization with our time source, but do not
-# permit the source to query or modify the service on this system.
-restrict default kod nomodify notrap nopeer noquery
-restrict -6 default kod nomodify notrap nopeer noquery
-
-# Permit all access over the loopback interface.  This could
-# be tightened as well, but to do so would effect some of
-# the administrative functions.
-restrict 127.0.0.1
-restrict -6 ::1
-
-server 3.pool.ntp.org iburst
-server 4.pool.ntp.org iburst
-server 5.pool.ntp.org iburst
-
-# Drift file.  Put this in a directory which the daemon can write to.
-# No symbolic links allowed, either, since the daemon updates the file
-# by creating a temporary in the same directory and then rename()&#39;ing
-# it to the file.
-driftfile /var/lib/ntp/drift
-[vagrant@vagrant-test ~]$ exit
-logout
-Connection to 192.168.1.123 closed.
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h3>8. Shutdown the vagrant machine:</h3>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant destroy
-==&gt; default: Calling vSphere PowerOff
-==&gt; default: Calling vShpere Destroy
-[root@vagrant vagrant-vms]#</code></pre></figure>
-
-<h3>Hopefully you found this post helpful in demonstrating how to use Puppet with Vagrant, as well as the benefits it provides for testing Puppet manfests and modules</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
   </div>
   

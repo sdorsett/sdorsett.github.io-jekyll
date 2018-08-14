@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://0.0.0.0:4000/atom.xml" rel="self"/>
  <link href="http://0.0.0.0:4000/"/>
- <updated>2018-08-10T04:22:17+00:00</updated>
+ <updated>2018-08-14T03:54:30+00:00</updated>
  <id>http://0.0.0.0:4000</id>
  <author>
    <name>Stan Dorsett</name>
@@ -13,13 +13,235 @@
 
  
  <entry>
-   <title>Creating an openstack instance on OVH public cloud</title>
-   <link href="http://0.0.0.0:4000/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/"/>
+   <title>Using the Openstack cli to create a server on OVH public cloud</title>
+   <link href="http://0.0.0.0:4000/2018/08/10/using-the-openstack-cli-to-create-a-server-on-ovh-public-cloud/"/>
+   <updated>2018-08-10T00:00:00+00:00</updated>
+   <id>http://0.0.0.0:4000/2018/08/10/using-the-openstack-cli-to-create-a-server-on-ovh-public-cloud</id>
+   <content type="html">&lt;p&gt;This is the second in a series of posts that will walk you through using the Openstack-based OVH public cloud. This post is assumes you have already signed up for an account with ovhcloud.com, added a payment method and created a cloud project. If you have not done these steps you can follow &lt;a href=&quot;http://sdorsett.github.io/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud/&quot;&gt;the first blog post&lt;/a&gt; in this series that will walk you through completing those steps. &lt;/p&gt;
+
+&lt;p&gt;I will attempt in this post to present the options that are available to OVH public cloud customers along side the choices I made that were specific to my Openstack server.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s get started...&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h2&gt;1. Sign into &lt;a href=&quot;https://ovhcloud.com/auth/&quot;&gt;ovhcloud.com&lt;/a&gt;.&lt;/h2&gt;
+
+&lt;p&gt;The first thing you will need to do before you can move forward with this post is sign into &lt;a href=&quot;https://ovhcloud.com/auth/&quot;&gt;https://ovhcloud.com/auth/&lt;/a&gt; using the account you created in the first blog post..&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-01-login-username-password.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;If you setup two-factor authentication, you will be prompted to enter the current two-factor token.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-02-login-two-factor.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;2. Create a new user account to use with the Openstack API.&lt;/h2&gt;
+
+&lt;p&gt;The Openstack API will not use the credentials you used to log into the ovhcloud.com site, but will instead use an Openstack user to create, modify or view objects in an OVH cloud project.&lt;/p&gt;
+
+&lt;p&gt;In order to use the Openstack API you will need to create an Openstack user account within the cloud project you want to work with. You can display all the Openstack user accounts then have been created in a cloud project by clicking the &amp;#39;Openstack&amp;#39; tab within any cloud project. &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-03-openstack-users.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Create a new user click the &amp;quot;Add user&amp;quot; button.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-04-openstack-add-user.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Once you have specified the username and clicked &amp;quot;Confirm&amp;quot; you will be taken back to the Openstack tab and see the user you just created. You will also be able to see the password for a short period of time. Make sure you record this password safely since it will not be visible perminantly. &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-05-openstack-users-password-shown.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;After a period of time you will no longer be able to see the password for the user you created, but If you do happen to forget the password, you can always have a new password regenerated.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-14-openstack-users-password-hidden.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;3. Download an Openstack configuration file.&lt;/h2&gt;
+
+&lt;p&gt;Now that you have an Openstack user created you can download an openrc.sh file that will contain all the details needed to connect as this user. Click the &amp;#39;...&amp;#39; icon and the end of the line for the user you want to use and select &amp;#39;Downloading an Openstack configuration file&amp;#39;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-06-download-openrc.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Select the region (datacenter) you want to connect to and click &amp;#39;confirm&amp;#39;. Your browser will next prompt you where you want to save the downloaded openrc.sh file.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-07-download-openrc-region.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;If you look at the downloaded file you will see that it sets environment variables containing the details needed to connect to your Openstack cloud project.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:Desktop standorsett$ cat ~/Downloads/openrc.sh
+#!/bin/bash
+
+# To use an Openstack cloud you need to authenticate against keystone, which
+# returns a **Token** and **Service Catalog**. The catalog contains the
+# endpoint for all services the user/tenant has access to - including nova,
+# glance, keystone, swift.
+#
+export OS_AUTH_URL=https://auth.cloud.ovh.us/v3/
+export OS_IDENTITY_API_VERSION=3
+
+export OS_USER_DOMAIN_NAME=${OS_USER_DOMAIN_NAME:-&amp;quot;Default&amp;quot;}
+export OS_PROJECT_DOMAIN_NAME=${OS_PROJECT_DOMAIN_NAME:-&amp;quot;Default&amp;quot;}
+
+
+# With the addition of Keystone we have standardized on the term **tenant**
+# as the entity that owns the resources.
+export OS_TENANT_ID=2897923a654b40d0b8b36a502bda4a8f
+export OS_TENANT_NAME=&amp;quot;3543682553721111&amp;quot;
+
+# In addition to the owning entity (tenant), openstack stores the entity
+# performing the action as the **user**.
+export OS_USERNAME=&amp;quot;5r7jJyuwwwsv&amp;quot;
+
+# With Keystone you pass the keystone password.
+echo &amp;quot;Please enter your OpenStack Password: &amp;quot;
+read -sr OS_PASSWORD_INPUT
+export OS_PASSWORD=$OS_PASSWORD_INPUT
+
+# If your configuration has multiple regions, we set that information here.
+# OS_REGION_NAME is optional and only valid in certain environments.
+export OS_REGION_NAME=&amp;quot;US-EAST-VA-1&amp;quot;
+# Don&amp;#39;t leave a blank variable, unset it if it was empty
+if [ -z &amp;quot;$OS_REGION_NAME&amp;quot; ]; then unset OS_REGION_NAME; fi
+MacBook-Pro:Desktop standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;The only piece of information that this file does not contain is your password, which it will prompt for when you source this file.&lt;/p&gt;
+
+&lt;h2&gt;4. Log into the Openstack Horizon UI.&lt;/h2&gt;
+
+&lt;p&gt;Just like you needed to create an Openstack user for interacting with the Openstack API, you will need to create a ssh keypair for connecting to Openstack servers. This can be done within the Openstack Horizon UI. &lt;/p&gt;
+
+&lt;p&gt;Click the &amp;#39;...&amp;#39; icon and the end of the line for the user you want to use for interacting with the Openstack API and select &amp;#39;Launch Openstack Horizon&amp;#39;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-08-launch-openstack-horizon.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;This will open another browser tab for the Openstack Horizon UI with your username already filled in. Provide the password for this user and click &amp;#39;connect&amp;#39;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-09-login-openstack-horizon.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;5. Create a ssh key-pair in the Openstack Horizon UI.&lt;/h2&gt;
+
+&lt;p&gt;We need to add a new ssh keypair that the Openstack API can add to servers that are created through the API. To keep things simple I added the same public ssh key that I generated in the first blog post.&lt;/p&gt;
+
+&lt;p&gt;To add a new ssh key pair go to &amp;#39;Project | Compute | Key pairs | Create Key Pair&amp;#39;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-10-openstack-horizon-key-pairs.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Give the key pair a friendly name you can remember and paste the contents of the public key file. Click &amp;#39;Import Key Pair&amp;#39; to add this key pair.  &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-12-openstack-horizon-import-key-pair.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;The key pair you just added will now be visible in the Horizon UI.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-13-openstack-horizon-key-pairs.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;6. Installing the Openstack cli.&lt;/h2&gt;
+
+&lt;p&gt;You will need to install the openstack cli on the operating system you are using. You can easily find instruction for installing it on whatever OS you prefer to use. I quickly installed it on my Mac laptop with homebrew using the following commands.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;brew install python2
+pip2 install --upgrade pip setuptools
+pip2 install --upgrade python-openstackclient&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2&gt;7. Sourcing the openrc.sh file&lt;/h2&gt;
+
+&lt;p&gt;In order to use the Openstack cli you just installed you first need to source the openrc.sh file you downloaded in step 3.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ source ~/Downloads/openrc.sh
+Please enter your OpenStack Password:
+MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;If you take a look at your exports environmental variables after sourcing the openrc.sh file, you will see the values from the opensh.rc file set along with your password.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:~ standorsett$ export | grep OS_
+declare -x OS_AUTH_URL=&amp;quot;https://auth.cloud.ovh.us/v3/&amp;quot;
+declare -x OS_IDENTITY_API_VERSION=&amp;quot;3&amp;quot;
+declare -x OS_PASSWORD=&amp;quot;*******************************&amp;quot;
+declare -x OS_PROJECT_DOMAIN_NAME=&amp;quot;Default&amp;quot;
+declare -x OS_REGION_NAME=&amp;quot;US-EAST-VA-1&amp;quot;
+declare -x OS_TENANT_ID=&amp;quot;2897923a654b40d0b8b36a502bda4a8f&amp;quot;
+declare -x OS_TENANT_NAME=&amp;quot;3543682553721111&amp;quot;
+declare -x OS_USERNAME=&amp;quot;5r7jJyuwwwsv&amp;quot;
+declare -x OS_USER_DOMAIN_NAME=&amp;quot;Default&amp;quot;
+MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2&gt;8. Using the Openstack cli to create an Openstack server&lt;/h2&gt;
+
+&lt;p&gt;Now that you have sourced the openrc.sh file you can start using the Openstack cli.&lt;/p&gt;
+
+&lt;p&gt;First list the ssh key pair you created in step 5.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-16-openstack-cli-keypair-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;We will need the name of this keypair shortly.&lt;/p&gt;
+
+&lt;p&gt;Next list the available operating system images.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-17-openstack-cli-image-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;We will need the ID of the image you want to use, so I noted &lt;code&gt;e0a89ff2-e98f-4a34-afae-68f9f6c9b5ad&lt;/code&gt; for the ID of Centos 7 I wanted to test.&lt;/p&gt;
+
+&lt;p&gt;Next list the available server sizes or flavors.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-18-openstack-cli-flavor-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;We will need the ID of the flavor of the server you want to create. I chose a &lt;code&gt;s1-2&lt;/code&gt; flavor since it was the smallest sandbox server with the lowest hourly rate, so I noted it&amp;#39;s ID was &lt;code&gt;a64381e7-c4e7-4b01-9fbe-da405c544d2e&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally list the security groups.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-19-openstack-cli-security-group-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;The default security group is named &lt;code&gt;default&lt;/code&gt; so you will need to specify it when creating a server..&lt;/p&gt;
+
+&lt;p&gt;With a flavor id, image id keypair name and security group name you are ready to create a new openstack server using a command like the following&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;openstack server create --flavor a64381e7-c4e7-4b01-9fbe-da405c544d2e --image e0a89ff2-e98f-4a34-afae-68f9f6c9b5ad --key-name ovhus_public_cloud --security-group default openstack_cli_test
+&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;p&gt;Below is a screenshot of me running that command.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-20-openstack-cli-server-create.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;After the Openstack server has been created you can run &lt;code&gt;openstack server list&lt;/code&gt; to show the details of the server you just created. The networks field will show the IP address of the server.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-21-openstack-cli-server-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Now that you know the IP address of the server you just created, You can test connecting to this server using the ssh key you created in the previous blog post.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-22-openstack-cli-server-ssh.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;9. Validating the Openstack server in ovhcloud.com UI&lt;/h2&gt;
+
+&lt;p&gt;You can check the ovhcloud.com UI to confirm the server has been created and the IP address is the same as what &lt;code&gt;openstack server list&lt;/code&gt; displayed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-23-ovhcloud-ui-server-created.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;h2&gt;10. Deleting the Openstack server using the Openstack cli.&lt;/h2&gt;
+
+&lt;p&gt;Once you are finished with your openstack server, you should delete the server to prevent being charged for it&amp;#39;s usage. Run the following command in the Openstack cli to delete the server.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-24-openstack-cli-server-delete.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Running &lt;code&gt;openstack server list&lt;/code&gt; will show that the server has been sucessfully deleted. &lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-25-openstack-cli-server-list.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;You can also check the ovhcloud.com UI to confirm the server has been deleted.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/08102018-26-ovhcloud-ui-server-deleted.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h3&gt;That all for this post covering how to use the Openstack cli utility to create servers on the OVH public cloud.&lt;/h3&gt;
+
+&lt;h3&gt;Please provide any feedback or suggestions to my twitter account located on the about page.&lt;/h3&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Creating an openstack server on OVH public cloud</title>
+   <link href="http://0.0.0.0:4000/2018/08/08/creating-an-openstack-server-on-ovh-public-cloud/"/>
    <updated>2018-08-08T00:00:00+00:00</updated>
-   <id>http://0.0.0.0:4000/2018/08/08/creating-an-openstack-instance-on-ovh-public-cloud</id>
+   <id>http://0.0.0.0:4000/2018/08/08/creating-an-openstack-server-on-ovh-public-cloud</id>
    <content type="html">&lt;p&gt;This is the first in a series of posts that will walk you through using the openstack-based OVH public cloud. Over the last few years, I have worked primarily with VMware products and have not taken the time to learn with openstack. Now that the OVH public cloud has launched in the United States, and I work for OVH US, I figured it was time to start learning how customers could put this offering to use.&lt;/p&gt;
 
-&lt;p&gt;I will attempt in this post to present the options that are available to OVH public cloud customers along side the choices I made that were specific to my instance.&lt;/p&gt;
+&lt;p&gt;I will attempt in this post to present the options that are available to OVH public cloud customers along side the choices I made that were specific to my server.&lt;/p&gt;
 
 &lt;p&gt;Let&amp;#39;s get started...&lt;/p&gt;
 
@@ -27,7 +249,7 @@
 
 &lt;h2&gt;1. Create an account at &lt;a href=&quot;https://ovhcloud.com/auth/&quot;&gt;ovhcloud.com&lt;/a&gt;.&lt;/h2&gt;
 
-&lt;p&gt;The first thing you will need to do before you can create OVH public cloud instances is setup an account by going to &lt;a href=&quot;https://ovhcloud.com/auth/&quot;&gt;https://ovhcloud.com/auth/&lt;/a&gt; and clicking the &amp;#39;Create an account&amp;#39; button. &lt;/p&gt;
+&lt;p&gt;The first thing you will need to do before you can create OVH public cloud servers is setup an account by going to &lt;a href=&quot;https://ovhcloud.com/auth/&quot;&gt;https://ovhcloud.com/auth/&lt;/a&gt; and clicking the &amp;#39;Create an account&amp;#39; button. &lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-01-create-an-account.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -71,7 +293,7 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-09-create-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;On the next screen you will be purchasing credits that your running instances will consume.&lt;/p&gt;
+&lt;p&gt;On the next screen you will be purchasing credits that your running servers will consume.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-10-create-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
@@ -83,7 +305,7 @@
 
 &lt;h2&gt;5. Creating a new ssh key for OVH public cloud to use.&lt;/h2&gt;
 
-&lt;p&gt;You will need to generate a ssh key to connect to the OVH openstack instances. On my mac laptop I ran the following command to generate a new ssh key for this purpose.&lt;/p&gt;
+&lt;p&gt;You will need to generate a ssh key to connect to the OVH openstack servers. On my mac laptop I ran the following command to generate a new ssh key for this purpose.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ssh-keygen -b 4096 -t rsa -C &amp;quot;stan.dorsett+ovhus_public_cloud@gmail.com&amp;quot; -f ~/.ssh/id_rsa-ovhus_public_cloud&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
@@ -130,7 +352,7 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2&gt;6. Add the ssh pub key to the OVH public cloud.&lt;/h2&gt;
 
-&lt;p&gt;You next need to add the public key generate in the previous step to OVH public cloud so it can be used to connect to instances you create.&lt;/p&gt;
+&lt;p&gt;You next need to add the public key generate in the previous step to OVH public cloud so it can be used to connect to servers you create.&lt;/p&gt;
 
 &lt;p&gt;Go to the project you created in the previous step. You can find this by clicking Cloud | Servers | [your project name].&lt;/p&gt;
 
@@ -148,7 +370,7 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-15-add-ssh-key.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;h2&gt;7. Create a new openstack instance.&lt;/h2&gt;
+&lt;h2&gt;7. Create a new openstack server.&lt;/h2&gt;
 
 &lt;p&gt;Under your cloud project and click the Infrastructure tab. From the Actions dropdown click &amp;#39;Add a server.&amp;#39;&lt;/p&gt;
 
@@ -158,21 +380,21 @@ MacBook-Pro:~ standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-17-pick-an-os-image.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Select the server type (flavor) of the instance you want to create. The server type will specify the number of vcpu, memory, disk size and price per hour of the openstack instance that will be created:&lt;/p&gt;
+&lt;p&gt;Select the server type (flavor) of the server you want to create. The server type will specify the number of vcpu, memory, disk size and price per hour of the openstack server that will be created:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-18-select-instance-type.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Select the ssh key you created in the previous step. Click the &amp;#39;Launch now&amp;#39; button to create the instance.&lt;/p&gt;
+&lt;p&gt;Select the ssh key you created in the previous step. Click the &amp;#39;Launch now&amp;#39; button to create the server.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-19-launch-instance.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Once the instance is created a &amp;#39;Login information&amp;#39; window will be displayed with the ssh username and ip address you will need to connect to the instance.&lt;/p&gt;
+&lt;p&gt;Once the server is created a &amp;#39;Login information&amp;#39; window will be displayed with the ssh username and ip address you will need to connect to the server.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-20-login-info.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;h2&gt;8. SSH to the new openstack instance,&lt;/h2&gt;
+&lt;h2&gt;8. SSH to the new openstack server,&lt;/h2&gt;
 
-&lt;p&gt;You can now use the login infomation provided in the last step along with the private ssh key you generated to connect to your new instance. I used the following commands to ssh from my Mac laptop to connect.&lt;/p&gt;
+&lt;p&gt;You can now use the login infomation provided in the last step along with the private ssh key you generated to connect to your new server. I used the following commands to ssh from my Mac laptop to connect.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
@@ -189,7 +411,7 @@ Are you sure you want to continue connecting (yes/no)? yes
 Warning: Permanently added &amp;#39;147.135.76.67&amp;#39; (ECDSA) to the list of known hosts.
 [centos@server-1 ~]$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;You can now run what commands you would like on your new openstack instance, like checking the IP address of the instance you created.&lt;/p&gt;
+&lt;p&gt;You can now run what commands you would like on your new openstack server, like checking the IP address of the server you created.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;[centos@server-1 ~]$ ip a
 1: lo: &amp;lt;LOOPBACK,UP,LOWER_UP&amp;gt; mtu 65536 qdisc noqueue state UNKNOWN qlen 1
@@ -206,17 +428,17 @@ Warning: Permanently added &amp;#39;147.135.76.67&amp;#39; (ECDSA) to the list o
        valid_lft forever preferred_lft forever
 [centos@server-1 ~]$&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;h2&gt;9. Destroy the openstack instance.&lt;/h2&gt;
+&lt;h2&gt;9. Destroy the openstack server.&lt;/h2&gt;
 
-&lt;p&gt;Once you are finished with your openstack instance, you should delete the instance in order to stop being charged for it&amp;#39;s usage. Click the drop down on the instance and select &amp;#39;delete&amp;#39; to delete the instance.&lt;/p&gt;
+&lt;p&gt;Once you are finished with your openstack server, you should delete the server in order to stop being charged for it&amp;#39;s usage. Click the drop down on the server and select &amp;#39;delete&amp;#39; to delete the server.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-21-instance-options.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Click &amp;#39;Confirm&amp;#39; to confirm that you want to delete the instance. This is your last chance to reconsider if you really want to delete it.&lt;/p&gt;
+&lt;p&gt;Click &amp;#39;Confirm&amp;#39; to confirm that you want to delete the server. This is your last chance to reconsider if you really want to delete it.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-22-confirm-delete.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Your cloud project will now be back to not having any server instances.&lt;/p&gt;
+&lt;p&gt;Your cloud project will now be back to not showing any servers.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/assets/08082018-23-empty-cloud-project.png&quot; alt=&quot;screenshot&quot;&gt;&lt;/p&gt;
 

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Creating an openstack server on OVH public cloud &middot; sdorsett.github.io
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/lanyon.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700|PT+Sans:400">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body>
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-item">
+    <p></p>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="/">Home</a>
+
+    
+
+    
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/about/">About</a>
+        
+      
+    
+      
+    
+      
+        
+      
+    
+      
+        
+          <a class="sidebar-nav-item" href="/posts/">All Posts</a>
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
+      
+        
+      
+    
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett/archive/v1.0.0.zip">Download</a>
+    <a class="sidebar-nav-item" href="https://github.com/sdorsett">GitHub project</a>
+    <span class="sidebar-nav-item">Currently v1.0.0</span>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2018. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">sdorsett.github.io</a>
+            <small>Things I find interesting</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">Creating an openstack server on OVH public cloud</h1>
+  <span class="post-date">08 Aug 2018</span>
+  <p>This is the first in a series of posts that will walk you through using the openstack-based OVH public cloud. Over the last few years, I have worked primarily with VMware products and have not taken the time to learn with openstack. Now that the OVH public cloud has launched in the United States, and I work for OVH US, I figured it was time to start learning how customers could put this offering to use.</p>
+
+<p>I will attempt in this post to present the options that are available to OVH public cloud customers along side the choices I made that were specific to my server.</p>
+
+<p>Let&#39;s get started...</p>
+
+<hr>
+
+<h2>1. Create an account at <a href="https://ovhcloud.com/auth/">ovhcloud.com</a>.</h2>
+
+<p>The first thing you will need to do before you can create OVH public cloud servers is setup an account by going to <a href="https://ovhcloud.com/auth/">https://ovhcloud.com/auth/</a> and clicking the &#39;Create an account&#39; button. </p>
+
+<p><img src="/assets/08082018-01-create-an-account.png" alt="screenshot"></p>
+
+<p>After providing my email address, specifying a complex password and adding my billing address I received an email within minutes that my account had been activated.</p>
+
+<h2>2. Setup two-factor authentication.</h2>
+
+<p>The second thing you should do after creating an account is setup two-factor authentication. Enabling two-factor authentication will require that you provide a code (token) from your two-factor authentication application on your phone or physical device, along with your username and password when you log into ovhcloud.com. I would highly recommend setting up two-factor authentication to help prevent unauthorized access to your OVH account.</p>
+
+<p>I found the option to enable two-factor authentication by going to My Account | Security | Two-factor authentication | activate double authentication</p>
+
+<p><img src="/assets/08082018-02-activate-two-factor-auth.png" alt="screenshot"></p>
+
+<p>OVH supports mobile applications and physical devices for two-factor authentication. I selected mobile application since I would be using Google Authenticator.</p>
+
+<p><img src="/assets/08082018-04-activate-two-factor-auth.png" alt="screenshot"></p>
+
+<p>Next I scanned the QR code on my phone, provided a code (token) generated by the Google Authenticator app and gave it a friendly name.</p>
+
+<p><img src="/assets/08082018-05-activate-two-factor-auth.png" alt="screenshot"></p>
+
+<p>After clicking next you will be given emergency codes that can be used if you lose your mobile app or physical two-factor device. Copy these emergency codes and store them in a safe place since they can never be retrieved again. After clicking next the two-factor authentication option will show as being enabled.</p>
+
+<p><img src="/assets/08082018-06-activate-two-factor-auth.png" alt="screenshot"></p>
+
+<h2>3. Adding a payment method.</h2>
+
+<p>You will now need to add a payment method, since it will be used to purchase cloud credits in the next step. I added a payment method by clicking my username at the upper right, clicking &#39;My payment methods&#39; and finally clicking the &#39;Add a payment method&#39; button. Provide your card number, experation date and security code and click the &#39;Add&#39; button.</p>
+
+<p>Once your payment method shows a &quot;Confirmed&quot; status you are ready to proceed to the next step.</p>
+
+<p><img src="/assets/08082018-07-add-payment-method.png" alt="screenshot"></p>
+
+<h2>4. Creating a public cloud project.</h2>
+
+<p>The next step you need to do is create a cloud project. To do this I went to order dropdown and clicked &#39;Cloud project&#39;.</p>
+
+<p><img src="/assets/08082018-08-create-cloud-project.png" alt="screenshot"></p>
+
+<p>Name your project and click &#39;launch your cloud project&#39;.</p>
+
+<p><img src="/assets/08082018-09-create-cloud-project.png" alt="screenshot"></p>
+
+<p>On the next screen you will be purchasing credits that your running servers will consume.</p>
+
+<p><img src="/assets/08082018-10-create-cloud-project.png" alt="screenshot"></p>
+
+<p>Accept the terms and conditions by clicking the check box. Your cloud project will be ordered and payment method charged once you click the &#39;Validate and pay&#39; button. </p>
+
+<p><img src="/assets/08082018-11-create-cloud-project.png" alt="screenshot"></p>
+
+<p>I received an email from OVH within 5 minutes of ordering to tell me that my cloud project had been created.</p>
+
+<h2>5. Creating a new ssh key for OVH public cloud to use.</h2>
+
+<p>You will need to generate a ssh key to connect to the OVH openstack servers. On my mac laptop I ran the following command to generate a new ssh key for this purpose.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">ssh-keygen -b 4096 -t rsa -C &quot;stan.dorsett+ovhus_public_cloud@gmail.com&quot; -f ~/.ssh/id_rsa-ovhus_public_cloud</code></pre></figure>
+
+<ul>
+<li>The <code>-b</code> option will specify the number of bits in the ssh key.</li>
+<li>The <code>-t</code> option with specify the type of ssh key generated.</li>
+<li>The <code>-C</code> option will add a comment to the end of the public key file.</li>
+<li>The <code>-f</code> option will specify the file that the private key will be saved to. </li>
+</ul>
+
+<p>When running the command you will also get asked you if you want to add a passphrase that will need to be provided when you use the ssh key. I didn&#39;t choose to set a passphrase, but you can choose to if you feel the need.</p>
+
+<p>Here is the output from my running of this command.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ ssh-keygen -b 4096 -t rsa -C &quot;stan.dorsett+ovhus_public_cloud@gmail.com&quot; -f ~/.ssh/id_rsa-ovhus_public_cloud
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.
+Your public key has been saved in /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.pub.
+The key fingerprint is:
+SHA256:7kSErA6S8zCIq0H/2hmcxE4+JUsW6ZmoDPIE/ULM8I4 stan.dorsett+ovhus_public_cloud@gmail.com
+The key&#39;s randomart image is:
++---[RSA 4096]----+
+|.                |
+| *   ...         |
+|. *  oo .        |
+|o* .+.+.         |
+|E.=.o@ .S        |
+|=Xo+O =o         |
+|ooo..O  o        |
+|..  o +o         |
+|.  ..+  .        |
++----[SHA256]-----+
+MacBook-Pro:~ standorsett$</code></pre></figure>
+
+<p>Output the public key so you can use it in the next step.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ cat /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDJ8LcFN8MRO/uwgVcdDg0grv
+...lots of more characters here...
+l0nXM7jjnjD9L3UMFw== stan.dorsett+ovhus_public_cloud@gmail.com
+MacBook-Pro:~ standorsett$</code></pre></figure>
+
+<h2>6. Add the ssh pub key to the OVH public cloud.</h2>
+
+<p>You next need to add the public key generate in the previous step to OVH public cloud so it can be used to connect to servers you create.</p>
+
+<p>Go to the project you created in the previous step. You can find this by clicking Cloud | Servers | [your project name].</p>
+
+<p><img src="/assets/08082018-12-view-cloud-project.png" alt="screenshot"></p>
+
+<p>Click the &#39;SSh keys&#39; tab to view or create new ssh keys.</p>
+
+<p><img src="/assets/08082018-13-add-ssh-key.png" alt="screenshot"></p>
+
+<p>Click &#39;Add a new key&#39; to add the public key generated in the previous step.</p>
+
+<p><img src="/assets/08082018-14-add-ssh-key.png" alt="screenshot"></p>
+
+<p>Paste the output from the public key file, provide a friendly name for the ssh key and click &quot;Add this key.&#39;</p>
+
+<p><img src="/assets/08082018-15-add-ssh-key.png" alt="screenshot"></p>
+
+<h2>7. Create a new openstack server.</h2>
+
+<p>Under your cloud project and click the Infrastructure tab. From the Actions dropdown click &#39;Add a server.&#39;</p>
+
+<p><img src="/assets/08082018-16-add-a-server.png" alt="screenshot"></p>
+
+<p>Choose the OS (image) that you want to have deployed.</p>
+
+<p><img src="/assets/08082018-17-pick-an-os-image.png" alt="screenshot"></p>
+
+<p>Select the server type (flavor) of the server you want to create. The server type will specify the number of vcpu, memory, disk size and price per hour of the openstack server that will be created:</p>
+
+<p><img src="/assets/08082018-18-select-instance-type.png" alt="screenshot"></p>
+
+<p>Select the ssh key you created in the previous step. Click the &#39;Launch now&#39; button to create the server.</p>
+
+<p><img src="/assets/08082018-19-launch-instance.png" alt="screenshot"></p>
+
+<p>Once the server is created a &#39;Login information&#39; window will be displayed with the ssh username and ip address you will need to connect to the server.</p>
+
+<p><img src="/assets/08082018-20-login-info.png" alt="screenshot"></p>
+
+<h2>8. SSH to the new openstack server,</h2>
+
+<p>You can now use the login infomation provided in the last step along with the private ssh key you generated to connect to your new server. I used the following commands to ssh from my Mac laptop to connect.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67</code></pre></figure>
+
+<ul>
+<li>The <code>-i</code> option is used to specify the ssh private key you generated earlier.</li>
+</ul>
+
+<p>Here is the output from my running of this command.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">MacBook-Pro:~ standorsett$ ssh -i /Users/standorsett/.ssh/id_rsa-ovhus_public_cloud centos@147.135.76.67
+The authenticity of host &#39;147.135.76.67 (147.135.76.67)&#39; can&#39;t be established.
+ECDSA key fingerprint is SHA256:aVSsv0mHKgIizglcvouJkvtBBOiZfNcQTpIc5oxhNO4.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;147.135.76.67&#39; (ECDSA) to the list of known hosts.
+[centos@server-1 ~]$</code></pre></figure>
+
+<p>You can now run what commands you would like on your new openstack server, like checking the IP address of the server you created.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[centos@server-1 ~]$ ip a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP qlen 1000
+    link/ether fa:16:3e:42:97:c4 brd ff:ff:ff:ff:ff:ff
+    inet 147.135.76.67/32 brd 147.135.76.67 scope global dynamic eth0
+       valid_lft 86350sec preferred_lft 86350sec
+    inet6 fe80::f816:3eff:fe42:97c4/64 scope link
+       valid_lft forever preferred_lft forever
+[centos@server-1 ~]$</code></pre></figure>
+
+<h2>9. Destroy the openstack server.</h2>
+
+<p>Once you are finished with your openstack server, you should delete the server in order to stop being charged for it&#39;s usage. Click the drop down on the server and select &#39;delete&#39; to delete the server.</p>
+
+<p><img src="/assets/08082018-21-instance-options.png" alt="screenshot"></p>
+
+<p>Click &#39;Confirm&#39; to confirm that you want to delete the server. This is your last chance to reconsider if you really want to delete it.</p>
+
+<p><img src="/assets/08082018-22-confirm-delete.png" alt="screenshot"></p>
+
+<p>Your cloud project will now be back to not showing any servers.</p>
+
+<p><img src="/assets/08082018-23-empty-cloud-project.png" alt="screenshot"></p>
+
+<hr>
+
+<h3>That all for this initial post covering how to sign up and get started using the OVH public cloud.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2018/08/10/using-the-openstack-cli-to-create-a-server-on-ovh-public-cloud/">
+            Using the Openstack cli to create a server on OVH public cloud
+            <small>10 Aug 2018</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/12/28/scripted-packer-build-and-export/">
+            Scripted Packer build, ovftool export and Vagrant .box file creation
+            <small>28 Dec 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2015/12/27/using-ovftool-to-export-packer-generated-virtual-machines/">
+            Using ovftool to convert Packer generated virtual machines into Vagrant .box files
+            <small>27 Dec 2015</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+  </body>
+</html>

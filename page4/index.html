@@ -112,6 +112,381 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2014/05/06/vagrant-and-puppet/">
+        Creating a Puppet manifest and integrating it with Vagrant
+      </a>
+    </h1>
+
+    <span class="post-date">06 May 2014</span>
+
+    <p>This post will cover configuring Vagrant to automatically run a Puppet manifest on the vm created by &quot;vagrant up.&quot; This capability allows you to test your Puppet manifests, make changes and test again, all quickly and easily. Let&#39;s get started:</p>
+
+<h3>1. Create the Puppet manifest &amp; modules we will be using for our Vagrant tests.</h3>
+
+<p>For testing purposes we will be creating a Puppet manifest that ensures NTP is installed and is configured to use the following NTP servers:</p>
+
+<ul>
+<li>0.pool.ntp.org</li>
+<li>1.pool.ntp.org</li>
+<li>2.pool.ntp.org</li>
+</ul>
+
+<h4>A. First we should install tree, since it will help us visualize the directory structure of the puppet manifest directories we will be creating:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# yum install -y tree
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.centarra.com
+ * epel: mirror.unl.edu
+ * extras: mirrors.finalasp.com
+ * updates: mirrors.centarra.com
+Setting up Install Process
+Resolving Dependencies
+--&gt; Running transaction check
+---&gt; Package tree.x86_64 0:1.5.3-2.el6 will be installed
+--&gt; Finished Dependency Resolution
+
+Dependencies Resolved
+
+====================================================================
+ Package      Arch           Version             Repository    Size
+====================================================================
+Installing:
+ tree         x86_64         1.5.3-2.el6         base          36 k
+
+Transaction Summary
+====================================================================
+Install       1 Package(s)
+
+Total download size: 36 k
+Installed size: 65 k
+Downloading Packages:
+tree-1.5.3-2.el6.x86_64.rpm                    |  36 kB     00:00     
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : tree-1.5.3-2.el6.x86_64                          1/1 
+  Verifying  : tree-1.5.3-2.el6.x86_64                          1/1 
+
+Installed:
+  tree.x86_64 0:1.5.3-2.el6                                           
+
+Complete!
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h4>B. Change to the directory that contains the Vagrantfile &amp; example_box directory we&#39;ve been working in over the last few blog posts:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# cd ~/vagrant-vms/
+[root@vagrant vagrant-vms]# tree
+.
+├── example_box
+│   └── dummy.box
+└── Vagrantfile
+
+1 directory, 2 files
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h4>C. Create the following modules &amp; manifests directory structure for our Puppet manifest files:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# mkdir -p {manifests,modules/ntp/manifests,modules/ntp/templates,modules/common/manifests}
+[root@vagrant vagrant-vms]# tree
+.
+├── example_box
+│   └── dummy.box
+├── manifests
+├── modules
+│   ├── common
+│   │   └── manifests
+│   └── ntp
+│       ├── manifests
+│       └── templates
+└── Vagrantfile
+
+8 directories, 2 files
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h4>D. Create manifests/site.pp with the following contents:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vi manifests/site.pp
+node default {
+  include common
+    class {&#39;ntp&#39;:}
+}
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>This is the Puppet manifest that we will configure Vagrent to run automatically. The &quot;node default&quot; section will be applied by any hostname that runs this manifest. The &quot;node default&quot; section calls the common &amp; ntp modules which we will create next.</p>
+
+<h4>E. Create modules/common/manifests/init.pp with the following contents:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat modules/common/manifests/init.pp
+class common {
+  include common::data
+}
+
+class common::data {
+  $ntpServerList = [ &#39;0.pool.ntp.org&#39;,&#39;1.pool.ntp.org&#39;,&#39;2.pool.ntp.org&#39; ]
+}
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>This manifest is what gets run when Puppets runs &quot;include common&quot; in the manifests/site.pp manifest. When this manifest is run it creates an array named &quot;common::data::ntpServerList&quot; containing the ntp servers we&#39;re needing to have defined.</p>
+
+<h4>F. Create modules/ntp/manifests/init.pp with the following contents:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat modules/ntp/manifests/init.pp
+class ntp( $ntpServerList = $common::data::ntpServerList) {
+  package { &#39;ntp&#39;:
+  ensure =&gt; &#39;present&#39;,
+  } #package
+
+  file { &#39;/etc/ntp.conf&#39;:
+    mode    =&gt; &quot;644&quot;,
+    content =&gt; template(&quot;ntp/client-ntp.conf.erb&quot;),
+    notify  =&gt; Service[&quot;ntpd&quot;],
+    require =&gt; Package[&quot;ntp&quot;],
+  } # file
+
+  service { &#39;ntpd&#39;:
+    ensure  =&gt; running,
+    enable  =&gt; true,
+    require =&gt; Package[&quot;ntp&quot;],
+  } # service
+}
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>This manifest is what gets run when Puppet calls &quot;class {&#39;ntp&#39;:}&quot; in the manifests/site.pp manifest. When this manifest is run it will ensure the ntp package is installed, the file &quot;/etc/ntp.conf&quot; is created containing our list of ntp servers and the ntpd service is started.    </p>
+
+<h4>G. Create modules/ntp/templates/client-ntp.conf.erb with the following contents:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"># This file is being maintained by Puppet.
+# DO NOT EDIT
+
+# Permit time synchronization with our time source, but do not
+# permit the source to query or modify the service on this system.
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+# Permit all access over the loopback interface.  This could
+# be tightened as well, but to do so would effect some of
+# the administrative functions.
+restrict 127.0.0.1
+restrict -6 ::1
+
+&lt;% ntpServerList.each do |ntpServer| -%&gt;
+server &lt;%= ntpServer %&gt;
+&lt;% end -%&gt;
+
+# Drift file.  Put this in a directory which the daemon can write to.
+# No symbolic links allowed, either, since the daemon updates the file
+# by creating a temporary in the same directory and then rename()&#39;ing
+# it to the file.
+driftfile /var/lib/ntp/drift
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>This .erb file is a ruby template describing what the file /etc/ntp.conf should contain. The magic of this is the section:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">&lt;% ntpServerList.each do |ntpServer| -%&gt;
+server &lt;%= ntpServer %&gt;
+&lt;% end -%&gt;</code></pre></figure>
+
+<p>This section is actually ruby code that runs a foreach loop on the array &quot;ntpServerList&quot; and adds a line for each ntp server contained in that array. </p>
+
+<h4>H. Run the tree command and you should see the following file/directory structure:</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# tree
+.
+├── example_box
+│   └── dummy.box
+├── manifests
+│   └── site.pp
+├── modules
+│   ├── common
+│   │   └── manifests
+│   │       └── init.pp
+│   └── ntp
+│       ├── manifests
+│       │   └── init.pp
+│       └── templates
+│           └── client-ntp.conf.erb
+└── Vagrantfile
+
+8 directories, 6 files
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h3>2. Modify the Vagrantfile we created in the last post to include the following:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat Vagrantfile
+Vagrant.configure(&quot;2&quot;) do |config|
+  config.vm.box = &#39;dummy&#39;
+  config.vm.box_url = &#39;./example_box/dummy.box&#39;
+
+  config.vm.provider :vsphere do |vsphere|
+    vsphere.host = &#39;192.168.1.195&#39;
+    vsphere.name = &#39;vagrant-test&#39;
+    vsphere.clone_from_vm = true
+    vsphere.template_name = &#39;vagrant-centos-6.5&#39;
+    vsphere.user = &#39;root@localos&#39;
+    vsphere.password = &#39;S0meR@nd0mP@ssw0rd&#39;
+    vsphere.insecure = true
+    vsphere.data_store_name = &#39;vsanDatastore&#39;
+    vsphere.linked_clone = true
+    vsphere.customization_spec_name = &#39;vagrant-centos&#39;
+  end
+  config.vm.provision &quot;puppet&quot; do |puppet|
+    puppet.manifests_path = &quot;manifests&quot;
+    puppet.manifest_file = &quot;site.pp&quot;
+    puppet.module_path = &quot;modules&quot;
+  end
+end
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>The following new lines have been added:</p>
+
+<ul>
+<li>&quot;puppet.manifests_path&quot; specifies the sub-directory, from the directory containing the Vagrantfile, that contains the puppet manifests.</li>
+<li>&quot;puppet.manifest_file&quot; specifies the puppet manifest that will be initially run.</li>
+<li>&quot;puppet.module_path&quot; specifies the sub-directory, from the directory containing the Vagrantfile, that contains the puppet modules.</li>
+</ul>
+
+<h3>3. Test the configuration changes we made by running a &quot;vagrant up&quot;:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant up --provider=vsphere
+Bringing machine &#39;default&#39; up with &#39;vsphere&#39; provider...
+==&gt; default: Calling vSphere CloneVM with the following settings:
+==&gt; default:  -- Source VM: vagrant-centos-6.5
+==&gt; default:  -- Name: vagrant-test
+==&gt; default: Waiting for SSH to become available...
+==&gt; default: New virtual machine successfully cloned and started
+==&gt; default: Rsyncing folder: /root/vagrant-vms/ =&gt; /vagrant
+==&gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ =&gt; /tmp/vagrant-puppet-1/manifests
+==&gt; default: Rsyncing folder: /root/vagrant-vms/modules/ =&gt; /tmp/vagrant-puppet-1/modules-0
+==&gt; default: Running provisioner: puppet...
+Running Puppet with site.pp...
+notice: /File[/etc/ntp.conf]/content: content changed &#39;{md5}d7e1e16f9c0cd6382f6b68b486163db1&#39; to &#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&#39;
+notice: /Stage[main]/Ntp/Service[ntpd]: Triggered &#39;refresh&#39; from 1 events
+notice: Finished catalog run in 0.72 seconds
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>You might notice a few new lines since the &quot;vagrant up&quot; we ran in the last post. </p>
+
+<ul>
+<li>The manifests &amp; modules folders we specified in Vagrantfile have been copied over using rsync. </li>
+<li>The Puppet agent is running a &quot;puppet apply&quot; using the site.pp file we specified. </li>
+<li>/etc/ntp.conf was modified by Puppet</li>
+<li>The NTP service was notified that it needed to refresh it&#39;s configuration since /etc/ntp.conf had been modified.</li>
+</ul>
+
+<h3>4. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we specified:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant ssh
+[vagrant@vagrant-test ~]$ cat /etc/ntp.conf
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+# Permit time synchronization with our time source, but do not
+# permit the source to query or modify the service on this system.
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+# Permit all access over the loopback interface.  This could
+# be tightened as well, but to do so would effect some of
+# the administrative functions.
+restrict 127.0.0.1
+restrict -6 ::1
+
+server 0.pool.ntp.org iburst
+server 1.pool.ntp.org iburst
+server 2.pool.ntp.org iburst
+
+# Drift file.  Put this in a directory which the daemon can write to.
+# No symbolic links allowed, either, since the daemon updates the file
+# by creating a temporary in the same directory and then rename()&#39;ing
+# it to the file.
+driftfile /var/lib/ntp/drift
+[vagrant@vagrant-test ~]$ exit
+logout
+Connection to 192.168.1.123 closed.
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h3>5. Modify the site.pp file to add a node definition for our vagrant vm:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# cat site.pp
+node default {
+  include common
+    class {&#39;ntp&#39;:}
+}
+node &#39;vagrant-test.mylab.net&#39; {
+  include common
+    class {&#39;ntp&#39;:
+      ntpServerList =&gt; [&#39;3.pool.ntp.org&#39;,&#39;4.pool.ntp.org&#39;,&#39;5.pool.ntp.org&#39;]
+    }
+}</code></pre></figure>
+
+<p>The new &quot;node &#39;vagrant-test.mylab.net&#39;&quot; definition will only be run by hosts with a matching hostname. Any host that doesn&#39;t have a matching host definition will continue to run the &quot;node default&quot; section. Node definitions allow you to change variables or even modules that will be run by specific hosts and provide flexibility in the changes made to a given host. Our new node section will configure &quot;vagrant-test.mylab.net&quot; to use a different set of ntp servers than any other host that runs this Puppet manifest  </p>
+
+<h3>6. Run &#39;vagrant provision&#39; to apply the updated Puppet manifest to our Vagrant vm:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant provision
+==&gt; default: Rsyncing folder: /root/vagrant-vms/ =&gt; /vagrant
+==&gt; default: Rsyncing folder: /root/vagrant-vms/manifests/ =&gt; /tmp/vagrant-puppet-1/manifests
+==&gt; default: Rsyncing folder: /root/vagrant-vms/modules/ =&gt; /tmp/vagrant-puppet-1/modules-0
+==&gt; default: Running provisioner: puppet...
+Running Puppet with site.pp...
+notice: /File[/etc/ntp.conf]/content: content changed &#39;{md5}f7a83a4ca84e1ba2bba0166c5620e9e7&#39; to &#39;{md5}414e811fdbfa3f8cfa38e1e4e6d0586f&#39;
+notice: /Stage[main]/Ntp/Service[ntpd]: Triggered &#39;refresh&#39; from 1 events
+notice: Finished catalog run in 0.34 seconds
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<p>While we could have destroyed and recreated our Vagrant vm to test the change to the Puppet manifest, &#39;vagrant provision&#39; quickly resyncs the folders defined in our Vagrantfile and re-runs our Puppet manifest.</p>
+
+<h3>7. Connect to the vagrant vm to validate that /etc/ntp.conf has been modified to include the three NTP servers we defined fof this specific node:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">root@vagrant vagrant-vms]# vagrant ssh
+Last login: Tue May  6 15:09:50 2014 from 192.168.1.40
+[vagrant@vagrant-test ~]$ cat /etc/ntp.conf
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+# Permit time synchronization with our time source, but do not
+# permit the source to query or modify the service on this system.
+restrict default kod nomodify notrap nopeer noquery
+restrict -6 default kod nomodify notrap nopeer noquery
+
+# Permit all access over the loopback interface.  This could
+# be tightened as well, but to do so would effect some of
+# the administrative functions.
+restrict 127.0.0.1
+restrict -6 ::1
+
+server 3.pool.ntp.org iburst
+server 4.pool.ntp.org iburst
+server 5.pool.ntp.org iburst
+
+# Drift file.  Put this in a directory which the daemon can write to.
+# No symbolic links allowed, either, since the daemon updates the file
+# by creating a temporary in the same directory and then rename()&#39;ing
+# it to the file.
+driftfile /var/lib/ntp/drift
+[vagrant@vagrant-test ~]$ exit
+logout
+Connection to 192.168.1.123 closed.
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h3>8. Shutdown the vagrant machine:</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant vagrant-vms]# vagrant destroy
+==&gt; default: Calling vSphere PowerOff
+==&gt; default: Calling vShpere Destroy
+[root@vagrant vagrant-vms]#</code></pre></figure>
+
+<h3>Hopefully you found this post helpful in demonstrating how to use Puppet with Vagrant, as well as the benefits it provides for testing Puppet manfests and modules</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2014/04/24/vagrant-and-vcenter-guest-customization/">
         Using advanced vagrant-vsphere provider settings and vCenter guest customization
       </a>
