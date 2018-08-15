@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://0.0.0.0:4000/atom.xml" rel="self"/>
  <link href="http://0.0.0.0:4000/"/>
- <updated>2018-08-15T03:44:30+00:00</updated>
+ <updated>2018-08-15T16:41:16+00:00</updated>
  <id>http://0.0.0.0:4000</id>
  <author>
    <name>Stan Dorsett</name>
@@ -671,9 +671,9 @@ Warning: Permanently added &amp;#39;147.135.76.67&amp;#39; (ECDSA) to the list o
 &lt;p&gt;The posts in this series of blog that have been released are:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;http://192.168.1.190:4000/2018/08/08/creating-an-openstack-server-on-ovh-public-cloud/&quot;&gt;Manually creating an openstack server on OVH public cloud&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://192.168.1.190:4000/2018/08/10/using-the-openstack-cli-to-create-a-server-on-ovh-public-cloud/&quot;&gt;Using the Openstack cli to create a server on OVH public cloud&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://192.168.1.190:4000/2018/08/14/using-rclone-to-connect-to-ovh-public-cloud-swift-storage/&quot;&gt;Using rclone to manage OVH Public Cloud swift storage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://sdorsett.github.io/2018/08/08/creating-an-openstack-server-on-ovh-public-cloud/&quot;&gt;Manually creating an openstack server on OVH public cloud&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://sdorsett.github.io/2018/08/10/using-the-openstack-cli-to-create-a-server-on-ovh-public-cloud/&quot;&gt;Using the Openstack cli to create a server on OVH public cloud&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://sdorsett.github.io/2018/08/14/using-rclone-to-connect-to-ovh-public-cloud-swift-storage/&quot;&gt;Using rclone to manage OVH Public Cloud swift storage&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;hr&gt;
