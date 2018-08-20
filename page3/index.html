@@ -116,6 +116,207 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">
+        Installing a ESXi 6.0 virtual machine for use with Packer
+      </a>
+    </h1>
+
+    <span class="post-date">23 Dec 2015</span>
+
+    <p>This is the second in a series of posts on <a href="https://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files/">using a Packer pipeline to generate Vagrant .box files</a>.</p>
+
+<p>In order to begin using Packer to create images, we will first need to lay the &quot;virtual&quot; ground work. Packer can create virtual machine images on a wide variety of virtualization or cloud platforms, but since I work for VMware I have been using the ESXi hypervisor.</p>
+
+<ul>
+<li>This post will be covering installing ESXi as a virtual machine on a vSphere cluster. There is no reason that you couldn&#39;t use Packer with a stand alone physical server that has ESXi installed as well.</li>
+<li>These steps were performed using the vCenter 6.0 web client. You could just as well use ESXi 5 with the C# client, but the steps for setting up nested virtualization will be slightly different.</li>
+<li>There is nothing new about the steps being covered, but I figured it would be best to go ahead and document them.</li>
+<li>If you are looking for the best resources regarding running ESXi in a virtual machine, I would suggest taking a look at <a href="http://www.virtuallyghetto.com/">William Lam&#39;s blog</a> which covers this subject in great detail. Williams site also provides more details about the embedded host client we will be using.</li>
+</ul>
+
+<p>Let&#39;s get started...</p>
+
+<h2>1. Log into the web client of your vCenter instance and create a new virtual machine.</h2>
+
+<p>We first need to create a new virtual machine inside of which we will install the ESXi 6.0 hypervisor.</p>
+
+<p><img src="/assets/01-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<h2>2. Step through the new virtual machine wizard:</h2>
+
+<p><img src="/assets/02-create-new-virtual-machine.jpg" alt="screenshot">  </p>
+
+<p>Name the virtual machine what you would like and click next. I named mine &quot;packer-esxi&quot;.</p>
+
+<p><img src="/assets/03-virtual-machine-name.jpg" alt="screenshot">  </p>
+
+<p>Select the vCenter cluster or resource pool the virtual machine will reside in and click next.</p>
+
+<p><img src="/assets/04-select-compute-resource.jpg" alt="screenshot">  </p>
+
+<p>Select the datastore you want the ESXi virtual machine to be created on and click next. I&#39;m using a local datastore on one of my physical ESXi hosts, to prevent Packer from using storage shared across the entire cluster.</p>
+
+<p><img src="/assets/05-select-storage.jpg" alt="screenshot">  </p>
+
+<p>Select the compatibility (virtual hardware level) for the virtual machine and click next. I kept with the default of version 11.</p>
+
+<p><img src="/assets/06-select-compatibility.jpg" alt="screenshot">  </p>
+
+<p>Select the guest operating system. vSphere 6.0 or newer will allow you to select ESXi 6.0 as you guest OS. Click next. This is where things will be different if you are using vSphere 5.0 and the c# client since you will only have ESXi 5.0 listed as an option.</p>
+
+<p><img src="/assets/07-select-guest-os.jpg" alt="screenshot">  </p>
+
+<p>Customize to virtual hardware to have the necessary resources. I had created my ESXi vurtual machine with:</p>
+
+<ul>
+<li>2 vCPU</li>
+<li>16 GB of memory</li>
+<li>100GB virtual hard drive</li>
+</ul>
+
+<p><img src="/assets/08-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Make sure you expand CPU and enable &quot;Hardware virtualization.&quot; The ESXi installer will fail if this is not enabled.</p>
+
+<p><img src="/assets/09-customize-hardware.jpg" alt="screenshot">  </p>
+
+<p>Click finish to create the virtual machine.</p>
+
+<p><img src="/assets/10-ready-to-complete.jpg" alt="screenshot">  </p>
+
+<h2>3. Enable promiscuous mode on virtual portgroup being used by ESXi virtual machine</h2>
+
+<p>You will need to ensure the portgroup (virtual network) you are connecting the ESXi virtual machine to has promiscuous mode enabled. Enabling promiscuous mode is required for the ESXi virtual machine to pass traffic to the child virtual machines running on it.</p>
+
+<p><img src="/assets/29-enable-protgroup-promiscuous-mode.png" alt="screenshot"></p>
+
+<h2>4. Connect the virtual CDROM of the ESXi virtual machine to the ESXi 6.0 installer .iso and power it on.</h2>
+
+<p><img src="/assets/11-start-esxi-vm.jpg" alt="screenshot">  </p>
+
+<h2>5. Connect to the console of the ESXi virtual machine and step through the installer</h2>
+
+<p>Press enter to begin</p>
+
+<p><img src="/assets/12-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to accept the EULA</p>
+
+<p><img src="/assets/13-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select the 100GB virtual hard drive we created with the virtual machine</p>
+
+<p><img src="/assets/14-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Select your keyboard layout and press enter</p>
+
+<p><img src="/assets/15-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Enter the root password twice and press enter</p>
+
+<p><img src="/assets/16-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/17-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Press F11 to begin the install process</p>
+
+<p><img src="/assets/18-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p>Disconnect the .iso file from the virtual CDROM before rebooting the virtual machine</p>
+
+<p><img src="/assets/19-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/20-esxi-installer.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/21-esxi-post-install.jpg" alt="screenshot">  </p>
+
+<h2>6. Press F2 to log into ESXi and make the following changes:</h2>
+
+<ul>
+<li>Set the management IP address, subnet mask and gateway</li>
+<li>Set the hostname, dns servers and search domain</li>
+<li>Enable ssh</li>
+</ul>
+
+<p><img src="/assets/22-set-ip-address.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/23-apply-network-config.jpg" alt="screenshot">  </p>
+
+<p><img src="/assets/24-enable-ssh.jpg" alt="screenshot">  </p>
+
+<h2>7. On your local machine download the embedded host client .vib</h2>
+
+<p>The embedded host client is a VMware fling that allows you to manage an ESXi host from a browser, without needing the #c client or vCenter. You can download the embedded host client .vib from <a href="https://labs.vmware.com/flings/esxi-embedded-host-client">this link</a>.</p>
+
+<p><img src="/assets/25-download-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<h2>8. SCP the downloaded .vib to the ESXi virtual machine</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ scp ~/Downloads/esxui_signed.vib root@192.168.1.51:/tmp/
+The authenticity of host &#39;192.168.1.51 (192.168.1.51)&#39; cant be established.
+RSA key fingerprint is 82:e9:6b:9e:9d:ac:d7:8a:65:e2:9e:bf:60:fc:2b:df.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;192.168.1.51&#39; (RSA) to the list of known hosts.
+Password: ********
+esxui_signed.vib                                                                                                                                100% 2805KB   2.7MB/s   00:00
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
+
+<h2>9. SSH to the ESXi virtual machine and install the embedded host client .vib</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.51
+Password: ********
+The time and date of this login have been sent to the system logs.
+
+VMware offers supported, powerful system administration tools.  Please
+see www.vmware.com/go/sysadmintools for details.
+
+The ESXi Shell can be disabled by an administrative user. See the
+vSphere Security documentation for more information.
+
+[root@packer-esxi:~] cd tmp
+[root@packer-esxi:/tmp] ls
+esxui_signed.vib  nfsgssd_krb5cc    probe.session     vmware-root
+
+[root@packer-esxi:/tmp] esxcli software vib install -v /tmp/esxui_signed.vib
+Installation Result
+   Message: Operation finished successfully.
+   Reboot Required: false
+   VIBs Installed: VMware_bootbank_esx-ui_0.0.2-0.1.3357452
+   VIBs Removed:
+   VIBs Skipped:
+
+[root@packer-esxi:/tmp]</code></pre></figure>
+
+<h2>10. Enable guest ip hack on the ESXi virtual machine</h2>
+
+<p>The <a href="https://www.packer.io/docs/builders/vmware-iso.html">Packer VMware .iso builder documentation</a> lists the following esxcli command as needing to be run on the ESXi virtual machine:</p>
+
+<p><img src="/assets/28-enable-guest-ip-hack.jpg" alt="screenshot">  </p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-esxi:/tmp] esxcli system settings advanced set -o /Net/GuestIPHack -i 1
+[root@packer-esxi:/tmp] exit
+Connection to 192.168.1.51 closed.
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
+
+<h2>11. Log into the embedded host client to validate that it it working properly</h2>
+
+<p>Open a browser on your local machine and go to https://[ESXi-virtual-machine-ip-address]/ui<br>
+Accept any certificate warnings and log in using root as the username and the password you entered while installing ESXi.</p>
+
+<p><img src="/assets/26-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<p>Under Storage | Datastores we can see a datastore name &quot;datastore1&quot; was automatically created using the extra space of the virtual hard drive.</p>
+
+<p><img src="/assets/27-embedded-host-client.jpg" alt="screenshot">  </p>
+
+<h3>That all for this post covering how to create a ESXi virtual machine that we will use to create Packer images.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2015/12/22/pipeline-for-creating-packer-box-files/">
         Setting up a pipeline for creating Packer .box files
       </a>
@@ -1271,252 +1472,6 @@ drwxr-xr-x. 9 root root      4096 Jan  3 20:12 ..
 [root@vagrant esxi55]#</code></pre></figure>
 
 <h3>That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2014/12/28/getting-packer-installed-on-OS-X/">
-        Using packer on OS X to create an ESXi .box template for vagrant deployment
-      </a>
-    </h1>
-
-    <span class="post-date">28 Dec 2014</span>
-
-    <p>I&#39;ve been recently working on using packer to create vagrant .box files rather than manually creating them as I documented in a previous post. For this post I will be using fusion and the vagrant vmware provider, each of which have an associated cost, but I will cover a free alternative using packer and CentOS in a future post.</p>
-
-<p>Several github projects by gosddc have helped me in getting packer up and running on my Macbook:</p>
-
-<ul>
-<li><p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf">gosddc/packer-post-processor-vagrant-vmware-ovf</a>.
-This repo contains a packer post processor that leverages VMware OVF Tool to create a vmware_ovf Vagrant box that is compatible with vagrant-vcloud, vagrant-vcenter and vagrant-vcloudair vagrant providers. It is only compatible with the packer VMware builder.</p></li>
-<li><p><a href="https://github.com/gosddc/packer-templates">gosddc/packer-templates</a>.
-This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating pakcer templates on VMware products.</p></li>
-</ul>
-
-<h2>1. Let&#39;s get started by installing packer.</h2>
-
-<h4>A.  Download packer from the following link:</h4>
-
-<p><a href="https://www.packer.io/downloads.html">https://www.packer.io/downloads.html</a></p>
-
-<h4>B.  Unzip the downloaded files to /usr/local/packer_7.5:</h4>
-
-<h4>C.  Add /usr/local/packer_7.5 to your path by running the following command.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ export PATH=&quot;/usr/local/packer_7.5:$PATH&quot;</code></pre></figure>
-
-<h4>D. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ cat ~/.bash_profile
-export PATH=&quot;/usr/local/packer_7.5:$PATH&quot;
-sdorsett-mbp:~ sdorsett$</code></pre></figure>
-
-<h2>2. Next we need to download and install VMware ovftool, since the vagrant-vmware-ovf requires it.</h2>
-
-<h4>A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.0-1274719-mac.x64.dmg is what I used.</h4>
-
-<h4>B. Verify ovftool is succesfully added to your path by running &quot;ovftool -v&quot;. This command should output the version of ovftool we installed.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ ovftool -v
-VMware ovftool 3.5.0 (build-1274719)</code></pre></figure>
-
-<h2>3. Now we can download and install the gosddc packer components we will need.</h2>
-
-<h4>A. Download the most recent version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:</h4>
-
-<p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases">https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases</a></p>
-
-<h4>B. Unzip packer-post-processor-vagrant-vmware-ovf and copy it to &quot;usr/local/packer_7.5&quot;. Ensure the permissions of this file match the other files in this directory.</h4>
-
-<h4>C. Create a directory to contain the packer templates:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ mkdir ~/Documents/packer
-sdorsett-mbp:~ sdorsett$ cd ~/Documents/packer/</code></pre></figure>
-
-<h5>D. Clone the gosddc packer-templates repository:</h5>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer sdorsett$ git clone https://github.com/gosddc/packer-templates.git
-sdorsett-mbp:packer sdorsett$ cd packer-templates</code></pre></figure>
-
-<h2>4. Now we need to download the ESXi 5.5 .iso and copy it into the proper directory location.</h2>
-
-<h4>A. create an &quot;iso&quot; directory for storing the ESXi iso files:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett$ mkdir ~/Documents/packer/packer-templates/iso</code></pre></figure>
-
-<h4>B. Download and copy the &quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot; ESXi 5.5 installer to the iso directory.</h4>
-
-<h2>5. Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.</h2>
-
-<h4>A. modify ~/Documents/packer/packer-templates/templates/esxi.json to look like the following:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett$ cat templates/esxi.json
-{
-  &quot;variables&quot;: {
-    &quot;version&quot;: &quot;1.0&quot;
-  },
-  &quot;builders&quot;: [
-    {
-      &quot;name&quot;: &quot;esxi55&quot;,
-      &quot;vm_name&quot;: &quot;esxi55&quot;,
-      &quot;vmdk_name&quot;: &quot;esxi55-disk0&quot;,
-      &quot;type&quot;: &quot;vmware-iso&quot;,
-      &quot;headless&quot;: true,
-      &quot;disk_size&quot;: 4096,
-      &quot;guest_os_type&quot;: &quot;vmkernel5&quot;,
-      &quot;iso_url&quot;: &quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot;,
-      &quot;iso_checksum&quot;: &quot;ef599dc7e647177027684c0eee346ccdbc8704f2&quot;,
-      &quot;iso_checksum_type&quot;: &quot;sha1&quot;,
-      &quot;ssh_username&quot;: &quot;root&quot;,
-      &quot;ssh_password&quot;: &quot;vagrant&quot;,
-      &quot;ssh_wait_timeout&quot;: &quot;60m&quot;,
-      &quot;shutdown_command&quot;: &quot;esxcli system maintenanceMode set -e true -t 0 ; esxcli system shutdown poweroff -d 10 -r &#39;Packer Shutdown&#39; ; esxcli system maintenanceMode set -e false -t 0&quot;,
-      &quot;http_directory&quot;: &quot;.&quot;,
-      &quot;boot_wait&quot;: &quot;5s&quot;,
-      &quot;vmx_data&quot;: {
-        &quot;memsize&quot;: &quot;4096&quot;,
-        &quot;numvcpus&quot;: &quot;2&quot;,
-        &quot;vhv.enable&quot;: &quot;TRUE&quot;
-      },
-      &quot;boot_command&quot;: [
-        &quot;&lt;enter&gt;&lt;wait&gt;O&lt;wait&gt; ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/scripts/esxi-5-kickstart.cfg&lt;enter&gt;&quot;
-      ]
-    }
-  ],
-  &quot;provisioners&quot;: [
-    {
-      &quot;type&quot;: &quot;file&quot;,
-      &quot;source&quot;: &quot;puppet/modules/vagrantbaseconfig/files/vagrant.pub&quot;,
-      &quot;destination&quot;: &quot;/etc/ssh/keys-root/authorized_keys&quot;
-    },
-    {
-      &quot;type&quot;: &quot;shell&quot;,
-      &quot;script&quot;: &quot;scripts/esxi-vmware-tools_install.sh&quot;
-    },
-    {
-      &quot;type&quot;: &quot;shell&quot;,
-      &quot;script&quot;: &quot;scripts/esxi-cloning_configuration.sh&quot;
-    }
-  ],
-  &quot;post-processors&quot;: [
-   {
-     &quot;type&quot;: &quot;vagrant-vmware-ovf&quot;,
-     &quot;compression_level&quot;: 9,
-     &quot;output&quot;: &quot;{{.BuildName}}-{{.Provider}}-{{user `version`}}.box&quot;
-
-   }
-  ]
-}</code></pre></figure>
-
-<p>There are several things I would like to point out in the esxi.json file we just created.</p>
-
-<ol>
-<li>builder - this section specifies that we will be using the &quot;vmware-iso&quot; builder, with VMware fusion, to create our packer template. We can modify attributes of our template virtual machine in this section:
-
-<ul>
-<li>disk size ( disk_size)</li>
-<li>memory ( memsize )</li>
-<li>vCPU count ( numvcpus )</li>
-</ul></li>
-<li>provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:
-
-<ul>
-<li>a file provisioner that will copy the vagrant public ssh key into our ESXi template</li>
-<li>a shell script to install the vmware tools VIB for nested ESXi</li>
-<li>a shell script to make necessary MAC address changes in our nested ESXi template.</li>
-</ul></li>
-<li>post-processors - this final section will convert the virtual machine artifact generated in VMware fusion into a vmware-ovf .box file we can use with vagrant</li>
-</ol>
-
-<h4>B. Validate the packer esxi.json file is ready for building by running the following command:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett$ packer validate templates/esxi.json
-Template validated successfully.</code></pre></figure>
-
-<h4>C. Start the build by running:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett$ packer build templates/esxi.json
-esxi55 output will be in this color.
-
-==&gt; esxi55: Downloading or copying ISO
-    esxi55: Downloading or copying: file:///Users/sdorsett/Documents/packer/packer-templates/iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso
-==&gt; esxi55: Creating virtual machine disk
-==&gt; esxi55: Building and writing VMX file
-==&gt; esxi55: Starting HTTP server on port 8351
-==&gt; esxi55: Starting virtual machine...
-    esxi55: The VM will be run headless, without a GUI. If you want to
-    esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986
-==&gt; esxi55: Waiting 5s for boot...
-==&gt; esxi55: Connecting to VM via VNC
-==&gt; esxi55: Typing the boot command over VNC...
-==&gt; esxi55: Waiting for SSH to become available...
-==&gt; esxi55: Connected to SSH!
-==&gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub =&gt; /etc/ssh/keys-root/authorized_keys
-==&gt; esxi55: Provisioning with shell script: scripts/esxi-vmware-tools_install.sh
-    esxi55: Installation Result
-    esxi55: Message: The update completed successfully, but the system needs to be rebooted for the changes to be effective.
-    esxi55: Reboot Required: true
-    esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
-    esxi55: VIBs Removed:
-    esxi55: VIBs Skipped:
-==&gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
-    esxi55: diff: can&#39;t stat &#39;/tmp/auto-backup.35216//etc/ssh/keys-root/authorized_keys&#39;: No such file or directory
-    esxi55: Saving current state in /bootbank
-    esxi55: Clock updated.
-    esxi55: Time: 02:09:44   Date: 12/30/2014   UTC
-==&gt; esxi55: Gracefully halting virtual machine...
-    esxi55: Waiting for VMware to clean up after itself...
-==&gt; esxi55: Deleting unnecessary VMware files...
-    esxi55: Deleting: output-esxi55/564d2ab2-395b-a9ba-9c17-2fe36682237c.vmem
-    esxi55: Deleting: output-esxi55/esxi55.plist
-    esxi55: Deleting: output-esxi55/vmware.log
-==&gt; esxi55: Cleaning VMX prior to finishing up...
-    esxi55: Unmounting floppy from VMX...
-    esxi55: Detaching ISO from CD-ROM device...
-==&gt; esxi55: Compacting the disk image
-==&gt; esxi55: Running post-processor: vagrant-vmware-ovf
-==&gt; esxi55 (vagrant-vmware-ovf): Creating Vagrant box for &#39;vmware_ovf&#39; provider
-    esxi55 (vagrant-vmware-ovf): Deleting key: ide1:0.filename
-    esxi55 (vagrant-vmware-ovf): Deleting key: floppy0.present
-    esxi55 (vagrant-vmware-ovf): Setting key: floppy0.present = FALSE
-    esxi55 (vagrant-vmware-ovf): Setting key: ide1:0.present = FALSE
-    esxi55 (vagrant-vmware-ovf): Creating directory: output-esxi55/ovf
-    esxi55 (vagrant-vmware-ovf): Starting ovftool
-    esxi55 (vagrant-vmware-ovf): Reading files in output-esxi55/ovf
-    esxi55 (vagrant-vmware-ovf): Copying: esxi55-disk1.vmdk
-    esxi55 (vagrant-vmware-ovf): Copying: esxi55.mf
-    esxi55 (vagrant-vmware-ovf): Copying: esxi55.ovf
-    esxi55 (vagrant-vmware-ovf): Compressing: Vagrantfile
-    esxi55 (vagrant-vmware-ovf): Compressing: esxi55-disk1.vmdk
-    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.mf
-    esxi55 (vagrant-vmware-ovf): Compressing: esxi55.ovf
-    esxi55 (vagrant-vmware-ovf): Compressing: metadata.json
-Build &#39;esxi55&#39; finished.
-
-==&gt; Builds finished. The artifacts of successful builds are:
---&gt; esxi55: &#39;vmware_ovf&#39; provider box: esxi55-vmware_ovf-1.0.box
-sdorsett-mbp:packer-templates sdorsett$</code></pre></figure>
-
-<p>If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:</p>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">esxi55: The VM will be run headless, without a GUI. If you want to
-    esxi55: view the screen of the VM, connect via VNC without a password to
-    esxi55: 127.0.0.1:5986</code></pre></figure>
-
-<p>When I connected the &quot;Chicken of the VNC&quot; client installed on my macbook to &quot;127.0.0.1:5986&quot; I could see where the build was at during the install process:</p>
-
-<p><img src="/assets/01-esxi-vnc-client.png" alt="screenshot">  </p>
-
-<h4>D. Once the packer build completes you should end up with a &quot;esxi55-vmware_ovf-1.0.box&quot; file in the same directory you ran the &quot;packer build&quot; command in. This .box file can be used with vagrant and the gosddc vagrant providers to deploy this template to ESXi, vCenter, vCloud Director and vCloud Air.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:packer-templates sdorsett$ ls *.box
-esxi55-vmware_ovf-1.0.box</code></pre></figure>
-
-<h3>Hopefully you found this post helpful in getting packer and the packer vagrant-vmware-ovf post processor installed/configured. The next blog post will be covering how to install packer on CentOS and build a packer virtual machine on a remote ESXi host.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
