@@ -116,6 +116,411 @@
   
   <div class="post">
     <h1 class="post-title">
+      <a href="/2015/12/24/installing-packer-and-ovftool-on-centos/">
+        Setting up Packer, ovftool and Apache web server on a CentOS virtual machine
+      </a>
+    </h1>
+
+    <span class="post-date">24 Dec 2015</span>
+
+    <p>This is the third in a series of posts on <a href="https://sdorsett.github.io/2015/12/22/pipeline-for-creating-packer-box-files/">using a Packer pipeline to generate Vagrant .box files</a>.</p>
+
+<p>In the <a href="https://sdorsett.github.io/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">last post</a> we setup a ESXi virtual machine that would be the target for creating Packer images. In order to follow along with this post you will need two things:</p>
+
+<ul>
+<li>A fresh CentOS virtual machine on which we will install Packer - I&#39;m using CentOS 6.6 minimal install named &quot;packer-centos&quot; with 2 vCPU, 4GB of memory and a 100GB virtual hard drive. I also gave this virtual machine the IP address of 192.168.1.52</li>
+<li><a href="https://my.vmware.com/web/vmware/details?productId=491&downloadGroup=OVFTOOL410">VMware ovftool</a> - if you followed the previous post and are using ESXi 6.0 you will need a copy of ovftool 4.1.</li>
+</ul>
+
+<p>Let&#39;s get started...</p>
+
+<h2>1. SSH to CentOS virtual machine you created.</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ ssh root@192.168.1.52
+The authenticity of host &#39;192.168.1.52 (192.168.1.52)&#39; cant be established.
+RSA key fingerprint is 58:f5:22:2e:f6:64:04:59:6b:0b:76:2f:33:6f:03:85.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added &#39;192.168.1.52&#39; (RSA) to the list of known hosts.
+root@192.168.1.52&#39;s password:
+Last login: Thu Oct 22 17:52:17 2015 from 192.168.1.1
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>2. Install the EPEL repository</h2>
+
+<p>There will be several package we need to install that are coming from the CentOS EPEL repository, so we will need to install it.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# yum install -y epel-release
+Loaded plugins: fastestmirror
+Setting up Install Process
+Determining fastest mirrors
+ * base: yum.tamu.edu
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+base
+base/primary_db
+extras
+extras/primary_db
+updates
+updates/primary_db
+Resolving Dependencies
+--&gt; Running transaction check
+---&gt; Package epel-release.noarch 0:6-8 will be installed
+--&gt; Finished Dependency Resolution
+
+Dependencies Resolved
+
+=============================================================
+ Package          Arch       Version     Repository     Size
+=============================================================
+Installing:
+ epel-release     noarch     6-8         extras         14 k
+
+Transaction Summary
+=============================================================
+Install       1 Package(s)
+
+Total download size: 14 k
+Installed size: 22 k
+Downloading Packages:
+epel-release-6-8.noarch.rpm     |  14 kB     00:00
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : epel-release-6-8.noarch     1/1
+  Verifying  : epel-release-6-8.noarch     1/1
+
+Installed:
+  epel-release.noarch 0:6-8
+
+Complete!
+
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>3. Use yum to make sure the following packages are installed:</h2>
+
+<ul>
+<li>git - for version control and the ability to pull down git repositories</li>
+<li>wget - provides the ability to download packages from URLs</li>
+<li>unzip - needed to unzip Packer, since it comes as a .zip</li>
+<li>sshpass - used for running SSH commands, but it allows us to specify a password to use</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# yum install -y git wget unzip sshpass
+Loaded plugins: fastestmirror
+Setting up Install Process
+Loading mirror speeds from cached hostfile
+ * base: yum.tamu.edu
+ * epel: fedora-epel.mirror.lstn.net
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+Package git-1.7.1-3.el6_4.1.x86_64 already installed and latest version
+Package wget-1.12-5.el6_6.1.x86_64 already installed and latest version
+Resolving Dependencies
+--&gt; Running transaction check
+---&gt; Package sshpass.x86_64 0:1.05-1.el6 will be installed
+---&gt; Package unzip.x86_64 0:6.0-2.el6_6 will be installed
+--&gt; Finished Dependency Resolution
+
+Dependencies Resolved
+
+============================================================
+ Package     Arch       Version        Repository     Size
+============================================================
+Installing:
+ sshpass     x86_64     1.05-1.el6     epel           19 k
+ unzip       x86_64     6.0-2.el6_6    base           149 k
+
+Transaction Summary
+============================================================
+Install       2 Package(s)
+
+Total download size: 168 k
+Installed size: 346 k
+Downloading Packages:
+(1/2): sshpass-1.05-1.el6.x86_64.rpm     |  19 kB     00:00
+(2/2): unzip-6.0-2.el6_6.x86_64.rpm      | 149 kB     00:00
+------------------------------------------------------------
+Total                                                                                                                                                                     593 kB/s | 168 kB     00:00
+warning: rpmts_HdrFromFdno: Header V3 RSA/SHA256 Signature, key ID 0608b895: NOKEY
+Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+Importing GPG key 0x0608B895:
+ Userid : EPEL (6) &lt;epel@fedoraproject.org&gt;
+ Package: epel-release-6-8.noarch (@extras)
+ From   : /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : sshpass-1.05-1.el6.x86_64     1/2
+  Installing : unzip-6.0-2.el6_6.x86_64      2/2
+  Verifying  : unzip-6.0-2.el6_6.x86_64      1/2
+  Verifying  : sshpass-1.05-1.el6.x86_64     2/2
+
+Installed:
+  sshpass.x86_64 0:1.05-1.el6     unzip.x86_64 0:6.0-2.el6_6
+
+Complete!
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>4. Install Packer</h2>
+
+<p>Go to <a href="https://packer.io/downloads.html">https://packer.io/downloads.html</a> and copy the URL for the Linux 64-bit package. In the SSH session to our CentOS virtual machine, perform the following steps:</p>
+
+<p>Create a new directory to install packer into</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# mkdir /usr/local/packer_0.8.6
+[root@packer-centos ~]#</code></pre></figure>
+
+<p>Download Packer using the URL you copied from the packer.io download page:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# wget https://releases.hashicorp.com/packer/0.8.6/packer_0.8.6_linux_amd64.zip
+--2015-12-23 17:22:03--  https://releases.hashicorp.com/packer/0.8.6/packer_0.8.6_linux_amd64.zip
+Resolving releases.hashicorp.com... 23.235.44.69
+Connecting to releases.hashicorp.com|23.235.44.69|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 132616691 (126M) [application/zip]
+Saving to: “packer_0.8.6_linux_amd64.zip”
+
+100%[====================================&gt;] 132,616,691 6.97M/s   in 18s
+
+2015-12-23 17:22:22 (6.95 MB/s) - “packer_0.8.6_linux_amd64.zip” saved [132616691/132616691]
+
+[root@packer-centos ~]# unzip packer_0.8.6_linux_amd64.zip -d /usr/local/packer_8.6/
+Archive:  packer_0.8.6_linux_amd64.zip
+  inflating: /usr/local/packer_8.6/packer
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-chroot
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-ebs
+  inflating: /usr/local/packer_8.6/packer-builder-amazon-instance
+  inflating: /usr/local/packer_8.6/packer-builder-digitalocean
+  inflating: /usr/local/packer_8.6/packer-builder-docker
+  inflating: /usr/local/packer_8.6/packer-builder-file
+  inflating: /usr/local/packer_8.6/packer-builder-googlecompute
+  inflating: /usr/local/packer_8.6/packer-builder-null
+  inflating: /usr/local/packer_8.6/packer-builder-openstack
+  inflating: /usr/local/packer_8.6/packer-builder-parallels-iso
+  inflating: /usr/local/packer_8.6/packer-builder-parallels-pvm
+  inflating: /usr/local/packer_8.6/packer-builder-qemu
+  inflating: /usr/local/packer_8.6/packer-builder-virtualbox-iso
+  inflating: /usr/local/packer_8.6/packer-builder-virtualbox-ovf
+  inflating: /usr/local/packer_8.6/packer-builder-vmware-iso
+  inflating: /usr/local/packer_8.6/packer-builder-vmware-vmx
+  inflating: /usr/local/packer_8.6/packer-post-processor-artifice
+  inflating: /usr/local/packer_8.6/packer-post-processor-atlas
+  inflating: /usr/local/packer_8.6/packer-post-processor-compress
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-import
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-push
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-save
+  inflating: /usr/local/packer_8.6/packer-post-processor-docker-tag
+  inflating: /usr/local/packer_8.6/packer-post-processor-vagrant
+  inflating: /usr/local/packer_8.6/packer-post-processor-vagrant-cloud
+  inflating: /usr/local/packer_8.6/packer-post-processor-vsphere
+  inflating: /usr/local/packer_8.6/packer-provisioner-ansible-local
+  inflating: /usr/local/packer_8.6/packer-provisioner-chef-client
+  inflating: /usr/local/packer_8.6/packer-provisioner-chef-solo
+  inflating: /usr/local/packer_8.6/packer-provisioner-file
+  inflating: /usr/local/packer_8.6/packer-provisioner-powershell
+  inflating: /usr/local/packer_8.6/packer-provisioner-puppet-masterless
+  inflating: /usr/local/packer_8.6/packer-provisioner-puppet-server
+  inflating: /usr/local/packer_8.6/packer-provisioner-salt-masterless
+  inflating: /usr/local/packer_8.6/packer-provisioner-shell
+  inflating: /usr/local/packer_8.6/packer-provisioner-shell-local
+  inflating: /usr/local/packer_8.6/packer-provisioner-windows-restart
+  inflating: /usr/local/packer_8.6/packer-provisioner-windows-shell
+[root@packer-centos ~]#</code></pre></figure>
+
+<p>Update ~/.bashrc to add &quot;/usr/local/packer_8.6&quot; to our path. Run &quot;source ~/.bashrc&quot; to re-read ~/.bashrc and validate $PATH has been updated.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# echo &#39;export PATH=&quot;/usr/local/packer_8.6:$PATH&quot;&#39; &gt;&gt; ~/.bashrc
+[root@packer-centos ~]# source ~/.bashrc
+[root@packer-centos ~]# echo $PATH
+/usr/local/packer_8.6:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+[root@packer-centos ~]#</code></pre></figure>
+
+<p>Ensure the packer binary can be found and is showing the proper version</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# which packer
+/usr/local/packer_8.6/packer
+[root@packer-centos ~]# packer -v
+0.8.6
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>5. Stop the iptables firewall and disable it from started on reboot of the virtual machine</h2>
+
+<p>Packer will start a web server service for providing kickstart and script files to Packer images during install. This service will use a random port within a range, so we will need to stop iptables in order to allow the Packer images to connect.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# service iptables stop
+[root@packer-centos ~]# chkconfig iptables off
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>6. Install ovftool on the CentOS virtual machine</h2>
+
+<p>Download linux 64bit version of ovftool 4.1 on your local machine</p>
+
+<p><img src="/assets/01-download-ovftool-linux-64bit.png" alt="screenshot">  </p>
+
+<p>SCP the downloaded file to the CentOS virtual machine</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sdorsett-mbp:~ sdorsett$ scp ~/Downloads/VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle root@192.168.1.52:/root/
+root@192.168.1.52&#39;s password:
+VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle                    100%   37MB  12.4MB/s   00:03
+sdorsett-mbp:~ sdorsett$</code></pre></figure>
+
+<p>Install ovftool on the CentOS virtual machine and validate the version</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# ls
+anaconda-ks.cfg  install.log  install.log.syslog  packer_0.8.6_linux_amd64.zip  VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle
+[root@packer-centos ~]# ./VMware-ovftool-4.1.0-2459827-lin.x86_64.bundle
+Extracting VMware Installer...done.
+You must accept the VMware OVF Tool component for Linux End User
+License Agreement to continue.  Press Enter to proceed.
+VMWARE END USER LICENSE AGREEMENT
+
+PLEASE NOTE THAT THE TERMS OF THIS END USER LICENSE AGREEMENT SHALL GOVERN YOUR
+USE OF THE SOFTWARE, REGARDLESS OF ANY TERMS THAT MAY APPEAR DURING THE
+INSTALLATION OF THE SOFTWARE.
+
+IMPORTANT-READ CAREFULLY:   BY DOWNLOADING, INSTALLING, OR USING THE SOFTWARE,
+YOU (THE INDIVIDUAL OR LEGAL ENTITY) AGREE TO BE BOUND BY THE TERMS OF THIS END
+USER LICENSE AGREEMENT (&quot;EULA&quot;).  IF YOU DO NOT AGREE TO THE TERMS OF THIS
+EULA, YOU MUST NOT DOWNLOAD, INSTALL, OR USE THE SOFTWARE, AND YOU MUST DELETE
+OR RETURN THE UNUSED SOFTWARE TO THE VENDOR FROM WHICH YOU ACQUIRED IT WITHIN
+THIRTY (30) DAYS AND REQUEST A REFUND OF THE LICENSE FEE, IF ANY, THAT YOU PAID
+FOR THE SOFTWARE.
+...
+
+Do you agree? [yes/no]: yes
+
+The product is ready to be installed.  Press Enter to begin
+installation or Ctrl-C to cancel.
+
+Installing VMware OVF Tool component for Linux 4.1.0
+    Configuring...
+[######################################################################] 100%
+Installation was successful.
+[root@packer-centos ~]# which ovftool
+/usr/bin/ovftool
+[root@packer-centos ~]# ovftool -v
+VMware ovftool 4.1.0 (build-2459827)
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>7. Install apache web server on the CentOS virtual machine</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# yum install -y httpd
+Loaded plugins: fastestmirror
+Setting up Install Process
+Loading mirror speeds from cached hostfile
+ * base: yum.tamu.edu
+ * epel: fedora-epel.mirror.lstn.net
+ * extras: centos.firehosted.com
+ * updates: mirrors.adams.net
+Resolving Dependencies
+--&gt; Running transaction check
+---&gt; Package httpd.x86_64 0:2.2.15-47.el6.centos.1 will be installed
+--&gt; Processing Dependency: httpd-tools = 2.2.15-47.el6.centos.1 for package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&gt; Processing Dependency: apr-util-ldap for package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&gt; Processing Dependency: /etc/mime.types for package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&gt; Processing Dependency: libaprutil-1.so.0()(64bit) for package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&gt; Processing Dependency: libapr-1.so.0()(64bit) for package: httpd-2.2.15-47.el6.centos.1.x86_64
+--&gt; Running transaction check
+---&gt; Package apr.x86_64 0:1.3.9-5.el6_2 will be installed
+---&gt; Package apr-util.x86_64 0:1.3.9-3.el6_0.1 will be installed
+---&gt; Package apr-util-ldap.x86_64 0:1.3.9-3.el6_0.1 will be installed
+---&gt; Package httpd-tools.x86_64 0:2.2.15-47.el6.centos.1 will be installed
+---&gt; Package mailcap.noarch 0:2.1.31-2.el6 will be installed
+--&gt; Finished Dependency Resolution
+
+Dependencies Resolved
+
+======================================================================
+ Package        Arch       Version                  Repository   Size
+======================================================================
+Installing:
+ httpd          x86_64     2.2.15-47.el6.centos.1   updates      830 k
+Installing for dependencies:
+ apr            x86_64     1.3.9-5.el6_2            base         123 k
+ apr-util       x86_64     1.3.9-3.el6_0.1          base         87 k
+ apr-util-ldap  x86_64     1.3.9-3.el6_0.1          base         15 k
+ httpd-tools    x86_64     2.2.15-47.el6.centos.1   updates      77 k
+ mailcap        noarch     2.1.31-2.el6             base         27 k
+
+Transaction Summary
+======================================================================
+Install       6 Package(s)
+
+Total download size: 1.1 M
+Installed size: 3.6 M
+Downloading Packages:
+(1/6): apr-1.3.9-5.el6_2.x86_64.rpm                   | 123 kB  00:00
+(2/6): apr-util-1.3.9-3.el6_0.1.x86_64.rpm            |  87 kB  00:00
+(3/6): apr-util-ldap-1.3.9-3.el6_0.1.x86_64.rpm       |  15 kB  00:00
+(4/6): httpd-2.2.15-47.el6.centos.1.x86_64.rpm        | 830 kB  00:00
+(5/6): httpd-tools-2.2.15-47.el6.centos.1.x86_64.rpm  |  77 kB  00:00
+(6/6): mailcap-2.1.31-2.el6.noarch.rpm                |  27 kB  00:00
+----------------------------------------------------------------------
+Total                                        711 kB/s | 1.1 MB  00:01
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : apr-1.3.9-5.el6_2.x86_64                         1/6
+  Installing : apr-util-1.3.9-3.el6_0.1.x86_64                  2/6
+  Installing : httpd-tools-2.2.15-47.el6.centos.1.x86_64        3/6
+  Installing : apr-util-ldap-1.3.9-3.el6_0.1.x86_64             4/6
+  Installing : mailcap-2.1.31-2.el6.noarch                      5/6
+  Installing : httpd-2.2.15-47.el6.centos.1.x86_64              6/6
+  Verifying  : httpd-tools-2.2.15-47.el6.centos.1.x86_64        1/6
+  Verifying  : httpd-2.2.15-47.el6.centos.1.x86_64              2/6
+  Verifying  : apr-util-ldap-1.3.9-3.el6_0.1.x86_64             3/6
+  Verifying  : apr-1.3.9-5.el6_2.x86_64                         4/6
+  Verifying  : mailcap-2.1.31-2.el6.noarch                      5/6
+  Verifying  : apr-util-1.3.9-3.el6_0.1.x86_64                  6/6
+
+Installed:
+  httpd.x86_64 0:2.2.15-47.el6.centos.1
+
+Dependency Installed:
+  apr.x86_64 0:1.3.9-5.el6_2    apr-util.x86_64 0:1.3.9-3.el6_0.1    
+  apr-util-ldap.x86_64 0:1.3.9-3.el6_0.1  httpd-tools.x86_64 0:2.2.15-47.el6.centos.1     
+  mailcap.noarch 0:2.1.31-2.el6
+
+Complete!
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>7. Remove the apache welcome.conf, to enable directory browsing, and start the httpd service</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# rm /etc/httpd/conf.d/welcome.conf
+rm: remove regular file &#39;/etc/httpd/conf.d/welcome.conf&#39;? y
+[root@packer-centos ~]# service httpd start
+Starting httpd:                                            [  OK  ]
+[root@packer-centos ~]#</code></pre></figure>
+
+<h2>8. create the directory /var/www/html/box-files and test that the directory is visible in a browser</h2>
+
+<p>Create the /var/www/hmlt/box-files/ directory and an empty test-file.txt</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# mkdir /var/www/html/box-files
+[root@packer-centos ~]# touch /var/www/html/box-files/test-file.txt
+[root@packer-centos ~]#</code></pre></figure>
+
+<p>Open the ip address of the CentOS virtual machine in a browser and verify that the test-file.txt is visible</p>
+
+<p><img src="/assets/02-browse-apache-box-file-directory.png" alt="screenshot">  </p>
+
+<p>Delete /var/www/html/box-files/test-file.txt, since it will not be needed:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@packer-centos ~]# rm /var/www/html/box-files/test-file.txt
+rm: remove regular empty file &#39;/var/www/html/box-files/test-file.txt&#39;? y
+[root@packer-centos ~]#</code></pre></figure>
+
+<h3>That all for this post covering how to install Packer, ovftool and Apache web server on a CentOS virtual machine. In the next post we will create a Packer template that uses what we have setup so far.</h3>
+
+<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
+
+  </div>
+  
+  <div class="post">
+    <h1 class="post-title">
       <a href="/2015/12/23/installing-esxi-virtual-machine-for-packer-depolyment/">
         Installing a ESXi 6.0 virtual machine for use with Packer
       </a>
@@ -1020,458 +1425,6 @@ VM, run `vagrant status NAME`.
 [root@vagrant esxi-test]#</code></pre></figure>
 
 <h3>That all for this post covering the basics of getting vagrant and the vagrant-vcenter provider installed/configured on CentOS.</h3>
-
-<h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
-
-  </div>
-  
-  <div class="post">
-    <h1 class="post-title">
-      <a href="/2015/01/03/using-packer-on-centos/">
-        Using packer on CentOS 6.5 to create an ESXi .box template for vagrant deployment
-      </a>
-    </h1>
-
-    <span class="post-date">03 Jan 2015</span>
-
-    <p>In the previous post I demonstrated using packer to create a ESXi .box template on OS X with fusion and the vagrant vmware provider. Both of these pieces of software have a cost associated with their usage, so in this post I will demonstrate how to use CentOS 6.5 and ESXi for the same results.  </p>
-
-<p>In this post we will again talk about two helpful gosddc projects:</p>
-
-<ul>
-<li><p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf">gosddc/packer-post-processor-vagrant-vmware-ovf</a>.
-This repo contains a packer post processor that leverages VMware OVF Tool to create a vmware_ovf Vagrant box that is compatible with vagrant-vcloud, vagrant-vcenter and vagrant-vcloudair vagrant providers. It is only compatible with the packer VMware builder. This project is a post processor that makes the generation of the .box file seemless. Unfortunately there currently seems to be <a href="https://github.com/mitchellh/packer/issues/1457">a bug with packer</a> exporting the virtual machine artifact from a remote ESXi server. Hopefully this issue will be resolved with an upcoming release of packer which will allow this post processor to be used with remote ESXi.</p></li>
-<li><p><a href="https://github.com/gosddc/packer-templates">gosddc/packer-templates</a>.
-This repo contains Packer templates for boxes available at https://vagrantcloud.com/gosddc, they only work with VMware and require the packer-post-processor-vagrant-vmware-ovf post-processor to work. These templates are a good starting point for generating packer templates on VMware products.</p></li>
-</ul>
-
-<p>We will be using a virtual machine with a minimal install of CentOS 6.5 to install everything we need to build the packer template.</p>
-
-<h2>1. Let&#39;s get started by installing packer.</h2>
-
-<h4>A.  Copy the linux 64bit packer installer URL from the following link:</h4>
-
-<p><a href="https://www.packer.io/downloads.html">https://www.packer.io/downloads.html</a></p>
-
-<h4>B.  Use wget on your CentOS vm to download the URL you copied</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# wget https://dl.bintray.com/mitchellh/packer/packer_0.7.5_linux_amd64.zip
---2015-01-02 21:17:41-- https://dl.bintray.com/mitchellh/packer/packer_0.7.5_linux_amd64.zip
-Resolving dl.bintray.com... 108.168.194.91, 108.168.194.92
-Connecting to dl.bintray.com|108.168.194.91|:443... connected.
-HTTP request sent, awaiting response... 302 
-Resolving d29vzk4ow07wi7.cloudfront.net... 54.230.5.16, 54.230.5.11, 54.230.5.30, ...
-Connecting to d29vzk4ow07wi7.cloudfront.net|54.230.5.16|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 87262135 (83M) [application/unknown]
-Saving to: &quot;packer_0.7.5_linux_amd64.zip&quot;
-
-100%[==================================================================================================&gt;] 87,262,135 1.92M/s in 50s 
-
-2015-01-02 21:18:42 (1.65 MB/s) - &quot;packer_0.7.5_linux_amd64.zip&quot; saved [87262135/87262135]</code></pre></figure>
-
-<h4>C.  Install the unzip package on our CentOS vm since that&#39;s the format packer comes compressed in:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# yum install -y unzip
-Loaded plugins: fastestmirror
-Setting up Install Process
-Loading mirror speeds from cached hostfile
- * base: repos.dfw.quadranet.com
- * extras: mirror.anl.gov
- * updates: mirror.us.oneandone.net
-base                                                                                                                 | 3.7 kB     00:00     
-extras                                                                                                               | 3.4 kB     00:00     
-updates                                                                                                              | 3.4 kB     00:00     
-Resolving Dependencies
---&gt; Running transaction check
----&gt; Package unzip.x86_64 0:6.0-1.el6 will be installed
---&gt; Finished Dependency Resolution
-
-Dependencies Resolved
-
-============================================================================================================================================
- Package                         Arch                             Version                              Repository                      Size
-============================================================================================================================================
-Installing:
- unzip                           x86_64                           6.0-1.el6                            base                           149 k
-
-Transaction Summary
-============================================================================================================================================
-Install       1 Package(s)
-
-Total download size: 149 k
-Installed size: 313 k
-Downloading Packages:
-unzip-6.0-1.el6.x86_64.rpm                                                                                           | 149 kB     00:00     
-Running rpm_check_debug
-Running Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing : unzip-6.0-1.el6.x86_64                                                                                                   1/1 
-  Verifying  : unzip-6.0-1.el6.x86_64                                                                                                   1/1 
-
-Installed:
-  unzip.x86_64 0:6.0-1.el6                                                                                                                  
-
-Complete!
-[root@vagrant ~]#</code></pre></figure>
-
-<h4>D.  Create the /usr/local/packer_7.5 directory and unzip the packer download to this location.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# mkdir /usr/local/packer_7.5
-[root@vagrant ~]# cp packer_0.7.5_linux_amd64.zip /usr/local/packer_7.5/
-[root@vagrant ~]# cd /usr/local/packer_7.5/
-[root@vagrant packer_7.5]# unzip packer_0.7.5_linux_amd64.zip
-Archive: packer_0.7.5_linux_amd64.zip
-inflating: packer 
-inflating: packer-builder-amazon-chroot 
-inflating: packer-builder-amazon-ebs 
-inflating: packer-builder-amazon-instance 
-inflating: packer-builder-digitalocean 
-inflating: packer-builder-docker 
-inflating: packer-builder-googlecompute 
-inflating: packer-builder-null 
-inflating: packer-builder-openstack 
-inflating: packer-builder-parallels-iso 
-inflating: packer-builder-parallels-pvm 
-inflating: packer-builder-qemu 
-inflating: packer-builder-virtualbox-iso 
-inflating: packer-builder-virtualbox-ovf 
-inflating: packer-builder-vmware-iso 
-inflating: packer-builder-vmware-vmx 
-inflating: packer-post-processor-atlas 
-inflating: packer-post-processor-compress 
-inflating: packer-post-processor-docker-import 
-inflating: packer-post-processor-docker-push 
-inflating: packer-post-processor-docker-save 
-inflating: packer-post-processor-docker-tag 
-inflating: packer-post-processor-vagrant 
-inflating: packer-post-processor-vagrant-cloud 
-inflating: packer-post-processor-vsphere 
-inflating: packer-provisioner-ansible-local 
-inflating: packer-provisioner-chef-client 
-inflating: packer-provisioner-chef-solo 
-inflating: packer-provisioner-file 
-inflating: packer-provisioner-puppet-masterless 
-inflating: packer-provisioner-puppet-server 
-inflating: packer-provisioner-salt-masterless 
-inflating: packer-provisioner-shell</code></pre></figure>
-
-<h4>E.  Add /usr/local/packer_7.5 to your path by running the following command.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer_7.5]# export PATH=&quot;/usr/local/packer_7.5:$PATH&quot;</code></pre></figure>
-
-<h4>F. Add the export command we just ran into ~/.bash_profile to ensure this path change persists after reboots.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer_7.5]# cat ~/.bash_profile
-export PATH=&quot;/usr/local/packer_7.5:$PATH&quot;
-[root@vagrant packer_7.5]#</code></pre></figure>
-
-<h4>G. Stop iptables since packer will be using a http server to publish the ESXi kickstart files:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer_7.5]# service iptables stop
-iptables: Setting chains to policy ACCEPT: filter [ OK ]
-iptables: Flushing firewall rules: [ OK ]
-iptables: Unloading modules: [ OK ]
-[root@vagrant packer_7.5]#</code></pre></figure>
-
-<h2>2. The next thing we need to do is download and install ovftool:</h2>
-
-<h4>A. Download and install the latest version of the VMware OVF tool. VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle is what I used.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# chmod +x VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle
-[root@vagrant ~]# ./VMware-ovftool-3.5.1-1747221-lin.x86_64.bundle
-Extracting VMware Installer...done.
-You must accept the VMware OVF Tool component for Linux End User
-License Agreement to continue. Press Enter to proceed.
-VMWARE END USER LICENSE AGREEMENT
-
-1.4 &quot;Intellectual Property Rights&quot; means all worldwide intellectual
-property rights, including without limitation, copyrights, trademarks, service
-Do you agree? [yes/no]: yes
-
-The product is ready to be installed. Press Enter to begin
-installation or Ctrl-C to cancel.
-
-Installing VMware OVF Tool component for Linux 3.5.1
-Configuring...
-[######################################################################] 100%
-Installation was successful.</code></pre></figure>
-
-<h4>B. Verify ovftool is successfully added to your path by running &quot;ovftool -v&quot;. This command should output the version of ovftool we installed.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# ovftool -v
-VMware ovftool 3.5.1 (build-1747221)</code></pre></figure>
-
-<h2>3. Now we can download and install the gosddc packer components we will need.</h2>
-
-<h4>A. Download the most recent linux amd64 version of the compiled packer-processor-vagrant-vmware-ovf binary from the following link:</h4>
-
-<p><a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases">https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/releases</a></p>
-
-<h4>B. Unzip packer-post-processor-vagrant-vmware-ovf and copy it to &quot;/usr/local/packer_7.5&quot;. Ensure the permissions of this file match the other files in this directory.</h4>
-
-<h4>C. Create a directory to contain the packer templates:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# mkdir ~/packer
-[root@vagrant ~]# cd ~/packer</code></pre></figure>
-
-<h5>D. Clone the gosddc packer-templates repository:</h5>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer]# git clone https://github.com/gosddc/packer-templates.git
-Initialized empty Git repository in /root/packer/packer-templates/.git/
-remote: Counting objects: 195, done.
-remote: Total 195 (delta 0), reused 0 (delta 0)
-Receiving objects: 100% (195/195), 39.32 KiB, done.
-Resolving deltas: 100% (105/105), done.</code></pre></figure>
-
-<h2>4. Next we need to download the ESXi 5.5 .iso and copy it into the proper directory location.</h2>
-
-<h4>A. create an &quot;iso&quot; directory for storing the ESXi iso files:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer]# cd packer-templates/
-[root@vagrant packer-templates]# mkdir iso</code></pre></figure>
-
-<h4>B. Download and copy the &quot;VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot; ESXi 5.5 installer to the iso directory.</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer-templates]# cp ~/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso iso/</code></pre></figure>
-
-<h2>5. Finally we will need to modify, validate and build the packer esxi.json packer template we will be using.</h2>
-
-<h4>A. modify ~/packer/packer-templates/templates/esxi.json to look like the following:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer-templates]# vi templates/esxi.json
-[root@vagrant packer-templates]# cat templates/esxi.json
-{
-  &quot;variables&quot;: {
-  &quot;version&quot;: &quot;1.0&quot;
-  },
-  &quot;builders&quot;: [
-    {
-      &quot;name&quot;: &quot;esxi55&quot;,
-      &quot;vm_name&quot;: &quot;esxi55&quot;,
-      &quot;vmdk_name&quot;: &quot;esxi55-disk0&quot;,
-      &quot;type&quot;: &quot;vmware-iso&quot;,
-      &quot;headless&quot;: true,
-      &quot;disk_size&quot;: 4096,
-      &quot;guest_os_type&quot;: &quot;centos-64&quot;,
-      &quot;iso_url&quot;: &quot;./iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso&quot;,
-      &quot;iso_checksum&quot;: &quot;ef599dc7e647177027684c0eee346ccdbc8704f2&quot;,
-      &quot;iso_checksum_type&quot;: &quot;sha1&quot;,
-      &quot;remote_host&quot;: &quot;192.168.1.201&quot;,
-      &quot;remote_datastore&quot;: &quot;esx01-local-sata&quot;,
-      &quot;remote_username&quot;: &quot;root&quot;,
-      &quot;remote_password&quot;: &quot;mySecretP@ssw0rd&quot;,
-      &quot;remote_type&quot;: &quot;esx5&quot;,
-      &quot;ssh_username&quot;: &quot;root&quot;,
-      &quot;ssh_password&quot;: &quot;vagrant&quot;,
-      &quot;ssh_wait_timeout&quot;: &quot;60m&quot;,
-      &quot;shutdown_command&quot;: &quot;esxcli system maintenanceMode set -e true -t 0 ; esxcli system shutdown poweroff -d 10 -r &#39;Packer Shutdown&#39; ; esxcli system maintenanceMode set -e false -t 0&quot;,
-      &quot;tools_upload_flavor&quot;: &quot;linux&quot;,
-      &quot;http_directory&quot;: &quot;.&quot;,
-      &quot;boot_wait&quot;: &quot;5s&quot;,
-      &quot;vmx_data&quot;: {
-        &quot;memsize&quot;: &quot;4096&quot;,
-        &quot;numvcpus&quot;: &quot;2&quot;,
-        &quot;vhv.enable&quot;: &quot;TRUE&quot;,
-        &quot;ethernet0.virtualDev&quot;: &quot;e1000&quot;,
-        &quot;ethernet0.networkName&quot;: &quot;vlan2&quot;,
-        &quot;ethernet0.present&quot;: &quot;TRUE&quot;
-      },
-      &quot;vmx_data_post&quot;: {
-        &quot;guestos&quot;: &quot;vmkernel5&quot;,
-        &quot;ide1:0.present&quot;: &quot;FALSE&quot;
-      },
-      &quot;boot_command&quot;: [
-        &quot;&lt;enter&gt;&lt;wait&gt;O&lt;wait&gt; ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/scripts/esxi-5-kickstart.cfg&lt;enter&gt;&quot;
-      ]
-    }
-  ],
-  &quot;provisioners&quot;: [
-    {
-      &quot;type&quot;: &quot;file&quot;,
-      &quot;source&quot;: &quot;puppet/modules/vagrantbaseconfig/files/vagrant.pub&quot;,
-      &quot;destination&quot;: &quot;/etc/ssh/keys-root/authorized_keys&quot;
-    },
-    {
-      &quot;type&quot;: &quot;shell&quot;,
-      &quot;script&quot;: &quot;scripts/esxi-vmware-tools_install.sh&quot;
-    },
-    {
-      &quot;type&quot;: &quot;shell&quot;,
-      &quot;script&quot;: &quot;scripts/esxi-cloning_configuration.sh&quot;
-    }
-  ]
-}</code></pre></figure>
-
-<p>There are several things I would like to point out in the esxi.json file we just created.</p>
-
-<ol>
-<li><p>builder - this section specifies that we will be using the &quot;vmware-iso&quot; builder, with a remote ESXi host, to create our packer template. You will need to modify several part of this to match your ESXi server:</p>
-
-<ul>
-<li> remote_host - this is the IP address of our ESXi server.</li>
-<li> remote_datastore - this is the datastore our virtual machine will be built on.</li>
-<li> remote_username - the ESXi username used to connect</li>
-<li> remote_password - the ESXi password used to connect</li>
-<li> remote_type - this specifies the remote server is ESXi 5.x</li>
-<li> ethernet0.networkName - this is the portgroup that the packer virtual machine connects to. This should be the same portgroup that the CentOS vm is one, since the ESXi install will need a kickstart file served by a http server included with packer.</li>
-</ul>
-
-<p>Also in the builder section you might notice we are setting the &quot;guest_os_type&quot; to be &quot;centos-64&quot; during install. This is due to packer attempting to mount the vmtools .iso at the end of the install process. This has no impact on the install and we change it back to &quot;vmkernel5&quot; in the &quot;vmx_data_post&quot; section, which gets processed post after the virtual machine is powered down after the install process has completed.</p></li>
-<li><p>provisioners - this section specifies we will be using multiple provisioners to modify our template after it has been created:</p>
-
-<ul>
-<li>a file provisioner that will copy the vagrant public ssh key into our ESXi template</li>
-<li>a shell script to install the vmware tools VIB for nested ESXi</li>
-<li>a shell script to make necessary MAC address changes in our nested ESXi template.</li>
-</ul></li>
-<li><p>post-processors - I have removed the vagrant-vmware-ovf post processor due to the bug I mentioned earlier.</p></li>
-</ol>
-
-<h4>B. modify the esxi-cloning_configuration.sh script in the scripts directory to read as follows:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer-templates]# vi scripts/esxi-cloning_configuration.sh
-[root@vagrant packer-templates]# cat scripts/esxi-cloning_configuration.sh
-# Settings to ensure that ESXi cloning goes smooth, thanks @lamw ! see:
-# http://www.virtuallyghetto.com/2013/12/how-to-properly-clone-nested-esxi-vm.html
-esxcli system settings advanced set -o /Net/FollowHardwareMac -i 1
-sed -i &#39;/\/system\/uuid/d&#39; /etc/vmware/esx.conf
-sed -i &#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&#39; /etc/vmware/esx.conf
-
-# DHCP doesn&#39;t refresh correctly upon boot, this will force a renew, it will
-# be executed on every boot, if you don&#39;t like this behavior you can remove
-# the line during the Vagrant provisioning part.
-sed -i &#39;/exit 0/d&#39; /etc/rc.local.d/local.sh 
-echo &#39;esxcli network ip interface set -e false -i vmk0; esxcli network ip interface set -e true -i vmk0&#39; &gt;&gt; /etc/rc.local.d/local.sh 
-echo &#39;exit 0&#39; &gt;&gt; /etc/rc.local.d/local.sh 
-
-# Ensure changes are persistent
-/sbin/auto-backup.sh</code></pre></figure>
-
-<p>We are adding the following line to delete the line that contains the vmkernel port MAC address in /etc/vmware/esx.conf, in order to force it to be regenerated on each clones template:</p>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">sed -i &#39;/\/net\/vmkernelnic\/child\[0000\]\/mac/d&#39; /etc/vmware/esx.conf</code></pre></figure>
-
-<h4>C. Validate the packer esxi.json file is ready for building by running the following command:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer-templates]# packer validate templates/esxi.json 
-Template validated successfully.</code></pre></figure>
-
-<h4>D. Start the build by running:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant packer-templates]# packer build templates/esxi.json 
-esxi55 output will be in this color.
-
-==&gt; esxi55: Downloading or copying ISO
-esxi55: Downloading or copying: file:///root/packer/packer-templates/iso/VMware-VMvisor-Installer-5.5.0-1331820.x86_64.iso
-==&gt; esxi55: Uploading ISO to remote machine...
-==&gt; esxi55: Creating virtual machine disk
-==&gt; esxi55: Building and writing VMX file
-==&gt; esxi55: Starting HTTP server on port 8828
-==&gt; esxi55: Registering remote VM...
-==&gt; esxi55: Starting virtual machine...
-esxi55: The VM will be run headless, without a GUI. If you want to
-esxi55: view the screen of the VM, connect via VNC without a password to
-esxi55: 192.168.1.201:5988
-==&gt; esxi55: Waiting 5s for boot...
-==&gt; esxi55: Connecting to VM via VNC
-==&gt; esxi55: Typing the boot command over VNC...
-==&gt; esxi55: Waiting for SSH to become available...
-==&gt; esxi55: Connected to SSH!
-==&gt; esxi55: Uploading puppet/modules/vagrantbaseconfig/files/vagrant.pub =&gt; /etc/ssh/keys-root/authorized_keys
-==&gt; esxi55: Provisioning with shell script: scripts/esxi-vmware-tools_install.sh
-esxi55: Installation Result
-esxi55: Message: The update completed successfully, but the system needs to be rebooted for the changes to be effective.
-esxi55: Reboot Required: true
-esxi55: VIBs Installed: VMware_bootbank_esx-tools-for-esxi_9.7.0-0.0.00000
-esxi55: VIBs Removed:
-esxi55: VIBs Skipped:
-==&gt; esxi55: Provisioning with shell script: scripts/esxi-cloning_configuration.sh
-esxi55: diff: can&#39;t stat &#39;/tmp/auto-backup.35224//etc/ssh/keys-root/authorized_keys&#39;: No such file or directory
-esxi55: Saving current state in /bootbank
-esxi55: Clock updated.
-esxi55: Time: 04:39:41 Date: 01/03/2015 UTC
-==&gt; esxi55: Gracefully halting virtual machine...
-esxi55: Waiting for VMware to clean up after itself...
-==&gt; esxi55: Deleting unnecessary VMware files...
-esxi55: Deleting: /vmfs/volumes/esx01-local-sata/output-esxi55/vmware.log
-==&gt; esxi55: Cleaning VMX prior to finishing up...
-esxi55: Unmounting floppy from VMX...
-esxi55: Detaching ISO from CD-ROM device...
-==&gt; esxi55: Compacting the disk image
-==&gt; esxi55: Unregistering virtual machine...
-Build &#39;esxi55&#39; finished.
-
-==&gt; Builds finished. The artifacts of successful builds are:
---&gt; esxi55: VM files in directory: /vmfs/volumes/esx01-local-sata/output-esxi55
-[root@vagrant packer-templates]#</code></pre></figure>
-
-<p>If you want to keep an eye on the build process you can connect a VNC client to the address and port listed during the packer build process. For my build this was what was displayed:</p>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">esxi55: The VM will be run headless, without a GUI. If you want to
-esxi55: view the screen of the VM, connect via VNC without a password to
-esxi55: 192168.1.201:5988</code></pre></figure>
-
-<p>The other option to track the progress of the ESXi install is to open the console of the virtual machine in the VI or web client.</p>
-
-<h4>D. The last line of the packer output shows the datastore location of the virtual machine that was created. We need to SSH to the ESXi host in order to re-register the virtual machine, in order to export it using ovftool:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# ssh root@192.168.1.201 &quot;vim-cmd solo/registervm /vmfs/volumes/esx01-local-sata/output-esxi55/*.vmx&quot;
-Password: 
-70</code></pre></figure>
-
-<p>Update this command to reflect the IP address and path to the virtual machine that packer created. Also take note of the vmid that the command returns, since we&#39;ll need this in a future step.</p>
-
-<h4>E. Use the following command to export the virtual machine we just registered:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# ovftool vi://root:[esxi_password]@192.168.1.201/esxi55 ./
-Opening VI source: vi://root@192.168.1.201:443/esxi55
-Opening OVF target: ./
-Writing OVF package: ./esxi55/esxi55.ovf
-Transfer Completed 
-Completed successfully</code></pre></figure>
-
-<p>Replace the IP address, password and virtual machine name if needed.</p>
-
-<h4>F. Unregister the virtual machine template using the following command with the vmid returned by the registration command:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant ~]# ssh root@192.168.1.201 &quot;vim-cmd vmsvc/unregister 70&quot;
-Password:</code></pre></figure>
-
-<h2>6. Since we disable the vagrant-vcenter-ovf post processor, we will need to create the .box file according to the specifications<a href="https://github.com/gosddc/packer-post-processor-vagrant-vmware-ovf/wiki/vmware_ovf-Box-Format"> listed here</a>:</h2>
-
-<h4>A. Create the metadata.json file needed by the vagrant-vmware-ovf .box file:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi55]# echo &#39;{&quot;provider&quot;:&quot;vmware_ovf&quot;}&#39; &gt;&gt; metadata.json
-[root@vagrant esxi55]#</code></pre></figure>
-
-<h4>B. Create an empty Vagrantfile to include in the .box file:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi55]# touch Vagrantfile
-[root@vagrant esxi55]#</code></pre></figure>
-
-<h4>C. Use tar to compress the files in this directory into a .box file:</h4>
-
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash">[root@vagrant esxi55]# tar cvzf esxi55-vmware_ovf-1.1.box ./*
-./esxi55-disk1.vmdk
-./esxi55.mf
-./esxi55.ovf
-./metadata.json
-./Vagrantfile
-[root@vagrant esxi55]# ls -la
-total 968296
-drwxr-xr-x. 2 root root      4096 Jan  3 15:36 .
-drwxr-xr-x. 9 root root      4096 Jan  3 20:12 ..
--rw-r--r--. 1 root root 496975360 Jan  3 15:32 esxi55-disk1.vmdk
--rw-r--r--. 1 root root       125 Jan  3 15:32 esxi55.mf
--rw-r--r--. 1 root root      7522 Jan  3 15:32 esxi55.ovf
--rw-r--r--. 1 root root 494527542 Jan  3 15:36 esxi55-vmware_ovf-1.1.box
--rw-r--r--. 1 root root        26 Jan  3 15:34 metadata.json
--rw-r--r--. 1 root root         0 Jan  3 15:34 Vagrantfile
-[root@vagrant esxi55]#</code></pre></figure>
-
-<h3>That all for this post covering the basics of getting packer and getting it installed/configured on CentOS. In the next blog post I&#39;m planning  on covering how to install vagrant on CentOS and using it to deploy this .box templates to vCenter.</h3>
 
 <h3>Please provide any feedback or suggestions to my twitter account located on the about page.</h3>
 
