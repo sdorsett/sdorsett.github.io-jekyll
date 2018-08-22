@@ -4,7 +4,7 @@
  <title>sdorsett.github.io</title>
  <link href="http://0.0.0.0:4000/atom.xml" rel="self"/>
  <link href="http://0.0.0.0:4000/"/>
- <updated>2018-08-22T00:55:48+00:00</updated>
+ <updated>2018-08-22T01:01:37+00:00</updated>
  <id>http://0.0.0.0:4000</id>
  <author>
    <name>Stan Dorsett</name>
@@ -99,7 +99,7 @@ MacBook-Pro:ovh_public_cloud_centos_7 standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/
 
 &lt;h2&gt;4. Source your openrc.sh file&lt;/h2&gt;
 
-&lt;p&gt;Source the openrc.sh you previously downloaded for your Openstack user. Enter the password for your Openstack user when prompted. This step will export the environemntal variables that the Vagrantfile needs in order to create the Openstack server.&lt;/p&gt;
+&lt;p&gt;Source the openrc.sh you previously downloaded for your Openstack user. Enter the password for your Openstack user when prompted. This step will export the environmental variables that the Vagrantfile needs in order to create the Openstack server.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:ovh_public_cloud_centos_7 standorsett$ source ~/Downloads/openrc.sh
 Please enter your OpenStack Password:
@@ -424,7 +424,7 @@ MacBook-Pro:ovh_public_cloud_centos_7 standorsett$&lt;/code&gt;&lt;/pre&gt;&lt;/
 
 &lt;h2&gt;4. Source your openrc.sh file&lt;/h2&gt;
 
-&lt;p&gt;Source the openrc.sh you previously downloaded for your Openstack user. Enter the password for your Openstack user when prompted. This step will export the environemntal variables that the Vagrantfile needs in order to create the Openstack server.&lt;/p&gt;
+&lt;p&gt;Source the openrc.sh you previously downloaded for your Openstack user. Enter the password for your Openstack user when prompted. This step will export the environmental variables that the Vagrantfile needs in order to create the Openstack server.&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;MacBook-Pro:ovh_public_cloud_centos_7 standorsett$ source ~/Downloads/openrc.sh
 Please enter your OpenStack Password:
